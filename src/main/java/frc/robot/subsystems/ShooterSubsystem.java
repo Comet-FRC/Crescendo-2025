@@ -24,11 +24,12 @@ private class ShooterSpeed {
 	double bottomMotorSpeed;
 
 	public ShooterSpeed(double top, double bottom) {
-	topMotorSpeed = top;
-	bottomMotorSpeed = bottom;
+		topMotorSpeed = top;
+		bottomMotorSpeed = bottom;
 	}
 }
 
+// Might change later to an enum just like how LYNK does it... but for right now this is ok
 private final ShooterSpeed SUBWOOFER = new ShooterSpeed(1360, 2830);
 
 public ShooterSubsystem() {
@@ -71,21 +72,15 @@ public ShooterSubsystem() {
 		setCurrentSpeed(SUBWOOFER);
 	}
 
-
-
 	private void setCurrentSpeed(ShooterSpeed speed) {
-		topCurrentTarget = 1360;
-		bottomCurrentTarget = 2830;
-		top.setControl(topControl.withVelocity(toRPS(topCurrentTarget)));
-		bottom.setControl(bottomControl.withVelocity(toRPS(bottomCurrentTarget)));
+		top.setControl(topControl.withVelocity(toRPS(speed.topMotorSpeed)));
+		bottom.setControl(bottomControl.withVelocity(toRPS(speed.bottomMotorSpeed)));
 	}
 
 	public void setVoltage(double voltage) {
 		top.setControl(voltageOut.withOutput(voltage));
 		bottom.setControl(voltageOut.withOutput(voltage));
-}
-
-
+	}
 
 	public void end() {
 		topCurrentTarget = 0;

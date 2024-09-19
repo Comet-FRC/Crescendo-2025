@@ -56,12 +56,9 @@ public final class Constants
   public class Intake {
     /* IDs */
     public static final int intakeMotorID = 3;
-    /* CANBus */
-    public static final String intakeMotorCanBus = "rio";
     /* Motor Speed Values */
     public static final double intakingSpeed = 0.50;
     public static final double ejectingSpeed = -0.50;
-    public static final double stoppingSpeed = 0.00;
     /* Motor Config Values */
     public static final double peakForwardVoltage = 12.0;
     public static final double peakReverseVoltage = -12.0;
@@ -73,8 +70,6 @@ public class Shooter {
   /* IDs */
   public static final int topShooterID = 4; 
   public static final int bottomShooterID = 17;
-  /* CANBus */
-  public static final String shooterMotorCanBus = "rio";
   /* Motor Speed Values */
   public static final double idleSpeed = 2500; 
   public static final double intakeSpeed = -800;
