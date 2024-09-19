@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
@@ -50,8 +52,51 @@ public final class Constants
     public static final double TURN_CONSTANT    = 6;
   }
 
-  public static class Shooter {
-    public static final int topShooterID = -1;
-    public static final int bottomShooterID = -1;
-  }
+
+  public class Intake {
+    /* IDs */
+    public static final int intakeMotorID = 3;
+    /* CANBus */
+    public static final String intakeMotorCanBus = "rio";
+    /* Motor Speed Values */
+    public static final double intakingSpeed = 0.50;
+    public static final double ejectingSpeed = -0.50;
+    public static final double stoppingSpeed = 0.00;
+    /* Motor Config Values */
+    public static final double peakForwardVoltage = 12.0;
+    public static final double peakReverseVoltage = -12.0;
+    public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
+    public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
+}
+
+public class Shooter {
+  /* IDs */
+  public static final int topShooterID = 4; 
+  public static final int bottomShooterID = 17;
+  /* CANBus */
+  public static final String shooterMotorCanBus = "rio";
+  /* Motor Speed Values */
+  public static final double idleSpeed = 2500; 
+  public static final double intakeSpeed = -800;
+  public static final double stopSpeed = 0.00;
+  public static final double topSpeed = 6000;
+  public static final double maxRPMError = 60.0;
+  public static final double maxRPMErrorLong = 30.0;
+  public static final double slideShotVelocityErrorMax = 100.0;
+  public static final double dumpShotVelocityErrorMax = 60.0;
+  public static final double shuttleShotVelocityErrorMax = 75.0;
+  public static final double farDistance = Units.inchesToMeters(114.0); // when more precision is required
+  /* Motor Config Values */
+  public static final double peakForwardVoltage = 12.0;
+  public static final double peakReverseVoltage = -12.0;
+  public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
+  public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
+  public static final double kP = 0.25; // Voltage per 1 RPS of error
+  public static final double kI = 0.0;
+  public static final double kD = 0.0;
+  public static final double kS = 0.21;  // Voltage to overcome static friction
+  public static final double RPMsPerVolt = 490;
+  /* Time to complete shot once Note no longer detected */
+  public static final double postShotTimeout = 0.1; // in seconds
+}
 }

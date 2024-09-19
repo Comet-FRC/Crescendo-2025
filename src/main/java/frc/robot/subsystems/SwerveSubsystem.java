@@ -102,7 +102,10 @@ public class SwerveSubsystem extends SubsystemBase {
                     // This will flip the path being followed to the red side of the field.
                     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
                     var alliance = DriverStation.getAlliance();
-                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+
+
+
                 },
                 this // Reference to this subsystem to set requirements
         );
