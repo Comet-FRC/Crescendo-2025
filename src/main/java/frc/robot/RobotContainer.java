@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.swervedrive.drivebase.AbsoluteDriveAdv;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -45,6 +46,7 @@ public class RobotContainer {
 	
 	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
 	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
+	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 
 	/* Subsystems */
 	private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
@@ -60,7 +62,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Fixed SW shot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
 				.andThen(
-					(new ShootCommand(shooter)
+					(new ShootCommand(shooter, 2500, 2500)
 					.raceWith(Commands.waitSeconds(1.50))))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
@@ -142,9 +144,9 @@ public class RobotContainer {
 			Commands.deferredProxy(() -> drivebase.driveToPose(
 									new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
 								));
-		// driverController.x().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+		ejectButton.whileTrue(new OuttakeCommand(intake).withName("Eject"));
 		
-		shooterButton.whileTrue(new ShootCommand(shooter).withName("Shoot"));
+		shooterButton.whileTrue(new ShootCommand(shooter, 2200, 2830).withName("Shoot AMP"));
 		intakeButton.whileTrue(new IntakeCommand(intake).withName("Intake"));
 	}
 
@@ -154,7 +156,7 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		// An example command will be run in autonomous
-		return new PathPlannerAuto("Speaker + Taxi");
+		return new PathPlannerAuto("New Auto");
 	}
 
 	public void setDriveMode() {

@@ -66,6 +66,10 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor.set(Constants.Intake.intakingSpeed);
         setFeederSpeed(-500, -500);
     }
+    public void Outtake(){
+        intakeMotor.set(Constants.Intake.ejectingSpeed);
+        setFeederSpeed(500, 500);
+    }
 
     public void eject() {
         intakeMotor.set(Constants.Intake.ejectingSpeed);

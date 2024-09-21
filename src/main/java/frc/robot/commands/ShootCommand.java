@@ -15,16 +15,20 @@ public class ShootCommand extends Command {
 	private final ShooterSubsystem shooter;
 	private boolean cancelled = false;
 	private Timer postShotTimer = new Timer();
+	private int topSpeed;
+	private int bottomSpeed;
 	private boolean gone = false;
 
-	public ShootCommand(ShooterSubsystem shooter) {
+	public ShootCommand(ShooterSubsystem shooter, int topSpeed, int bottomSpeed) {
 		this.shooter = shooter;
 		addRequirements(shooter);
+		this.topSpeed = topSpeed;
+		this.bottomSpeed = bottomSpeed;
 	}
 
 	// Overloaded constructor with Swerve for autonomous movement
-	public ShootCommand(ShooterSubsystem shooter, SwerveSubsystem swerve) {
-		this(shooter);
+	public ShootCommand(ShooterSubsystem shooter, SwerveSubsystem swerve, int topSpeed, int bottomSpeed) {
+		this(shooter, topSpeed, bottomSpeed);
 	}
 
 	@Override
@@ -32,7 +36,7 @@ public class ShootCommand extends Command {
 		cancelled = false;
 		gone = false;
 
-		shooter.shoot();
+		shooter.shoot(topSpeed, bottomSpeed);
 	}
 
 	@Override

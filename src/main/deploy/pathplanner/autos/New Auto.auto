@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 2.0,
-      "y": 7.0
+      "x": 2.341320238196032,
+      "y": 6.0
     },
     "rotation": 0
   },
@@ -14,7 +14,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "New Path"
+            "pathName": "Test"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Fixed SW Shot"
           }
         }
       ]

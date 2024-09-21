@@ -30,7 +30,8 @@ private class ShooterSpeed {
 }
 
 // Might change later to an enum just like how LYNK does it... but for right now this is ok
-private final ShooterSpeed SUBWOOFER = new ShooterSpeed(2000, 2000);
+public final ShooterSpeed SUBWOOFER = new ShooterSpeed(2400, 2400);
+public final ShooterSpeed AMP = new ShooterSpeed(350, 950);
 
 public ShooterSubsystem() {
 	top = new TalonFX(Constants.Shooter.topShooterID, "rio");
@@ -68,13 +69,13 @@ public ShooterSubsystem() {
 		return rpm / 60.0;
 	}
 
-	public void shoot() {
-		setCurrentSpeed(SUBWOOFER);
+	public void shoot(int topSpeed, int bottomSpeed) {
+		setCurrentSpeed(topSpeed, bottomSpeed);
 	}
 
-	private void setCurrentSpeed(ShooterSpeed speed) {
-		top.setControl(topControl.withVelocity(toRPS(speed.topMotorSpeed)));
-		bottom.setControl(bottomControl.withVelocity(toRPS(speed.bottomMotorSpeed)));
+	private void setCurrentSpeed(int topSpeed, int bottomSpeed) {
+		top.setControl(topControl.withVelocity(toRPS(topSpeed)));
+		bottom.setControl(bottomControl.withVelocity(toRPS(bottomSpeed)));
 	}
 
 	public void setVoltage(double voltage) {
