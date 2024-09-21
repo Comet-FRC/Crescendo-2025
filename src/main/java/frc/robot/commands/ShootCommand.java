@@ -12,47 +12,42 @@ import frc.robot.subsystems.SwerveSubsystem;
 import edu.wpi.first.wpilibj.Timer;
 
 public class ShootCommand extends Command {
-  private final ShooterSubsystem shooter;
-  private boolean cancelled = false;
-  private Timer postShotTimer = new Timer();
-  private boolean gone = false;
+	private final ShooterSubsystem shooter;
+	private boolean cancelled = false;
+	private Timer postShotTimer = new Timer();
+	private boolean gone = false;
 
-  public ShootCommand(ShooterSubsystem shooter) {
-    this.shooter = shooter;
-    addRequirements(shooter);
-  }
+	public ShootCommand(ShooterSubsystem shooter) {
+		this.shooter = shooter;
+		addRequirements(shooter);
+	}
 
-  // Overloaded constructor with Swerve for autonomous movement
-  public ShootCommand(ShooterSubsystem shooter, SwerveSubsystem swerve) {
-    this(shooter);
-  }
+	// Overloaded constructor with Swerve for autonomous movement
+	public ShootCommand(ShooterSubsystem shooter, SwerveSubsystem swerve) {
+		this(shooter);
+	}
 
-  
+	@Override
+	public void initialize() {
+		cancelled = false;
+		gone = false;
 
-  @Override
-  public void initialize() {
-    cancelled = false;
-    gone = false;
+		shooter.shoot();
+	}
 
-    shooter.shoot();
-  }
-
-  @Override
-  public void execute() {
-    if (cancelled) return;
-
+	@Override
+	public void execute() {
+		if (cancelled) return;
+	}
 
 
-    }
-  
+	@Override
+	public void end(boolean interrupted) {
+		shooter.end();
+	}
 
-  @Override
-  public void end(boolean interrupted) {
-    shooter.end();
-  }
-
-  @Override
-  public boolean isFinished() {
-    return cancelled || (gone && postShotTimer.hasElapsed(Constants.Shooter.postShotTimeout));
-  }
+	@Override
+	public boolean isFinished() {
+		return cancelled || (gone && postShotTimer.hasElapsed(Constants.Shooter.postShotTimeout));
+	}
 }

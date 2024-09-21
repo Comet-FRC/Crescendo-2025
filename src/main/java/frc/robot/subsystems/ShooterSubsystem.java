@@ -30,7 +30,7 @@ private class ShooterSpeed {
 }
 
 // Might change later to an enum just like how LYNK does it... but for right now this is ok
-private final ShooterSpeed SUBWOOFER = new ShooterSpeed(1360, 2830);
+private final ShooterSpeed SUBWOOFER = new ShooterSpeed(2000, 2000);
 
 public ShooterSubsystem() {
 	top = new TalonFX(Constants.Shooter.topShooterID, "rio");

@@ -1,17 +1,12 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "SPARK MAX [1]": {
+      "SPARK MAX [15]": {
         "header": {
           "open": true
         }
       },
-      "SPARK MAX [3]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [5]": {
+      "Talon FX (v6)[13]": {
         "header": {
           "open": true
         }
@@ -60,15 +55,11 @@
       "/SmartDashboard/Pigeon 2 (v6) [20]": "Gyro",
       "/SmartDashboard/Pigeon 2 [13]": "Gyro",
       "/SmartDashboard/SendableChooser[0]": "String Chooser",
+      "/SmartDashboard/auto/Auto Chooser": "String Chooser",
       "/SmartDashboard/navX-Sensor[1]": "Gyro",
       "/SmartDashboard/navX-Sensor[4]": "Gyro"
     },
     "windows": {
-      "/FMSInfo": {
-        "window": {
-          "visible": true
-        }
-      },
       "/SmartDashboard/Field": {
         "XModules": {
           "arrowColor": [
@@ -96,17 +87,17 @@
   "NetworkTables": {
     "transitory": {
       "SmartDashboard": {
-        "Field": {
+        "open": true,
+        "shooter": {
           "open": true
         },
-        "open": true,
         "swerve": {
           "open": true
         }
       }
     }
   },
-  "NetworkTables Info": {
-    "visible": true
+  "NetworkTables View": {
+    "visible": false
   }
 }

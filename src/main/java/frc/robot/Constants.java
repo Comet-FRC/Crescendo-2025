@@ -19,79 +19,72 @@ import swervelib.math.Matter;
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
-public final class Constants
-{
+public final class Constants {
 
-  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
-  public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
-  public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
-  public static final double MAX_SPEED  = 14.5;
-      // Maximum speed of the robot in meters per second, used to limit acceleration.
+	public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
+	public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
+	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
+	public static final double MAX_SPEED  = Units.feetToMeters(12.5);
+		// Maximum speed of the robot in meters per second, used to limit acceleration.
 
-  public static final class AutonConstants
-  {
+	public static final class AutonConstants {
+		public static final PIDConstants TRANSLATION_PID = new PIDConstants(5, 0, 0);
+		public static final PIDConstants ANGLE_PID       = new PIDConstants(2, 0, 0.01);
+	}
 
-    public static final PIDConstants TRANSLATION_PID = new PIDConstants(5, 0, 0);
-    public static final PIDConstants ANGLE_PID       = new PIDConstants(2, 0, 0.01);
-  }
+	public static final class DrivebaseConstants {
+		// Hold time on motor brakes when disabled
+		public static final double WHEEL_LOCK_TIME = 10; // seconds
+	}
 
-  public static final class DrivebaseConstants
-  {
-
-    // Hold time on motor brakes when disabled
-    public static final double WHEEL_LOCK_TIME = 10; // seconds
-  }
-
-  public static class OperatorConstants
-  {
-
-    // Joystick Deadband
-    public static final double LEFT_X_DEADBAND  = 0.1;
-    public static final double LEFT_Y_DEADBAND  = 0.1;
-    public static final double RIGHT_X_DEADBAND = 0.1;
-    public static final double TURN_CONSTANT    = 6;
-  }
+	public static class OperatorConstants {
+		/* Joystick Deadband */
+		public static final double LEFT_X_DEADBAND  = 0.1;
+		public static final double LEFT_Y_DEADBAND  = 0.1;
+		public static final double RIGHT_X_DEADBAND = 0.1;
+		public static final double TURN_CONSTANT    = 6;
+	}
 
 
-  public class Intake {
-    /* IDs */
-    public static final int intakeMotorID = 3;
-    /* Motor Speed Values */
-    public static final double intakingSpeed = 0.50;
-    public static final double ejectingSpeed = -0.50;
-    /* Motor Config Values */
-    public static final double peakForwardVoltage = 12.0;
-    public static final double peakReverseVoltage = -12.0;
-    public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
-    public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
-}
+	public class Intake {
+		/* IDs */
+		public static final int motorID = 15;
+		/* Motor Speed Values */
+		public static final double intakingSpeed = -0.5;
+		public static final double ejectingSpeed = 0.10;
+		/* Motor Config Values */
+		public static final double peakForwardVoltage = 12.0;
+		public static final double peakReverseVoltage = -12.0;
+		public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
+		public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
+	}
 
-public class Shooter {
-  /* IDs */
-  public static final int topShooterID = 4; 
-  public static final int bottomShooterID = 17;
-  /* Motor Speed Values */
-  public static final double idleSpeed = 2500; 
-  public static final double intakeSpeed = -800;
-  public static final double stopSpeed = 0.00;
-  public static final double topSpeed = 6000;
-  public static final double maxRPMError = 60.0;
-  public static final double maxRPMErrorLong = 30.0;
-  public static final double slideShotVelocityErrorMax = 100.0;
-  public static final double dumpShotVelocityErrorMax = 60.0;
-  public static final double shuttleShotVelocityErrorMax = 75.0;
-  public static final double farDistance = Units.inchesToMeters(114.0); // when more precision is required
-  /* Motor Config Values */
-  public static final double peakForwardVoltage = 12.0;
-  public static final double peakReverseVoltage = -12.0;
-  public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
-  public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
-  public static final double kP = 0.25; // Voltage per 1 RPS of error
-  public static final double kI = 0.0;
-  public static final double kD = 0.0;
-  public static final double kS = 0.21;  // Voltage to overcome static friction
-  public static final double RPMsPerVolt = 490;
-  /* Time to complete shot once Note no longer detected */
-  public static final double postShotTimeout = 0.1; // in seconds
-}
+	public class Shooter {
+		/* IDs */
+		public static final int topShooterID = 13; 
+		public static final int bottomShooterID = 14;
+		/* Motor Speed Values */
+		public static final double idleSpeed = 2500; 
+		public static final double intakeSpeed = -800;
+		public static final double stopSpeed = 0.00;
+		public static final double topSpeed = 6000;
+		public static final double maxRPMError = 60.0;
+		public static final double maxRPMErrorLong = 30.0;
+		public static final double slideShotVelocityErrorMax = 100.0;
+		public static final double dumpShotVelocityErrorMax = 60.0;
+		public static final double shuttleShotVelocityErrorMax = 75.0;
+		public static final double farDistance = Units.inchesToMeters(114.0); // when more precision is required
+		/* Motor Config Values */
+		public static final double peakForwardVoltage = 12.0;
+		public static final double peakReverseVoltage = -12.0;
+		public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
+		public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
+		public static final double kP = 0.25; // Voltage per 1 RPS of error
+		public static final double kI = 0.0;
+		public static final double kD = 0.0;
+		public static final double kS = 0.21;  // Voltage to overcome static friction
+		public static final double RPMsPerVolt = 490;
+		/* Time to complete shot once Note no longer detected */
+		public static final double postShotTimeout = 0.1; // in seconds
+	}
 }

@@ -12,8 +12,8 @@ public class IntakeCommand extends Command {
 
 	public IntakeCommand(IntakeSubsystem intake) {
 		this.intake = intake;
-		addRequirements(this.intake);
-	} 
+		addRequirements(intake);
+	}
 
 	// Called when the command is initially scheduled.
 	@Override
@@ -23,7 +23,9 @@ public class IntakeCommand extends Command {
 
 	// Called every time the scheduler runs while the command is scheduled.
 	@Override	
-	public void execute() {}
+	public void execute() {
+		intake.intake();
+	}
 
 	// Called once the command ends or is interrupted.
 	@Override
