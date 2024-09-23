@@ -5,40 +5,31 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
-public class ShootCommand extends Command {
+public class PrepareShootCommand extends Command {
 	private final ShooterSubsystem shooter;
-	private final FeederSubsystem feeder;
+	private final Speed speed;
 
-	private Speed speed;
-
-	public ShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, Speed speed) {
+	public PrepareShootCommand(ShooterSubsystem shooter, Speed speed) {
 		this.shooter = shooter;
-		this.feeder = feeder;
+		addRequirements(shooter);
 		this.speed = speed;
-		addRequirements(shooter, feeder);
-	}
-
-	/**
-	 * Overloaded constructor with Swerve for autonomous movement
-	*/ 
-	public ShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, SwerveSubsystem swerve, Speed speed) {
-		this(shooter, feeder, speed);
 	}
 
 	@Override
 	public void initialize() {
-		feeder.intake();
 		shooter.shoot(speed);
 	}
 
 	@Override
 	public void end(boolean interrupted) {
 		shooter.stop();
-		feeder.stop();
+	}
+
+	@Override
+	public boolean isFinished() {
+		return shooter.isReady(false);
 	}
 }

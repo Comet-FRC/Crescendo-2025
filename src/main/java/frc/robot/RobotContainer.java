@@ -20,12 +20,16 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.OuttakeCommand;
+import frc.robot.commands.PrepareShootCommand;
+import frc.robot.commands.EjectCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.swervedrive.drivebase.AbsoluteDriveAdv;
+import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.Speed;
+
 import java.io.File;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -52,6 +56,7 @@ public class RobotContainer {
 	private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 
 	private final IntakeSubsystem intake = new IntakeSubsystem();
+	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	
 	/**
@@ -62,7 +67,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Fixed SW shot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
 				.andThen(
-					(new ShootCommand(shooter, 2500, 2500)
+					(new ShootCommand(shooter, feeder, Speed.SUBWOOFER)
 					.raceWith(Commands.waitSeconds(1.50))))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
@@ -70,7 +75,7 @@ public class RobotContainer {
 			Commands.runOnce(() -> { 
 				SmartDashboard.putString("Auto Status", "Beginning Intake");
 			})
-			.andThen(new IntakeCommand(intake))
+			.andThen(new IntakeCommand(intake, feeder))
 			.andThen(Commands.runOnce(() -> { 
 				SmartDashboard.putString("Auto Status", "Intake Complete");
 			}))
@@ -144,10 +149,15 @@ public class RobotContainer {
 			Commands.deferredProxy(() -> drivebase.driveToPose(
 									new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
 								));
-		ejectButton.whileTrue(new OuttakeCommand(intake).withName("Eject"));
+
+		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
-		shooterButton.whileTrue(new ShootCommand(shooter, 2200, 2830).withName("Shoot AMP"));
-		intakeButton.whileTrue(new IntakeCommand(intake).withName("Intake"));
+		shooterButton.whileTrue(
+			new PrepareShootCommand(shooter, Speed.SPEAKER)
+			.andThen(new ShootCommand(shooter, feeder, Speed.SPEAKER)
+			.withName("Shoot Command")));
+		
+		intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
 	}
 
 	/**
