@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
 import swervelib.math.Matter;
 
 /**
@@ -20,8 +21,7 @@ import swervelib.math.Matter;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-
-	public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
+	public static final double ROBOT_MASS = Units.lbsToKilograms(86.5);
 	public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
 
@@ -54,7 +54,7 @@ public final class Constants {
 		/* IDs */
 		public static final int motorID = 15;
 		/* Motor Speed Values */
-		public static final double intakingSpeed = -0.5;
+		public static final double intakingSpeed = -1;
 		public static final double ejectingSpeed = 0.10;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;

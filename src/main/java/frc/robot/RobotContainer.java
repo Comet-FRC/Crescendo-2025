@@ -153,7 +153,7 @@ public class RobotContainer {
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
 		shooterButton.whileTrue(
-			new PrepareShootCommand(shooter, Speed.SPEAKER)
+			new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
 			.andThen(new ShootCommand(shooter, feeder, Speed.SPEAKER)
 			.withName("Shoot Command")));
 		

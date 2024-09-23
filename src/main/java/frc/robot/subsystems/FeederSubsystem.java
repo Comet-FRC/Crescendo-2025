@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.Timer;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -50,29 +52,36 @@ public class FeederSubsystem extends SubsystemBase {
 		return rpm / 60.0;
 	}
 
-    private void setFeederSpeed(double left, double right) {
-		feederMotorLeft.setControl(flControl.withVelocity(toRPS(left)));
-		feederMotorRight.setControl(frControl.withVelocity(toRPS(right)));
+    private void setFeederSpeed(double speed) {
+		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speed)));
+		feederMotorRight.setControl(frControl.withVelocity(toRPS(speed)));
 	}
 
     public void intake() {
-        setFeederSpeed(-500, -500);
+        //double intakingSpeed = Constants.Intake.intakingSpeed*5676;
+        //setFeederSpeed(intakingSpeed);
+        setFeederSpeed(-500);
     }
 
     public void eject() {
-        setFeederSpeed(500, 500);
+        double ejectingSpeed = Constants.Intake.ejectingSpeed*5676;
+        setFeederSpeed(ejectingSpeed);
     }
 
     /**
      * Stops both wheels.
      */
     public void stop() {
-        setFeederSpeed(0, 0);
+        setFeederSpeed(0);
+    }
+
+    public double getTorqueCurrent() {
+        return feederMotorLeft.getTorqueCurrent().getValueAsDouble();
     }
 
     @Override
     public void periodic() {
-        double current = feederMotorLeft.getTorqueCurrent().getValueAsDouble();
+        double current = getTorqueCurrent();
         SmartDashboard.putNumber("feeder/torqueCurrent", current);
     }
 }

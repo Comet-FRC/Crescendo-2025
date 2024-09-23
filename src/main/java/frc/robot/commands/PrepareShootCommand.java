@@ -4,23 +4,38 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 public class PrepareShootCommand extends Command {
 	private final ShooterSubsystem shooter;
+	private final FeederSubsystem feeder;
 	private final Speed speed;
 
-	public PrepareShootCommand(ShooterSubsystem shooter, Speed speed) {
+	private final Timer indexTimer = new Timer();
+
+	public PrepareShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, Speed speed) {
 		this.shooter = shooter;
-		addRequirements(shooter);
+		this.feeder = feeder;
+		addRequirements(shooter, feeder);
 		this.speed = speed;
 	}
 
 	@Override
 	public void initialize() {
+		feeder.eject();
 		shooter.shoot(speed);
+		indexTimer.reset();
+		indexTimer.start();
+	}
+
+	@Override
+	public void execute() {
+		if (indexTimer.hasElapsed(0.2))
+			feeder.stop();
 	}
 
 	@Override

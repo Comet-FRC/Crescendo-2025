@@ -19,6 +19,9 @@ private final VelocityVoltage bottomControl = new VelocityVoltage(0).withEnableF
 
 private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
+	/**
+	 * Represents the speeds of the top and bottom motors of the shooter.
+	 */
 	public class ShooterSpeed {
 		double topMotorSpeed;
 		double bottomMotorSpeed;
@@ -29,6 +32,9 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		}
 	}
 
+	/**
+	 * 
+	 */
 	public enum Speed {
 		STOP,
 		SUBWOOFER,
