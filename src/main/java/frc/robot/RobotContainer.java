@@ -72,31 +72,8 @@ public class RobotContainer {
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
-
-		// Zero Gyro so the front is forward.
-		drivebase.zeroGyro();
-
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
-
-		/* Subwoofer Shot */
-		NamedCommands.registerCommand("Fixed SW shot",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
-				.andThen(
-					(new ShootCommand(shooter, feeder, Speed.SUBWOOFER)
-					.raceWith(Commands.waitSeconds(1.50))))
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
-			);
-		
-		/* Intake */
-		NamedCommands.registerCommand("Intake note",
-			Commands.runOnce(() -> { 
-				SmartDashboard.putString("Auto Status", "Beginning Intake");
-			})
-			.andThen(new IntakeCommand(intake, feeder))
-			.andThen(Commands.runOnce(() -> { 
-				SmartDashboard.putString("Auto Status", "Intake Complete");
-			}))
-		);
+		configureAutonCommands();
 
 		/* Configure the trigger bindings */
 		configureBindings();
@@ -152,6 +129,29 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 			SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 	}
+
+	private void configureAutonCommands() {
+		/* Subwoofer Shot */
+		NamedCommands.registerCommand("Fixed SW shot",
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
+				.andThen(
+					(new ShootCommand(shooter, feeder, Speed.SUBWOOFER)
+					.raceWith(Commands.waitSeconds(1.50))))
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
+			);
+		
+		/* Intake */
+		NamedCommands.registerCommand("Intake note",
+			Commands.runOnce(() -> { 
+				SmartDashboard.putString("Auto Status", "Beginning Intake");
+			})
+			.andThen(new IntakeCommand(intake, feeder))
+			.andThen(Commands.runOnce(() -> { 
+				SmartDashboard.putString("Auto Status", "Intake Complete");
+			}))
+		);
+	}
+
 
 	/**
 	 * Use this method to define your trigger->command mappings. Triggers can be created via the
