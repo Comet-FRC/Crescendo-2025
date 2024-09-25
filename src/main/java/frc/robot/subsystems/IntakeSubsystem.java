@@ -19,6 +19,10 @@ public class IntakeSubsystem extends SubsystemBase {
         intakeMotor.setSmartCurrentLimit(80);
     }
 
+    public void set(double speed) {
+        intakeMotor.set(speed);
+    }
+
     public void intake() {
         intakeMotor.set(Constants.Intake.intakingSpeed);
     }

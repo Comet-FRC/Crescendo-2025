@@ -7,6 +7,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Timer;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 
@@ -17,6 +18,8 @@ public class IntakeCommand extends Command {
 	private final Timer timer = new Timer();
 	boolean hasNote = false;
 
+	private double intakingSpeed;
+
 	public IntakeCommand(IntakeSubsystem intake, FeederSubsystem feeder) {
 		this.intake = intake;
 		this.feeder = feeder;
@@ -26,6 +29,7 @@ public class IntakeCommand extends Command {
 	// Called when the command is initially scheduled.
 	@Override
 	public void initialize() {
+		intakingSpeed = Constants.Intake.intakingSpeed;
 		intake.intake();
 		feeder.intake();
 		hasNote = false;
@@ -39,6 +43,10 @@ public class IntakeCommand extends Command {
 			hasNote = true;
 			timer.start();
 		}
+		if (intakingSpeed > -1.0) {
+			intakingSpeed -= 0.01;
+			intake.set(intakingSpeed);
+		}
 	}
 
 	// Called once the command ends or is interrupted.
@@ -50,6 +58,6 @@ public class IntakeCommand extends Command {
 
 	@Override
 	public boolean isFinished() {
-		return timer.hasElapsed(0.3);
+		return timer.hasElapsed(0.5);
 	}
 }

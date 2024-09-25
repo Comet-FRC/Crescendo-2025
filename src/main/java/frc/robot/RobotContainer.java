@@ -42,19 +42,20 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
  * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+	/* Autonomous */
 	private final SendableChooser<Command> autoChooser;
 	
 	/* Controllers */
 	private final CommandXboxController driverController = new CommandXboxController(0);
 	private final Joystick operatorController = new Joystick(1);
 	
+	/* Buttons */
 	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
 	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 
 	/* Subsystems */
 	private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
-
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
@@ -63,7 +64,9 @@ public class RobotContainer {
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
-		/* REGISTERED COMMANDS FOR PATHPLANNER */
+		/* REGISTERING COMMANDS FOR PATHPLANNER */
+
+		/* Subwoofer Shot */
 		NamedCommands.registerCommand("Fixed SW shot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
 				.andThen(
@@ -71,7 +74,9 @@ public class RobotContainer {
 					.raceWith(Commands.waitSeconds(1.50))))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
-			NamedCommands.registerCommand("Intake note",
+		
+		/* Intake */
+		NamedCommands.registerCommand("Intake note",
 			Commands.runOnce(() -> { 
 				SmartDashboard.putString("Auto Status", "Beginning Intake");
 			})
