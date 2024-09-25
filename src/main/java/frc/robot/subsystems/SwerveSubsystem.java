@@ -10,6 +10,8 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
+
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -36,10 +38,6 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
-
-    /**
-     * Swerve drive object.
-     */
     private final SwerveDrive swerveDrive;
 
     /**
@@ -51,16 +49,21 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
         // objects being created.
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.NONE;
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot
-                                                 // via angle.
-        swerveDrive.setCosineCompensator(false);// !SwerveDriveTelemetry.isSimulation); // Disables cosine compensation
-                                                // for simulations since it causes discrepancies not seen in real life.
+
+        // Heading correction should only be used while controlling the robot via angle.
+        swerveDrive.setHeadingCorrection(false); 
+        
+        // Disables cosine compensation
+        // for simulations since it causes discrepancies not seen in real life.
+        if (!SwerveDriveTelemetry.isSimulation) {
+            swerveDrive.setCosineCompensator(false);
+        }
         setupPathPlanner();
     }
 
@@ -102,10 +105,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     // This will flip the path being followed to the red side of the field.
                     // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
                     var alliance = DriverStation.getAlliance();
-return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-
-
-
+                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
                 },
                 this // Reference to this subsystem to set requirements
         );
@@ -314,6 +314,13 @@ return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : fal
     }
 
     /**
+     * Get the swerve drive pose estimator object.
+     */
+    public SwerveDrivePoseEstimator getPoseEstimator() {
+        return swerveDrive.swerveDrivePoseEstimator;
+    }
+
+    /**
      * Resets odometry to the given pose. Gyro angle and module positions do not
      * need to be reset when calling this
      * method. However, if either gyro angle or module position is reset, this must
@@ -502,4 +509,6 @@ return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : fal
     public Rotation2d getPitch() {
         return swerveDrive.getPitch();
     }
+
+
 }

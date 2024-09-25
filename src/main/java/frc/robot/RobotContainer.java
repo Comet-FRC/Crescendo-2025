@@ -5,6 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.PrepareShootCommand;
+import frc.robot.commands.AlignToSpeakerCommand;
 import frc.robot.commands.EjectCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.swervedrive.drivebase.AbsoluteDriveAdv;
@@ -28,6 +31,7 @@ import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 import java.io.File;
@@ -50,6 +54,9 @@ public class RobotContainer {
 	private final Joystick operatorController = new Joystick(1);
 	
 	/* Buttons */
+	private final Trigger zeroGyroButton = driverController.a();
+
+	private final Trigger alignButton = new JoystickButton(operatorController, 4);
 	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
 	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
@@ -59,11 +66,16 @@ public class RobotContainer {
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
+	private final VisionSubsystem vision = new VisionSubsystem(drivebase, "limelight");
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
+
+		// Zero Gyro so the front is forward.
+		drivebase.zeroGyro();
+
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 
 		/* Subwoofer Shot */
@@ -149,11 +161,14 @@ public class RobotContainer {
 	 * controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
 	 */
 	private void configureBindings() {
-		driverController.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+		zeroGyroButton.onTrue((Commands.runOnce(drivebase::zeroGyro)));
 		driverController.b().whileTrue(
 			Commands.deferredProxy(() -> drivebase.driveToPose(
-									new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
-								));
+				new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
+			));
+
+		
+		alignButton.whileTrue(new AlignToSpeakerCommand(drivebase, vision).withName("Align to Speaker"));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
