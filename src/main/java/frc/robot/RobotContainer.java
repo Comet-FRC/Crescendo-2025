@@ -25,9 +25,9 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.PrepareShootCommand;
 import frc.robot.commands.AlignToSpeakerCommand;
+import frc.robot.commands.DriveCommand;
 import frc.robot.commands.EjectCommand;
 import frc.robot.commands.ShootCommand;
-import frc.robot.commands.swervedrive.drivebase.AbsoluteDriveAdv;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -63,11 +63,11 @@ public class RobotContainer {
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 
 	/* Subsystems */
-	private final SwerveSubsystem drivebase = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
+	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
-	private final VisionSubsystem vision = new VisionSubsystem(drivebase, "limelight");
+	private final VisionSubsystem vision = new VisionSubsystem(swerve, "limelight-shooter");
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -84,50 +84,23 @@ public class RobotContainer {
 
 		/*
 		Applies deadbands and inverts controls because joysticks are back-right positive
-		while robot controls are front-left positive left stick controls translation
-		right stick controls the rotational velocity buttons are quick rotation
-		positions to different ways to face
-		WARNING: default buttons are on the same buttons as the ones defined in configureBindings
-		*/
-		AbsoluteDriveAdv closedAbsoluteDriveAdv = new AbsoluteDriveAdv(drivebase,
-			() -> -MathUtil.applyDeadband(driverController.getLeftY(),
-				OperatorConstants.LEFT_Y_DEADBAND),
-			() -> -MathUtil.applyDeadband(driverController.getLeftX(),
-				OperatorConstants.LEFT_X_DEADBAND),
-			() -> -MathUtil.applyDeadband(driverController.getRightX(),
-				OperatorConstants.RIGHT_X_DEADBAND),
-			driverController.getHID()::getYButtonPressed,
-			driverController.getHID()::getAButtonPressed,
-			driverController.getHID()::getXButtonPressed,
-			driverController.getHID()::getBButtonPressed);
-
-		/*
-		Applies deadbands and inverts controls because joysticks are back-right positive
-		while robot controls are front-left positive left stick controls translation
+		while robot controls are front-left positive
+		left stick controls translation
 		right stick controls the desired angle NOT angular rotation
 		*/
-		Command driveFieldOrientedDirectAngle = drivebase.driveCommand(
+		Command driveFieldOrientedDirectAngle = swerve.driveCommand(
 			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND),
 			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND),
 			() -> driverController.getRightX(),
 			() -> driverController.getRightY());
 
-		/*
-		Applies deadbands and inverts controls because joysticks are back-right positive
-		while robot controls are front-left positive left stick controls translation
-		right stick controls the angular velocity of the robot
-		*/
-		Command driveFieldOrientedAnglularVelocity = drivebase.driveCommand(
+		Command driveFieldOrientedDirectAngleSim = swerve.simDriveCommand(
 			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND),
 			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND),
-			() -> driverController.getRightX() * 0.5);
+			() -> driverController.getRightX(),
+			() -> driverController.getRightY());
 
-		Command driveFieldOrientedDirectAngleSim = drivebase.simDriveCommand(
-			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND),
-			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND),
-			() -> driverController.getRawAxis(2));
-
-		drivebase.setDefaultCommand(
+		swerve.setDefaultCommand(
 			!RobotBase.isSimulation() ? driveFieldOrientedDirectAngle : driveFieldOrientedDirectAngleSim);
 
 		autoChooser = AutoBuilder.buildAutoChooser();
@@ -165,14 +138,14 @@ public class RobotContainer {
 	 * controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
 	 */
 	private void configureBindings() {
-		zeroGyroButton.onTrue((Commands.runOnce(drivebase::zeroGyro)));
+		zeroGyroButton.onTrue((Commands.runOnce(swerve::zeroGyro)));
 		driverController.b().whileTrue(
-			Commands.deferredProxy(() -> drivebase.driveToPose(
+			Commands.deferredProxy(() -> swerve.driveToPose(
 				new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
 			));
 
 		
-		alignButton.whileTrue(new AlignToSpeakerCommand(drivebase, vision).withName("Align to Speaker"));
+		alignButton.whileTrue(new AlignToSpeakerCommand(swerve, vision).withName("Align to Speaker"));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
@@ -198,6 +171,9 @@ public class RobotContainer {
 	}
 
 	public void setMotorBrake(boolean brake) {
-		drivebase.setMotorBrake(brake);
-	    }
+		swerve.setMotorBrake(brake);
+	}
+
+	
+
 }

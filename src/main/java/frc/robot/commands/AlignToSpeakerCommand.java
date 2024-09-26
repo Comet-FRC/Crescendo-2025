@@ -25,7 +25,7 @@ public class AlignToSpeakerCommand extends Command {
     public void initialize() {
         isAligned = false;
 
-        tagPose = visionSubsystem.getTagPose();
+        //tagPose = visionSubsystem.getTagPose();
         
         if (tagPose != null) {
             // Calculate the desired pose for the robot to aim at the speaker
@@ -38,7 +38,7 @@ public class AlignToSpeakerCommand extends Command {
 
     @Override
     public void execute() {
-        tagPose = visionSubsystem.getTagPose();
+        //tagPose = visionSubsystem.getTagPose();
     }
 
     private Pose2d calculateTargetPose(Pose2d tagPose) {
