@@ -10,6 +10,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -67,11 +68,14 @@ public class RobotContainer {
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final VisionSubsystem vision = new VisionSubsystem(drivebase, "limelight");
-	
+
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
+		DriverStation.silenceJoystickConnectionWarning(true);
+
+
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		configureAutonCommands();
 
@@ -195,5 +199,5 @@ public class RobotContainer {
 
 	public void setMotorBrake(boolean brake) {
 		drivebase.setMotorBrake(brake);
-	}
+	    }
 }
