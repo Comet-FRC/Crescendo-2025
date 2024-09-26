@@ -7,7 +7,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -44,9 +43,9 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
 	private final EnumMap<Speed, ShooterSpeed> shooterSpeeds = new EnumMap<>(Map.ofEntries(
 		Map.entry(Speed.STOP, new ShooterSpeed(0, 0)),
-		Map.entry(Speed.SPEAKER, new ShooterSpeed(2200, 2830)),
+		Map.entry(Speed.SPEAKER, new ShooterSpeed(3000, 3000)),
 		Map.entry(Speed.AMP, new ShooterSpeed(350, 950)),
-		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1360, 2830))
+		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000))
 	));
 
 	public ShooterSubsystem() {
@@ -54,7 +53,7 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		bottom = new TalonFX(Constants.Shooter.bottomShooterID, "rio");
 		applyConfigs();
 
-		SmartDashboard.putNumber("shooter/speed", 0.0);
+		//SmartDashboard.putNumber("shooter/speed", 0.0);
 		//SmartDashboard.putNumber("shooter/Top RPM adjustment", 0.0);
 		//SmartDashboard.putNumber("shooter/Bottom RPM adjustment", 0.0);
 	}
