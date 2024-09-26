@@ -83,6 +83,6 @@ public class FeederSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         double current = getTorqueCurrent();
-        SmartDashboard.putNumber("feeder/torqueCurrent", current);
+        //SmartDashboard.putNumber("feeder/torqueCurrent", current);
     }
 }
