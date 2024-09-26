@@ -40,11 +40,12 @@ public class PrepareShootCommand extends Command {
 
 	@Override
 	public void end(boolean interrupted) {
+		feeder.stop();
 		shooter.stop();
 	}
 
 	@Override
 	public boolean isFinished() {
-		return shooter.isReady(false);
+		return shooter.isReady(true);
 	}
 }
