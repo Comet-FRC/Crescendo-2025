@@ -54,7 +54,7 @@ public final class Constants {
 		/* IDs */
 		public static final int motorID = 15;
 		/* Motor Speed Values */
-		public static final double intakingSpeed = -0.5;
+		public static final double intakingSpeed = -0.1;
 		public static final double ejectingSpeed = 0.10;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
@@ -96,5 +96,5 @@ public final class Constants {
 		public static final double RPMsPerVolt = 490;
 		/* Time to complete shot once Note no longer detected */
 		public static final double postShotTimeout = 0.1; // in seconds
-	}
+	    }
 }
