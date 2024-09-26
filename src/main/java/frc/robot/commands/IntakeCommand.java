@@ -43,7 +43,7 @@ public class IntakeCommand extends Command {
 			hasNote = true;
 			timer.start();
 		}
-		if (intakingSpeed > -1.0) {
+		if (intakingSpeed > -0.5) {
 			intakingSpeed -= 0.01;
 			intake.set(intakingSpeed);
 		}
@@ -58,6 +58,6 @@ public class IntakeCommand extends Command {
 
 	@Override
 	public boolean isFinished() {
-		return timer.hasElapsed(0.5);
+		return timer.hasElapsed(0.4);
 	}
 }
