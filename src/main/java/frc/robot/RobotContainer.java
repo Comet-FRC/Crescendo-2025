@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -14,6 +16,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.StadiaController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.PrepareShootCommand;
+//import frc.robot.commands.PrepareShootCommand;
 import frc.robot.commands.AlignToSpeakerCommand;
 import frc.robot.commands.DriveCommand;
 import frc.robot.commands.EjectCommand;
@@ -57,24 +61,22 @@ public class RobotContainer {
 	/* Buttons */
 	private final Trigger zeroGyroButton = driverController.a();
 
-	private final Trigger alignButton = new JoystickButton(operatorController, 4);
+	private final Trigger ampButton = new JoystickButton(operatorController, 4);
 	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
 	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
-
 	/* Subsystems */
 	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	private final VisionSubsystem vision = new VisionSubsystem(swerve, "limelight-shooter");
-
+	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
 		DriverStation.silenceJoystickConnectionWarning(true);
-
 
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		configureAutonCommands();
@@ -89,14 +91,14 @@ public class RobotContainer {
 		right stick controls the desired angle NOT angular rotation
 		*/
 		Command driveFieldOrientedDirectAngle = swerve.driveCommand(
-			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND),
-			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND),
+			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
 			() -> driverController.getRightX(),
 			() -> driverController.getRightY());
 
 		Command driveFieldOrientedDirectAngleSim = swerve.simDriveCommand(
-			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND),
-			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND),
+			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
 			() -> driverController.getRightX(),
 			() -> driverController.getRightY());
 
@@ -112,7 +114,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("Fixed SW shot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
 				.andThen(
-					(new ShootCommand(shooter, feeder, Speed.SUBWOOFER)
+					(new ShootCommand(shooter, /*feeder,*/ Speed.SUBWOOFER)
 					.raceWith(Commands.waitSeconds(1.50))))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
@@ -145,14 +147,16 @@ public class RobotContainer {
 			));
 
 		
-		alignButton.whileTrue(new AlignToSpeakerCommand(swerve, vision).withName("Align to Speaker"));
+		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
 		shooterButton.whileTrue(
-			new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
-			.andThen(new ShootCommand(shooter, feeder, Speed.SPEAKER)
-			.withName("Shoot Command")));
+			//new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
+			/* .andThen(*/new ShootCommand(shooter, /*feeder,*/ Speed.SPEAKER)
+			.withName("Shoot Command"));
+	
+		
 		
 		intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
 	}
@@ -175,5 +179,7 @@ public class RobotContainer {
 	}
 
 	
-
+	public Joystick getOperatorController () {
+		return operatorController;
+	}
 }

@@ -44,7 +44,7 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 	private final EnumMap<Speed, ShooterSpeed> shooterSpeeds = new EnumMap<>(Map.ofEntries(
 		Map.entry(Speed.STOP, new ShooterSpeed(0, 0)),
 		Map.entry(Speed.SPEAKER, new ShooterSpeed(3000, 3000)),
-		Map.entry(Speed.AMP, new ShooterSpeed(350, 950)),
+		Map.entry(Speed.AMP, new ShooterSpeed(650, 1150)),
 		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000))
 	));
 

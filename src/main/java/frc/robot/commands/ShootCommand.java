@@ -12,33 +12,34 @@ import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 public class ShootCommand extends Command {
 	private final ShooterSubsystem shooter;
-	private final FeederSubsystem feeder;
+	//private final FeederSubsystem feeder;
 
 	private Speed speed;
 
-	public ShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, Speed speed) {
+	public ShootCommand(ShooterSubsystem shooter, /*FeederSubsystem feeder,*/ Speed speed) {
 		this.shooter = shooter;
-		this.feeder = feeder;
+		//this.feeder = feeder;
 		this.speed = speed;
-		addRequirements(shooter, feeder);
+		addRequirements(shooter /*feeder*/);
 	}
 
 	/**
 	 * Overloaded constructor with Swerve for autonomous movement
-	*/ 
+	
 	public ShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, SwerveSubsystem swerve, Speed speed) {
 		this(shooter, feeder, speed);
 	}
+*/
 
 	@Override
 	public void initialize() {
-		feeder.intake();
+		//feeder.intake();
 		shooter.shoot(speed);
 	}
 
 	@Override
 	public void end(boolean interrupted) {
 		shooter.stop();
-		feeder.stop();
+		//feeder.stop();
 	}
 }

@@ -178,4 +178,8 @@ public class Robot extends TimedRobot
 	public static Logger getLogger() {
 		return Logger.getLogger(Robot.class.getName());
 	}
+
+	public RobotContainer getRobotContainer() {
+		return m_robotContainer;
+	}
 }
