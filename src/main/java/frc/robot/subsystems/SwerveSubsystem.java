@@ -37,6 +37,8 @@ import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
+
 public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDrive swerveDrive;
 
@@ -510,5 +512,7 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getPitch();
     }
 
-
+    public double getRate() {
+        return ((Pigeon2)(swerveDrive.getGyro().getIMU())).getRate();
+    }
 }
