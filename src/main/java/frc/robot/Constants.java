@@ -25,12 +25,15 @@ public final class Constants {
 	public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
 
-	/**
-	 * The maximum speed of the robot in meters per second, used to limit acceleration.
-	 * 12.5 ft/s is the theoretical max speed of a MK4i L1 Neo-based drivetrain like
-	 * the one we have.
-	 */
-	public static final double MAX_SPEED  = Units.feetToMeters(12.5);
+	public static final class SWERVE {
+		/**
+		 * The maximum speed of the robot in meters per second, used to limit acceleration.
+		 * 12.5 ft/s is the theoretical max speed of a MK4i L1 Neo-based drivetrain like
+		 * the one we have.
+		 */
+		public static final double MAX_SPEED  = Units.feetToMeters(12.5);
+	}
+
 
 	public static final class AutonConstants {
 		public static final PIDConstants TRANSLATION_PID = new PIDConstants(5, 0, 0);
