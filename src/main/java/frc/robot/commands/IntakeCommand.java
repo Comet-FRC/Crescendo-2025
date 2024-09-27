@@ -43,7 +43,7 @@ public class IntakeCommand extends Command {
 			hasNote = true;
 			timer.start();
 		}
-		if (intakingSpeed > -0.5) {
+		if (intakingSpeed > -0.3) {
 			intakingSpeed -= 0.01;
 			intake.set(intakingSpeed);
 		}
