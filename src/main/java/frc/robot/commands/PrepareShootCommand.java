@@ -1,7 +1,7 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-/* 
+
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -16,11 +16,12 @@ public class PrepareShootCommand extends Command {
 	private final Speed speed;
 
 	private final Timer indexTimer = new Timer();
+	private final Timer autoTimer = new Timer();
 
 	public PrepareShootCommand(ShooterSubsystem shooter, FeederSubsystem feeder, Speed speed) {
 		this.shooter = shooter;
 		this.feeder = feeder;
-		addRequirements(shooter, feeder);
+		addRequirements(shooter);
 		this.speed = speed;
 	}
 
@@ -34,7 +35,8 @@ public class PrepareShootCommand extends Command {
 
 	@Override
 	public void execute() {
-		if (indexTimer.hasElapsed(0.2))
+		
+		if (indexTimer.hasElapsed(5))
 			feeder.stop();
 	}
 
@@ -46,7 +48,7 @@ public class PrepareShootCommand extends Command {
 
 	@Override
 	public boolean isFinished() {
-		return shooter.isReady(true);
+		return shooter.isReady(true) || autoTimer.hasElapsed(2);
 	}
 }
-*/
+

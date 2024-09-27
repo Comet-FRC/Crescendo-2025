@@ -5,12 +5,24 @@
       "x": 2.341320238196032,
       "y": 6.0
     },
-    "rotation": 0
+    "rotation": 179.37582541794828
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "SubWoof"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
         {
           "type": "path",
           "data": {
@@ -18,9 +30,15 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
           "type": "named",
           "data": {
-            "name": "Fixed SW Shot"
+            "name": "Intake note"
           }
         }
       ]
