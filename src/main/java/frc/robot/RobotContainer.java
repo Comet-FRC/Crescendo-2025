@@ -27,7 +27,8 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.PrepareShootCommand;
+import frc.robot.commands.AutonPrepareShootCommand;
+import frc.robot.commands.AutonShootCommand;
 //import frc.robot.commands.PrepareShootCommand;
 import frc.robot.commands.AlignToSpeakerCommand;
 import frc.robot.commands.DriveCommand;
@@ -82,8 +83,8 @@ public class RobotContainer {
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		NamedCommands.registerCommand("SubWoof",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
-				.andThen(new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)).withTimeout(2)
-				.andThen(new ShootCommand(shooter, feeder, Speed.SPEAKER)).withTimeout(1)
+				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER)).withTimeout(2)
+				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER)).withTimeout(1)
 				
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
@@ -98,16 +99,16 @@ public class RobotContainer {
 		right stick controls the desired angle NOT angular rotation
 		*/
 		Command driveFieldOrientedDirectAngle = swerve.driveCommand(
-			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> driverController.getRightX(),
-			() -> driverController.getRightY());
+			() -> -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> -driverController.getRightX(),
+			() -> -driverController.getRightY());
 
 		Command driveFieldOrientedDirectAngleSim = swerve.simDriveCommand(
-			() -> MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> driverController.getRightX(),
-			() -> driverController.getRightY());
+			() -> -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
+			() -> -driverController.getRightX(),
+			() -> -driverController.getRightY());
 
 		swerve.setDefaultCommand(
 			!RobotBase.isSimulation() ? driveFieldOrientedDirectAngle : driveFieldOrientedDirectAngleSim);
@@ -148,13 +149,13 @@ public class RobotContainer {
 			));
 
 		
-		ampButton.whileTrue(new ShootCommand(shooter, feeder, Speed.AMP));
+		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
 		
 		shooterButton.whileTrue(
 			//new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
-			/* .andThen(*/new ShootCommand(shooter, feeder, Speed.SPEAKER)
+			/* .andThen(*/new ShootCommand(shooter, Speed.SPEAKER)
 			.withName("Shoot Command"));
 	
 		
@@ -168,7 +169,7 @@ public class RobotContainer {
 	 */
 	public Command getAutonomousCommand() {
 		// An example command will be run in autonomous
-		return new PathPlannerAuto("New Auto");
+		return autoChooser.getSelected();
 	}
 
 	public void setDriveMode() {

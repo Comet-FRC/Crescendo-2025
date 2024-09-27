@@ -4,31 +4,26 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
-public class ShootCommand extends Command {
+public class AutonPrepareShootCommand extends Command {
 	private final ShooterSubsystem shooter;
+	private final Speed speed;
 
-	private Speed speed;
 
-	public ShootCommand(ShooterSubsystem shooter, Speed speed) {
+	public AutonPrepareShootCommand(ShooterSubsystem shooter, Speed speed) {
 		this.shooter = shooter;
-		this.speed = speed;
 		addRequirements(shooter);
+		this.speed = speed;
 	}
-
-	
-
 
 	@Override
 	public void initialize() {
 		shooter.shoot(speed);
-		
 	}
 
 	@Override
@@ -36,7 +31,9 @@ public class ShootCommand extends Command {
 		shooter.stop();
 	}
 
-
-
-
+	@Override
+	public boolean isFinished() {
+		return shooter.isReady(true);
+	}
 }
+
