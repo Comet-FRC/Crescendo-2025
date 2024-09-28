@@ -4,20 +4,11 @@
 
 package frc.robot;
 
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.HttpCamera;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.StadiaController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,9 +20,6 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.AutonPrepareShootCommand;
 import frc.robot.commands.AutonShootCommand;
-//import frc.robot.commands.PrepareShootCommand;
-import frc.robot.commands.AlignToSpeakerCommand;
-import frc.robot.commands.DriveCommand;
 import frc.robot.commands.EjectCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
@@ -43,8 +31,7 @@ import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 import java.io.File;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.auto.*;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 /**
@@ -78,40 +65,20 @@ public class RobotContainer {
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
+
 		DriverStation.silenceJoystickConnectionWarning(true);
 
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		NamedCommands.registerCommand("SubWoof",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
-				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER)).withTimeout(2)
-				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER)).withTimeout(1)
+				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER))
+				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER)).withTimeout(2)
 				
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
 		configureAutonCommands();
 		/* Configure the trigger bindings */
 		configureBindings();
-
-		/*
-		Applies deadbands and inverts controls because joysticks are back-right positive
-		while robot controls are front-left positive
-		left stick controls translation
-		right stick controls the desired angle NOT angular rotation
-		*/
-		Command driveFieldOrientedDirectAngle = swerve.driveCommand(
-			() -> -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> -driverController.getRightX(),
-			() -> -driverController.getRightY());
-
-		Command driveFieldOrientedDirectAngleSim = swerve.simDriveCommand(
-			() -> -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * (operatorController.getRawButton(5) ? 0.75 : 1),
-			() -> -driverController.getRightX(),
-			() -> -driverController.getRightY());
-
-		swerve.setDefaultCommand(
-			!RobotBase.isSimulation() ? driveFieldOrientedDirectAngle : driveFieldOrientedDirectAngleSim);
 
 		autoChooser = AutoBuilder.buildAutoChooser();
 			SmartDashboard.putData("auto/Auto Chooser", autoChooser);
@@ -143,12 +110,7 @@ public class RobotContainer {
 	 */
 	private void configureBindings() {
 		zeroGyroButton.onTrue((Commands.runOnce(swerve::zeroGyro)));
-		driverController.b().whileTrue(
-			Commands.deferredProxy(() -> swerve.driveToPose(
-				new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
-			));
 
-		
 		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
@@ -184,4 +146,75 @@ public class RobotContainer {
 	public Joystick getOperatorController () {
 		return operatorController;
 	}
+
+	// simple proportional turning control with Limelight.
+	// "proportional control" is a control algorithm in which the output is proportional to the error.
+	// in this case, we are going to return an angular velocity that is proportional to the 
+	// "tx" value from the Limelight.
+	double limelight_aim_proportional()
+	{    
+		// kP (constant of proportionality)
+		// this is a hand-tuned number that determines the aggressiveness of our proportional control loop
+		// if it is too high, the robot will oscillate.
+		// if it is too low, the robot will never reach its target
+		// if the robot never turns in the correct direction, kP should be inverted.
+		double kP = .035;
+
+		// tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
+		// your limelight 3 feed, tx should return roughly 31 degrees.
+		double targetingAngularVelocity = LimelightHelpers.getTX("limelight-shooter") * kP;
+
+		// convert to radians per second for our drive method
+		targetingAngularVelocity *= swerve.getMaximumAngularVelocity();
+
+		//invert since tx is positive when the target is to the right of the crosshair
+		targetingAngularVelocity *= -1.0;
+
+		return targetingAngularVelocity;
+	}
+
+	// simple proportional ranging control with Limelight's "ty" value
+	// this works best if your Limelight's mount height and target mount height are different.
+	// if your limelight and target are mounted at the same or similar heights, use "ta" (area) for target ranging rather than "ty"
+	double limelight_range_proportional()
+	{    
+		double kP = .1;
+		double targetingForwardSpeed = LimelightHelpers.getTY("limelight-shooter") * kP;
+		targetingForwardSpeed *= swerve.getMaximumVelocity();
+		targetingForwardSpeed *= -1.0;
+		return targetingForwardSpeed-2;
+	}
+
+	public void drive(boolean fieldRelative) {
+		// Get the x speed. We are inverting this because Xbox controllers return
+		// negative values when we push forward.
+		double xSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * swerve.getMaximumVelocity();
+
+		// Get the y speed or sideways/strafe speed. We are inverting this because
+		// we want a positive value when we pull to the left. Xbox controllers
+		// return positive values when you pull to the right by default.
+		double ySpeed = -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * swerve.getMaximumVelocity();
+
+		// Get the rate of angular rotation. We are inverting this because we want a
+		// positive value when we pull to the left (remember, CCW is positive in
+		// mathematics). Xbox controllers return positive values when you pull to
+		// the right by default.
+		double rot = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
+
+		// while the A-button is pressed, overwrite some of the driving values with the output of our limelight methods
+		if(driverController.b().getAsBoolean())
+		{
+			final double rot_limelight = limelight_aim_proportional();
+			rot = rot_limelight;
+
+			final double forward_limelight = limelight_range_proportional();
+			xSpeed = forward_limelight;
+
+			//while using Limelight, turn off field-relative driving.
+			fieldRelative = false;
+		}
+
+		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.002);
+		}
+
 }

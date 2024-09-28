@@ -5,7 +5,7 @@
       "x": 2.341320238196032,
       "y": 6.0
     },
-    "rotation": 179.37582541794828
+    "rotation": 180.0
   },
   "command": {
     "type": "sequential",
@@ -18,27 +18,9 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Test"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake note"
           }
         }
       ]

@@ -25,6 +25,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.AutonConstants;
+import frc.robot.LimelightHelpers;
+
 import java.io.File;
 import java.util.function.DoubleSupplier;
 import swervelib.SwerveController;
@@ -198,11 +200,13 @@ public class SwerveSubsystem extends SubsystemBase {
             
             // Make the robot move
 
-            driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(xInput, yInput,
-                    headingX.getAsDouble(),
-                    headingY.getAsDouble(),
-                    swerveDrive.getOdometryHeading().getRadians(),
-                    swerveDrive.getMaximumVelocity()));
+            driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(
+                xInput,
+                yInput,
+                headingX.getAsDouble(),
+                headingY.getAsDouble(),
+                swerveDrive.getOdometryHeading().getRadians(),
+                swerveDrive.getMaximumVelocity()));
         });
     }
 
@@ -230,11 +234,13 @@ public class SwerveSubsystem extends SubsystemBase {
             
             // Make the robot move
 
-            driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(xInput, yInput,
-                    headingX.getAsDouble(),
-                    headingY.getAsDouble(),
-                    swerveDrive.getOdometryHeading().getRadians(),
-                    swerveDrive.getMaximumVelocity()));
+            driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(
+                xInput,
+                yInput,
+                headingX.getAsDouble(),
+                headingY.getAsDouble(),
+                swerveDrive.getOdometryHeading().getRadians(),
+                swerveDrive.getMaximumVelocity()));
         });
     }
 
@@ -285,6 +291,23 @@ public class SwerveSubsystem extends SubsystemBase {
                     swerveDrive.getOdometryHeading().getRadians(),
                     swerveDrive.getMaximumVelocity()));
         });
+    }
+
+    /**
+   * Method to drive the robot using joystick info.
+   *
+   * @param xSpeed Speed of the robot in the x direction (forward).
+   * @param ySpeed Speed of the robot in the y direction (sideways).
+   * @param rot Angular rate of the robot.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the field.
+   */
+  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, double periodSeconds) {
+        ChassisSpeeds chassisSpeeds = ChassisSpeeds.discretize(
+            fieldRelative
+                ? ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xSpeed, ySpeed, rot, swerveDrive.getYaw())
+                : new ChassisSpeeds(xSpeed, ySpeed, rot), periodSeconds);
+        swerveDrive.drive(chassisSpeeds);
     }
 
     /**
@@ -556,4 +579,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public double getMaximumVelocity() {
         return swerveDrive.getMaximumVelocity();
     }
+
+    
+    
 }
