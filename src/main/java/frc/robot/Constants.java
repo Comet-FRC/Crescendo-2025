@@ -58,7 +58,7 @@ public final class Constants {
 		public static final int motorID = 15;
 		/* Motor Speed Values */
 		public static final double intakingSpeed = -0.1;
-		public static final double ejectingSpeed = 0.10;
+		public static final double ejectingSpeed = 0.3;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;

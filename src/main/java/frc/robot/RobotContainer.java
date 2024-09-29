@@ -182,24 +182,28 @@ public class RobotContainer {
 		double targetingForwardSpeed = LimelightHelpers.getTY("limelight-shooter") * kP;
 		targetingForwardSpeed *= swerve.getMaximumVelocity();
 		targetingForwardSpeed *= -1.0;
-		return targetingForwardSpeed-2;
+
+		// this is bad but we will fix later
+		targetingForwardSpeed -= 4.3;
+		//double out = targetingForwardSpeed > 0 ? targetingForwardSpeed : 0;
+		return targetingForwardSpeed;
 	}
 
 	public void drive(boolean fieldRelative) {
 		// Get the x speed. We are inverting this because Xbox controllers return
 		// negative values when we push forward.
-		double xSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * swerve.getMaximumVelocity();
+		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * swerve.getMaximumVelocity();
 
 		// Get the y speed or sideways/strafe speed. We are inverting this because
 		// we want a positive value when we pull to the left. Xbox controllers
 		// return positive values when you pull to the right by default.
-		double ySpeed = -MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * swerve.getMaximumVelocity();
+		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * swerve.getMaximumVelocity();
 
 		// Get the rate of angular rotation. We are inverting this because we want a
 		// positive value when we pull to the left (remember, CCW is positive in
 		// mathematics). Xbox controllers return positive values when you pull to
 		// the right by default.
-		double rot = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
+		double rot = MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
 		// while the A-button is pressed, overwrite some of the driving values with the output of our limelight methods
 		if(driverController.b().getAsBoolean())
