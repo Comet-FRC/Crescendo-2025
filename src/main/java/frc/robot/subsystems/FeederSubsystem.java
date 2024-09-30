@@ -4,13 +4,10 @@
 
 package frc.robot.subsystems;
 
-import java.util.Timer;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -78,11 +75,5 @@ public class FeederSubsystem extends SubsystemBase {
 
     public double getTorqueCurrent() {
         return feederMotorLeft.getTorqueCurrent().getValueAsDouble();
-    }
-
-    @Override
-    public void periodic() {
-        double current = getTorqueCurrent();
-        //SmartDashboard.putNumber("feeder/torqueCurrent", current);
     }
 }
