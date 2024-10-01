@@ -44,14 +44,6 @@ public final class Constants {
 		public static final double WHEEL_LOCK_TIME = 10; // seconds
 	}
 
-	public static class OperatorConstants {
-		/* Joystick Deadband */
-		public static final double LEFT_X_DEADBAND  = 0.1;
-		public static final double LEFT_Y_DEADBAND  = 0.1;
-		public static final double RIGHT_X_DEADBAND = 0.1;
-		public static final double TURN_CONSTANT    = 6;
-	}
-
 	public class Intake {
 		/* IDs */
 		public static final int motorID = 15;
@@ -61,8 +53,6 @@ public final class Constants {
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;
-		public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
-		public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
 	}
 
 	public class Feeder {
@@ -82,15 +72,9 @@ public final class Constants {
 		public static final double topSpeed = 6000;
 		public static final double maxRPMError = 60.0;
 		public static final double maxRPMErrorLong = 30.0;
-		public static final double slideShotVelocityErrorMax = 100.0;
-		public static final double dumpShotVelocityErrorMax = 60.0;
-		public static final double shuttleShotVelocityErrorMax = 75.0;
-		public static final double farDistance = Units.inchesToMeters(114.0); // when more precision is required
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;
-		public static final InvertedValue motorOutputInverted = InvertedValue.Clockwise_Positive;
-		public static final NeutralModeValue motorNeutralValue = NeutralModeValue.Brake;
 		public static final double kP = 0.25; // Voltage per 1 RPS of error
 		public static final double kI = 0.0;
 		public static final double kD = 0.0;

@@ -7,6 +7,8 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -28,11 +30,13 @@ public class FeederSubsystem extends SubsystemBase {
 
     private void applyConfigs() {
 		var feederMotorConfig = new TalonFXConfiguration();
-		feederMotorConfig.MotorOutput.NeutralMode = Constants.Shooter.motorNeutralValue;
-		feederMotorConfig.MotorOutput.Inverted = Constants.Shooter.motorOutputInverted;
-		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Shooter.peakForwardVoltage;
-		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.Shooter.peakReverseVoltage;
+		feederMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+		feederMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Intake.peakForwardVoltage;
+		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.Intake.peakReverseVoltage;
 
+        // TODO: Check if this changes anything
+        /*
 		feederMotorConfig.Slot0.kP = Constants.Shooter.kP;
 		feederMotorConfig.Slot0.kI = Constants.Shooter.kI;
 		feederMotorConfig.Slot0.kD = Constants.Shooter.kD;
@@ -40,6 +44,7 @@ public class FeederSubsystem extends SubsystemBase {
 		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.Shooter.RPMsPerVolt);
 		feederMotorConfig.Slot0.kA = 0.0;
 		feederMotorConfig.Slot0.kG = 0.0;
+        */
 
 		feederMotorLeft.getConfigurator().apply(feederMotorConfig);
 		feederMotorRight.getConfigurator().apply(feederMotorConfig);

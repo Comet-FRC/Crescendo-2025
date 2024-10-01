@@ -6,6 +6,8 @@ import java.util.Map;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -60,8 +62,8 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
 	private void applyConfigs() {
 		var shooterMotorConfig = new TalonFXConfiguration();
-		shooterMotorConfig.MotorOutput.NeutralMode = Constants.Shooter.motorNeutralValue;
-		shooterMotorConfig.MotorOutput.Inverted = Constants.Shooter.motorOutputInverted;
+		shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+		shooterMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		shooterMotorConfig.Voltage.PeakForwardVoltage = Constants.Shooter.peakForwardVoltage;
 		shooterMotorConfig.Voltage.PeakReverseVoltage = Constants.Shooter.peakReverseVoltage;
 
