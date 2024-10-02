@@ -5,6 +5,9 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -24,6 +27,7 @@ import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 import java.io.File;
@@ -55,6 +59,9 @@ public class RobotContainer {
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
+	// TODO: measure limelight values
+	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 0, 0);
+	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-shooter", 0, 0);
 
 	/* Booleans */
 	private boolean hasNote = false;
@@ -150,6 +157,34 @@ public class RobotContainer {
 		LIMELIGHT_INTAKE
 	}
 
+	public void updateOdometry() {
+		SwerveDrivePoseEstimator poseEstimator = swerve.getPoseEstimator();
+
+		poseEstimator.update(
+			swerve.getHeading(), 
+			swerve.getModulePositions());
+		
+		boolean doRejectUpdate = false;
+		
+		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+		if(Math.abs(swerve.getRate()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+		{
+		doRejectUpdate = true;
+		}
+		if(mt2.tagCount == 0)
+		{
+		doRejectUpdate = true;
+		}
+		if(!doRejectUpdate)
+		{
+		poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+		poseEstimator.addVisionMeasurement(
+			mt2.pose,
+			mt2.timestampSeconds);
+		}
+  	}
+
 	/**
 	 * simple proportional turning control with Limelight.
 	 * "proportional control" is a control algorithm in which the output is proportional to the error.
@@ -175,7 +210,7 @@ public class RobotContainer {
 	/**
 	 * simple proportional ranging control with Limelight's "ty" value
 	 */
-	double limelight_range_proportional()
+	/*double limelight_range_proportional()
 	{    
 		double kP = 0.1;
 
@@ -187,7 +222,24 @@ public class RobotContainer {
 		targetingForwardSpeed -= 4.3;
 		//double out = targetingForwardSpeed > 0 ? targetingForwardSpeed : 0;
 		return targetingForwardSpeed;
+	}*/
+
+	/**
+	 * simple proportional ranging control with Limelight's "ty" value
+	 */
+	double limelight_range_proportional()
+	{    
+		double kP = 0.1;
+
+		// TODO: Measure apriltag height
+		double currentDistance = limelightShooter.getDistanceFromTarget(100);
+		double desiredDistance = 2; // Meters
+		double distanceError = desiredDistance - currentDistance;
+		double drivingAdjustment = kP * distanceError;
+
+		return drivingAdjustment;
 	}
+
 
 	/**
 	 * Makes the robot move. Contains code to control auto-aim button presses
@@ -235,7 +287,8 @@ public class RobotContainer {
 			fieldRelative = false;
 		}
 
-		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.002);
+		// TODO: This was 0.002 but should be 0.02. Check if this changes anything though
+		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.02);
 		}
 
 }

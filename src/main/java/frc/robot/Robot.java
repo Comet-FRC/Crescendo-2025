@@ -112,6 +112,7 @@ public class Robot extends TimedRobot
 	@Override
 	public void autonomousPeriodic()
 	{
+		m_robotContainer.updateOdometry();
 		m_robotContainer.drive(false);
 	}
 
