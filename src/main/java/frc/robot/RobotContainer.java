@@ -7,7 +7,6 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -147,14 +146,8 @@ public class RobotContainer {
 		swerve.setMotorBrake(brake);
 	}
 
-	
-	public Joystick getOperatorController () {
-		return operatorController;
-	}
-
-	enum LimelightType {
-		LIMELIGHT_SHOOTER,
-		LIMELIGHT_INTAKE
+	public SwerveSubsystem getSwerveSubsystem() {
+		return swerve;
 	}
 
 	public void updateOdometry() {
@@ -186,62 +179,6 @@ public class RobotContainer {
   	}
 
 	/**
-	 * simple proportional turning control with Limelight.
-	 * "proportional control" is a control algorithm in which the output is proportional to the error.
-	 * in this case, we are going to return an angular velocity that is proportional to the 
-	 * "tx" value from the Limelight.*/
-	double limelight_aim_proportional()
-	{    
-		double kP = .035;
-
-		// tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
-		// your limelight 3 feed, tx should return roughly 31 degrees.
-		double targetingAngularVelocity = LimelightHelpers.getTX("limelight-shooter") * kP;
-
-		// convert to radians per second for our drive method
-		targetingAngularVelocity *= swerve.getMaximumAngularVelocity();
-
-		//invert since tx is positive when the target is to the right of the crosshair
-		targetingAngularVelocity *= -1.0;
-
-		return targetingAngularVelocity;
-	}
-
-	/**
-	 * simple proportional ranging control with Limelight's "ty" value
-	 */
-	/*double limelight_range_proportional()
-	{    
-		double kP = 0.1;
-
-		double targetingForwardSpeed = LimelightHelpers.getTY("limelight-shooter") * kP;
-		targetingForwardSpeed *= swerve.getMaximumVelocity();
-		targetingForwardSpeed *= -1.0;
-
-		// TODO: this is bad but we will fix later
-		targetingForwardSpeed -= 4.3;
-		//double out = targetingForwardSpeed > 0 ? targetingForwardSpeed : 0;
-		return targetingForwardSpeed;
-	}*/
-
-	/**
-	 * simple proportional ranging control with Limelight's "ty" value
-	 */
-	double limelight_range_proportional()
-	{    
-		double kP = 0.1;
-
-		// TODO: Measure apriltag height
-		double currentDistance = limelightShooter.getDistanceFromTarget(100);
-		double desiredDistance = 2; // Meters
-		double distanceError = desiredDistance - currentDistance;
-		double drivingAdjustment = kP * distanceError;
-
-		return drivingAdjustment;
-	}
-
-
-	/**
 	 * Makes the robot move. Contains code to control auto-aim button presses
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
@@ -264,10 +201,10 @@ public class RobotContainer {
 		// while the B-button is pressed, overwrite some of the driving values with the output of our limelight methods
 		if(driverController.b().getAsBoolean())
 		{
-			final double rot_limelight = limelight_aim_proportional();
+			final double rot_limelight = limelightShooter.aim_proportional();
 			rot = rot_limelight;
 
-			final double forward_limelight = limelight_range_proportional();
+			final double forward_limelight = limelightShooter.range_proportional(100);
 			xSpeed = forward_limelight;
 
 			//while using Limelight, turn off field-relative driving.
@@ -277,7 +214,7 @@ public class RobotContainer {
 		// while the Y-button is pressed, overwrite some of the driving values with the output of our limelight methods
 		else if(driverController.y().getAsBoolean()) // add hasNote = false && when we get the thing
 		{
-			final double rot_limelight = limelight_aim_proportional();
+			final double rot_limelight = limelightIntake.aim_proportional();
 			rot = rot_limelight;
 
 			// Move forward at 1 m/s
