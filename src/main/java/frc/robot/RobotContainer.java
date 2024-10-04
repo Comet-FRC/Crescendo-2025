@@ -30,8 +30,12 @@ import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 import java.io.File;
+import java.util.logging.Level;
 
 import com.pathplanner.lib.auto.*;
+
+import au.grapplerobotics.ConfigurationFailedException;
+import au.grapplerobotics.LaserCan;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -62,6 +66,8 @@ public class RobotContainer {
 	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 0, 0);
 	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-shooter", 0, 0);
 
+	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
+
 	/* Booleans */
 	private boolean hasNote = false;
 	
@@ -86,6 +92,15 @@ public class RobotContainer {
 
 		autoChooser = AutoBuilder.buildAutoChooser();
 			SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+
+		// TODO: Maybe move this stuff to a dedicated sensor subsystem
+		try {
+            laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
+            laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+        } catch (ConfigurationFailedException e) {
+            Robot.getLogger().log(Level.SEVERE, "test");
+        }
 	}
 
 	private void configureAutonCommands() {
@@ -160,7 +175,7 @@ public class RobotContainer {
 		boolean doRejectUpdate = false;
 		
 		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-shooter");
 		if(Math.abs(swerve.getRate()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
 		{
 		doRejectUpdate = true;
@@ -226,6 +241,15 @@ public class RobotContainer {
 
 		// TODO: This was 0.002 but should be 0.02. Check if this changes anything though
 		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.02);
-		}
+	}
+
+	public void updateNoteStatus() {
+		LaserCan.Measurement measurement = laserCan.getMeasurement();
+
+		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
+			//System.out.println("Oh no! The target is out of range, or we can't get a reliable measurement!");
+
+		hasNote = measurement.distance_mm <= 50;
+	}
 
 }

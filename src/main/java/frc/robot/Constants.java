@@ -46,8 +46,8 @@ public final class Constants {
 		/* IDs */
 		public static final int motorID = 15;
 		/* Motor Speed Values */
-		public static final double intakingSpeed = -0.1;
-		public static final double ejectingSpeed = 0.3;
+		public static final double intakingSpeed = 0.1;
+		public static final double ejectingSpeed = -0.3;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;
@@ -57,6 +57,7 @@ public final class Constants {
 		/* IDs */
 		public static final int leftFeederID = 17;
 		public static final int rightFeederID = 18;
+		public static final int laserCanID = 19;
 	}
 
 	public class Shooter {

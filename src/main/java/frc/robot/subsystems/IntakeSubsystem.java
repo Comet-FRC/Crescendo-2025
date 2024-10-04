@@ -24,11 +24,11 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void intake() {
-        intakeMotor.set(Constants.Intake.intakingSpeed);
+        set(Constants.Intake.intakingSpeed);
     }
 
     public void eject() {
-        intakeMotor.set(Constants.Intake.ejectingSpeed);
+        set(Constants.Intake.ejectingSpeed);
     }
 
     /**
