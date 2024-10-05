@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import au.grapplerobotics.LaserCan;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -12,6 +13,8 @@ import frc.robot.Constants;
 
 public class IntakeSubsystem extends SubsystemBase {
     private final CANSparkMax intakeMotor;
+    //change id
+    private final LaserCan m_laser = new LaserCan(1);;
     static boolean intaking = false;
 
     public IntakeSubsystem() {
@@ -37,6 +40,23 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stop() {
         intakeMotor.set(0);
     }
+
+    public static boolean hasNote(LaserCan laser) {
+        LaserCan.Measurement measurement = laser.getMeasurement();
+        if (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT && measurement.distance_mm <= 2.0) {
+            return true;
+        }
+        return false;
+   }
+
+   /*public void runIntake() {
+    if(hasNote(m_laser) == true){
+        intakeMotor.set(0.0);
+    }
+    else{
+        intakeMotor.set(Constants.Intake.intakingSpeed);
+    }
+  }*/
 
     /*@Override
     public void periodic() {

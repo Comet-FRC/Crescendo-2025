@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -12,7 +14,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
-
+import au.grapplerobotics.LaserCan;
+import frc.robot.subsystems.IntakeSubsystem;
 import swervelib.parser.SwerveParser;
 
 /**
@@ -30,8 +33,19 @@ public class Robot extends TimedRobot
 
 	private Timer disabledTimer;
 
+	private final AddressableLED m_led;
+  	private final AddressableLEDBuffer m_ledBuffer;
+
+  	// LaserCAN sensor object (using CAN ID 1, modify to match your setup)
+  	private final LaserCan m_laser = new LaserCan(1);
+
 	public Robot() {
 		instance = this;
+		//change port
+		m_led = new AddressableLED(9);
+    	m_ledBuffer = new AddressableLEDBuffer(60);
+    	m_led.setLength(m_ledBuffer.getLength());
+    	m_led.start();
 	}
 
 	public static Robot getInstance() {
@@ -138,6 +152,12 @@ public class Robot extends TimedRobot
 	public void teleopPeriodic()
 	{
 		m_robotContainer.drive(true);
+		if (IntakeSubsystem.hasNote(m_laser)) {
+			AddressableLEDs.hasNoteColor(m_led, m_ledBuffer);
+		}
+		else {
+			AddressableLEDs.defaultColor(m_led, m_ledBuffer);
+		}
 	}
 
 	@Override
