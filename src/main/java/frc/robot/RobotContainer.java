@@ -7,9 +7,11 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -63,13 +65,15 @@ public class RobotContainer {
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	// TODO: measure limelight values
-	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 0, 0);
-	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-shooter", 0, 0);
+	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 40, 13);
+	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", 0, 0);
 
 	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
 
-	/* Booleans */
-	private boolean hasNote = false;
+	/* Robot states */
+	public boolean hasNote = false;
+	private State robotState = State.IDLE;
+	private Timer shootTimer = new Timer();
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -86,7 +90,7 @@ public class RobotContainer {
 				
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
-		configureAutonCommands();
+		configureAutonCommands(	);
 		/* Configure the trigger bindings */
 		configureBindings();
 
@@ -96,8 +100,8 @@ public class RobotContainer {
 		// TODO: Maybe move this stuff to a dedicated sensor subsystem
 		try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
-            laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 4, 4));
+            laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
         } catch (ConfigurationFailedException e) {
             Robot.getLogger().log(Level.SEVERE, "test");
         }
@@ -193,44 +197,72 @@ public class RobotContainer {
 		}
   	}
 
+	public enum State {
+		IDLE,
+		INTAKING,
+		PREPPING,
+		SHOOTING
+	}
+
+	public void updateState() {
+		if (driverController.b().getAsBoolean() && hasNote) {
+			if (robotState == State.PREPPING || robotState == State.SHOOTING)
+				return;
+			robotState = State.PREPPING;
+		} else if (driverController.y().getAsBoolean()) robotState = State.INTAKING;
+		else robotState = State.IDLE;
+
+		SmartDashboard.putString("robot/robot state", robotState.toString());
+	}
+
 	/**
 	 * Makes the robot move. Contains code to control auto-aim button presses
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
-		// Get the x speed. We are inverting this because Xbox controllers return
-		// negative values when we push forward.
 		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
-
-		// Get the y speed or sideways/strafe speed. We are inverting this because
-		// we want a positive value when we pull to the left. Xbox controllers
-		// return positive values when you pull to the right by default.
 		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
+		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
-		// Get the rate of angular rotation. We are inverting this because we want a
-		// positive value when we pull to the left (remember, CCW is positive in
-		// mathematics). Xbox controllers return positive values when you pull to
-		// the right by default.
-		double rot = MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
-
-		// while the B-button is pressed, overwrite some of the driving values with the output of our limelight methods
-		if(driverController.b().getAsBoolean())
-		{
-			final double rot_limelight = limelightShooter.aim_proportional();
-			rot = rot_limelight;
-
-			final double forward_limelight = limelightShooter.range_proportional(100);
-			xSpeed = forward_limelight;
-
-			//while using Limelight, turn off field-relative driving.
-			fieldRelative = false;
+		switch (robotState) {
+			case PREPPING:
+				System.out.println("PREPPING");
+				if (limelightShooter.hasTarget()) {
+					rotationalSpeed = limelightShooter.aim_proportional();
+					xSpeed = limelightShooter.range_proportional(70, 57.5);
+					fieldRelative = false;
+				}
+				System.out.println(rotationalSpeed); //TODO check rotational values and add to condition
+				if (Math.abs(xSpeed) < 0.02 && shooter.isReady(false)) {
+					robotState = State.SHOOTING;
+					break;
+				}
+				shooter.shoot(Speed.SPEAKER);
+				break;
+			case SHOOTING:
+				fieldRelative = false;
+				shootTimer.restart();
+				feeder.intake();
+				if (shootTimer.hasElapsed(Constants.Shooter.postShotTimeout)) {
+					robotState = State.IDLE;
+					feeder.stop();
+				}
+				break;
+			default:
+				robotState = State.IDLE;
+				fieldRelative = true;
+				shooter.stop();
+				intake.stop();
+				feeder.stop();
+				break;
+				
 		}
 
-		// while the Y-button is pressed, overwrite some of the driving values with the output of our limelight methods
-		else if(driverController.y().getAsBoolean()) // add hasNote = false && when we get the thing
-		{
+		
+		// while the Y-button is pressed, intake
+		if (!hasNote && driverController.y().getAsBoolean()) {
 			final double rot_limelight = limelightIntake.aim_proportional();
-			rot = rot_limelight;
+			rotationalSpeed = rot_limelight;
 
 			// Move forward at 1 m/s
 			xSpeed = 1;
@@ -239,17 +271,19 @@ public class RobotContainer {
 			fieldRelative = false;
 		}
 
-		// TODO: This was 0.002 but should be 0.02. Check if this changes anything though
-		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.02);
+		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
 	}
 
 	public void updateNoteStatus() {
 		LaserCan.Measurement measurement = laserCan.getMeasurement();
 
 		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
-			//System.out.println("Oh no! The target is out of range, or we can't get a reliable measurement!");
+			return;
 
-		hasNote = measurement.distance_mm <= 50;
+		//System.out.println(measurement.distance_mm);
+		hasNote = measurement.distance_mm <= 75;
+		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
 }

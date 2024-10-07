@@ -111,6 +111,7 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 	public boolean isReady(boolean precise) {
 		boolean topIsReady = Math.abs(toRPM(top.getVelocity().getValueAsDouble()) - speedTarget.topMotorSpeed) < (precise ? Constants.Shooter.maxRPMErrorLong : Constants.Shooter.maxRPMError);
 		boolean bottomIsReady = Math.abs(toRPM(bottom.getVelocity().getValueAsDouble()) - speedTarget.bottomMotorSpeed) < (precise ? Constants.Shooter.maxRPMErrorLong : Constants.Shooter.maxRPMError);
+
 		return topIsReady && bottomIsReady;
 	}
 }

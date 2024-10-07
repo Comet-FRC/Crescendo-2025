@@ -140,6 +140,7 @@ public class Robot extends TimedRobot
 	public void teleopPeriodic()
 	{
 		m_robotContainer.updateNoteStatus();
+		m_robotContainer.updateState();
 		m_robotContainer.drive(true);
 	}
 

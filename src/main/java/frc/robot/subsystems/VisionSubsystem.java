@@ -36,7 +36,8 @@ public class VisionSubsystem {
         double angleToGoalRadians = Units.degreesToRadians(angleToGoalDegrees);
 
         double distanceFromTarget = (targetHeight - height) / Math.tan(angleToGoalRadians);
-        return distanceFromTarget;
+        
+		return distanceFromTarget;
     }
 
     /**
@@ -83,16 +84,23 @@ public class VisionSubsystem {
 	 * simple proportional ranging control with Limelight's "ty" value
      * @param targetHeight the distance, in inches, from the floor to target
 	 */
-	public double range_proportional(double targetHeight)
+	public double range_proportional(double desiredDistance, double targetHeight)
 	{    
-		double kP = 0.1;
+		double kP = 0.075;
 
 		// TODO: Measure apriltag height
 		double currentDistance = getDistanceFromTarget(targetHeight);
-		double desiredDistance = 2; // Meters
-		double distanceError = desiredDistance - currentDistance;
+
+		double distanceError = currentDistance - desiredDistance;
 		double drivingAdjustment = kP * distanceError;
 
 		return drivingAdjustment;
+	}
+
+	/**
+	 * returns true if a target is visible
+	 */
+	public boolean hasTarget() {
+		return LimelightHelpers.getTV(name);
 	}
 }

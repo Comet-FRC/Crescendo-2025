@@ -8,15 +8,13 @@ import edu.wpi.first.wpilibj.Timer;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.Robot;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 
 public class IntakeCommand extends Command {
 	private final IntakeSubsystem intake;
 	private final FeederSubsystem feeder;
-
-	private final Timer timer = new Timer();
-	boolean hasNote = false;
 
 	private double intakingSpeed;
 
@@ -32,18 +30,11 @@ public class IntakeCommand extends Command {
 		intakingSpeed = Constants.Intake.intakingSpeed;
 		intake.intake();
 		feeder.intake();
-		hasNote = false;
-		timer.reset();
-		timer.stop();
 	}
 
 	@Override
 	public void execute() {
-		if (feeder.getTorqueCurrent() < -75) {
-			hasNote = true;
-			timer.start();
-		}
-		if (intakingSpeed < 0.3) {
+		if (intakingSpeed < 0.5) {
 			intakingSpeed += 0.01;
 			intake.set(intakingSpeed);
 		}
@@ -58,6 +49,6 @@ public class IntakeCommand extends Command {
 
 	@Override
 	public boolean isFinished() {
-		return timer.hasElapsed(0.4);
+		return Robot.getInstance().getRobotContainer().hasNote;
 	}
 }
