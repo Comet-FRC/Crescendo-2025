@@ -67,7 +67,7 @@ public class RobotContainer {
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 	// TODO: measure limelight values
 	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 40, 13);
-	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", 0, 0);
+	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", -10, 16.5);
 
 	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
 
@@ -237,15 +237,16 @@ public class RobotContainer {
 
 		switch (robotState) {
 			case INTAKING:
+				fieldRelative = false;
+
+				// Move forward at 0.75 m/s
+				xSpeed = -0.75;
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = limelightIntake.aim_proportional();
+					if (rotationalSpeed > 0.01)
+						xSpeed = 0;
 				}
-
-				// Move forward at 1 m/s
-				xSpeed = -0.5;
-
-				fieldRelative = false;
 
 				intake.intake();
 				feeder.intake();
@@ -257,8 +258,8 @@ public class RobotContainer {
 					xSpeed = limelightShooter.range_proportional(70, 57.5);
 					fieldRelative = false;
 				}
-				SmartDashboard.putNumber("robot/rotationalSpeed", rotationalSpeed); //TODO check rotational values and add to condition
-				if (Math.abs(xSpeed) < 0.02 && shooter.isReady(false)) {
+				//SmartDashboard.putNumber("robot/rotationalSpeed", rotationalSpeed);
+				if (Math.abs(rotationalSpeed) < 0.02 && Math.abs(xSpeed) < 0.02 && shooter.isReady(false)) {
 					robotState = State.SHOOTING;
 					break;
 				}
@@ -280,7 +281,6 @@ public class RobotContainer {
 				intake.stop();
 				feeder.stop();
 				break;
-				
 		}
 
 		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
