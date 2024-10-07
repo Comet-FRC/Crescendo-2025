@@ -47,11 +47,11 @@ import au.grapplerobotics.LaserCan;
 public class RobotContainer {
 	/* Autonomous */
 	private final SendableChooser<Command> autoChooser;
-	
+
 	/* Controllers */
 	private final CommandXboxController driverController = new CommandXboxController(0);
 	private final Joystick operatorController = new Joystick(1);
-	
+
 	/* Buttons */
 	private final Trigger zeroGyroButton = driverController.a();
 
@@ -108,16 +108,22 @@ public class RobotContainer {
 	}
 
 	private void configureAutonCommands() {
-		/* Subwoofer Shot */
-		
-		
+		/* Shoot */
+		NamedCommands.registerCommand("SubWoof",
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
+				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER))
+				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER))
+
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
+			);
+
 		/* Intake */
 		NamedCommands.registerCommand("Intake note",
-			Commands.runOnce(() -> { 
+			Commands.runOnce(() -> {
 				SmartDashboard.putString("Auto Status", "Beginning Intake");
 			})
 			.andThen(new IntakeCommand(intake, feeder))
-			.andThen(Commands.runOnce(() -> { 
+			.andThen(Commands.runOnce(() -> {
 				SmartDashboard.putString("Auto Status", "Intake Complete");
 			}))
 		);
@@ -137,14 +143,13 @@ public class RobotContainer {
 		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
-		
+
 		shooterButton.whileTrue(
-			//new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
-			/* .andThen(*/new ShootCommand(shooter, Speed.SPEAKER)
+			new ShootCommand(shooter, Speed.SPEAKER)
 			.withName("Shoot Command"));
-	
-		
-		
+
+
+
 		intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
 	}
 
@@ -173,11 +178,11 @@ public class RobotContainer {
 		SwerveDrivePoseEstimator poseEstimator = swerve.getPoseEstimator();
 
 		poseEstimator.update(
-			swerve.getHeading(), 
+			swerve.getHeading(),
 			swerve.getModulePositions());
-		
+
 		boolean doRejectUpdate = false;
-		
+
 		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-shooter");
 		if(Math.abs(swerve.getRate()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates

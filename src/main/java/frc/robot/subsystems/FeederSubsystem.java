@@ -66,14 +66,12 @@ public class FeederSubsystem extends SubsystemBase {
 	}
 
     public void intake() {
-        //double intakingSpeed = Constants.Intake.intakingSpeed*5676;
-        //setFeederSpeed(intakingSpeed);
+       
         setFeederSpeed(-500);
     }
 
     public void eject() {
-        //double ejectingSpeed = Constants.Intake.ejectingSpeed*5676;
-        //setFeederSpeed(ejectingSpeed);
+       
         setFeederSpeed(500);
     }
 
