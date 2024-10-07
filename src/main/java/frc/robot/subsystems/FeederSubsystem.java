@@ -67,7 +67,7 @@ public class FeederSubsystem extends SubsystemBase {
 
     public void intake() {
        
-        setFeederSpeed(-500);
+        setFeederSpeed(-750);
     }
 
     public void eject() {

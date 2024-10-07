@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -56,7 +57,7 @@ public class RobotContainer {
 	private final Trigger zeroGyroButton = driverController.a();
 
 	private final Trigger ampButton = new JoystickButton(operatorController, 4);
-	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
+	private final Trigger intakeButton = new JoystickButton(driverController.getHID(), XboxController.Button.kLeftBumper.value);
 	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 	/* Subsystems */
@@ -150,7 +151,7 @@ public class RobotContainer {
 
 
 
-		intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
+		//intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
 	}
 
 	/**
@@ -214,8 +215,13 @@ public class RobotContainer {
 			if (robotState == State.PREPPING || robotState == State.SHOOTING)
 				return;
 			robotState = State.PREPPING;
-		} else if (driverController.y().getAsBoolean()) robotState = State.INTAKING;
-		else robotState = State.IDLE;
+
+		} else if (driverController.y().getAsBoolean() && !hasNote) {
+			robotState = State.INTAKING;
+
+		} else {
+			robotState = State.IDLE;
+		}
 
 		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
@@ -230,14 +236,28 @@ public class RobotContainer {
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
 		switch (robotState) {
+			case INTAKING:
+
+				if (limelightIntake.hasTarget()) {
+					rotationalSpeed = limelightIntake.aim_proportional();
+				}
+
+				// Move forward at 1 m/s
+				xSpeed = -0.5;
+
+				fieldRelative = false;
+
+				intake.intake();
+				feeder.intake();
+
+				break;
 			case PREPPING:
-				System.out.println("PREPPING");
 				if (limelightShooter.hasTarget()) {
 					rotationalSpeed = limelightShooter.aim_proportional();
 					xSpeed = limelightShooter.range_proportional(70, 57.5);
 					fieldRelative = false;
 				}
-				System.out.println(rotationalSpeed); //TODO check rotational values and add to condition
+				SmartDashboard.putNumber("robot/rotationalSpeed", rotationalSpeed); //TODO check rotational values and add to condition
 				if (Math.abs(xSpeed) < 0.02 && shooter.isReady(false)) {
 					robotState = State.SHOOTING;
 					break;
@@ -261,19 +281,6 @@ public class RobotContainer {
 				feeder.stop();
 				break;
 				
-		}
-
-		
-		// while the Y-button is pressed, intake
-		if (!hasNote && driverController.y().getAsBoolean()) {
-			final double rot_limelight = limelightIntake.aim_proportional();
-			rotationalSpeed = rot_limelight;
-
-			// Move forward at 1 m/s
-			xSpeed = 1;
-
-			//while using Limelight, turn off field-relative driving.
-			fieldRelative = false;
 		}
 
 		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
