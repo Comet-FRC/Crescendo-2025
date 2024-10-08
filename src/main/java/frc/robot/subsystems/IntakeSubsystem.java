@@ -37,15 +37,4 @@ public class IntakeSubsystem extends SubsystemBase {
     public void stop() {
         intakeMotor.set(0);
     }
-
-    /*@Override
-    public void periodic() {
-        double current = intakeMotor.getTorqueCurrent().getValueAsDouble();
-        boolean active = (current > 20.0);
-
-        if (active && !intaking) {
-        }
-        SmartDashboard.putNumber("intake/torqueCurrent", current);
-
-    }*/
 }

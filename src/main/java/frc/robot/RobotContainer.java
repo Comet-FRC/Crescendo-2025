@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -54,10 +53,10 @@ public class RobotContainer {
 
 	/* Buttons */
 	private final Trigger zeroGyroButton = driverController.a();
+	private final Trigger shooterButton = driverController.b();
 
 	private final Trigger ampButton = new JoystickButton(operatorController, 4);
-	private final Trigger intakeButton = new JoystickButton(driverController.getHID(), XboxController.Button.kLeftBumper.value);
-	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
+
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 	/* Subsystems */
 	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
@@ -100,10 +99,10 @@ public class RobotContainer {
 		// TODO: Maybe move this stuff to a dedicated sensor subsystem
 		try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 4, 4));
+            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
             laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
         } catch (ConfigurationFailedException e) {
-            Robot.getLogger().log(Level.SEVERE, "test");
+            Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
         }
 	}
 
@@ -209,10 +208,10 @@ public class RobotContainer {
 	 */
 	public void updateState() {
 		if (driverController.b().getAsBoolean() && hasNote) {
-			if (robotState == State.PREPPING || robotState == State.SHOOTING)
+			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
 				return;
+			}
 			robotState = State.PREPPING;
-
 		} else if (driverController.y().getAsBoolean() && !hasNote) {
 			robotState = State.INTAKING;
 
@@ -236,13 +235,11 @@ public class RobotContainer {
 			case INTAKING:
 				fieldRelative = false;
 
-				// Move forward at 0.75 m/s
-				xSpeed = -0.75;
-
 				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = limelightIntake.aim_proportional(0.035);
-					if (rotationalSpeed > 0.01)
-						xSpeed = 0;
+					rotationalSpeed = limelightIntake.aim_proportional(0.01);
+					System.out.println(rotationalSpeed);
+					if (rotationalSpeed <= 0.5)
+						xSpeed = -0.75;;
 				}
 
 				intake.intake();
@@ -251,12 +248,11 @@ public class RobotContainer {
 				break;
 			case PREPPING:
 				if (limelightShooter.hasTarget()) {
-					rotationalSpeed = limelightShooter.aim_proportional(0.035);
+					rotationalSpeed = limelightShooter.aim_proportional(0.025);
 					xSpeed = limelightShooter.range_proportional(70, 57.5);
 					fieldRelative = false;
 				}
-				//SmartDashboard.putNumber("robot/rotationalSpeed", rotationalSpeed);
-				if (Math.abs(rotationalSpeed) < 0.02 && Math.abs(xSpeed) < 0.02 && shooter.isReady(false)) {
+				if (Math.abs(rotationalSpeed) < 0.05 && Math.abs(xSpeed) < 0.03 && shooter.isReady(false)) {
 					robotState = State.SHOOTING;
 					break;
 				}

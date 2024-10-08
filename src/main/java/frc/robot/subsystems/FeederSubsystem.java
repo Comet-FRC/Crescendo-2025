@@ -59,7 +59,7 @@ public class FeederSubsystem extends SubsystemBase {
 
     public void intake() {
        
-        setFeederSpeed(-750);
+        setFeederSpeed(-500);
     }
 
     public void eject() {
@@ -67,9 +67,6 @@ public class FeederSubsystem extends SubsystemBase {
         setFeederSpeed(500);
     }
 
-    /**
-     * Stops both wheels.
-     */
     public void stop() {
         setFeederSpeed(0);
     }
