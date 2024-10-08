@@ -34,8 +34,6 @@ public class FeederSubsystem extends SubsystemBase {
 		feederMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Intake.peakForwardVoltage;
 		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.Intake.peakReverseVoltage;
-
-        // TODO: Check if this changes anything
         
 		feederMotorConfig.Slot0.kP = Constants.Shooter.kP;
 		feederMotorConfig.Slot0.kI = Constants.Shooter.kI;

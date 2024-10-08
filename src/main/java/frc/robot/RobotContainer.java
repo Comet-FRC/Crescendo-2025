@@ -64,7 +64,7 @@ public class RobotContainer {
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
-	// TODO: measure limelight values
+
 	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 40, 13);
 	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", -10, 16.5);
 
@@ -185,20 +185,15 @@ public class RobotContainer {
 
 		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-shooter");
-		if(Math.abs(swerve.getRate()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
-		{
-		doRejectUpdate = true;
-		}
-		if(mt2.tagCount == 0)
-		{
-		doRejectUpdate = true;
-		}
-		if(!doRejectUpdate)
-		{
-		poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-		poseEstimator.addVisionMeasurement(
-			mt2.pose,
-			mt2.timestampSeconds);
+		
+		// if our angular velocity is greater than 720 degrees per second, ignore vision updates
+		if (Math.abs(swerve.getRate()) > 720) {
+			doRejectUpdate = true;
+		} if(mt2.tagCount == 0) {
+			doRejectUpdate = true;
+		} if(!doRejectUpdate) {
+			poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+			poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
 		}
   	}
 
@@ -242,7 +237,7 @@ public class RobotContainer {
 				xSpeed = -0.75;
 
 				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = limelightIntake.aim_proportional();
+					rotationalSpeed = limelightIntake.aim_proportional(0.035);
 					if (rotationalSpeed > 0.01)
 						xSpeed = 0;
 				}
@@ -253,7 +248,7 @@ public class RobotContainer {
 				break;
 			case PREPPING:
 				if (limelightShooter.hasTarget()) {
-					rotationalSpeed = limelightShooter.aim_proportional();
+					rotationalSpeed = limelightShooter.aim_proportional(0.035);
 					xSpeed = limelightShooter.range_proportional(70, 57.5);
 					fieldRelative = false;
 				}
