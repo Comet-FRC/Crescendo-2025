@@ -204,6 +204,9 @@ public class RobotContainer {
 		SHOOTING
 	}
 
+	/**
+	 * Updates the robot state
+	 */
 	public void updateState() {
 		if (driverController.b().getAsBoolean() && hasNote) {
 			if (robotState == State.PREPPING || robotState == State.SHOOTING)
@@ -280,6 +283,9 @@ public class RobotContainer {
 		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
 	}
 
+	/**
+	 * Sets {@link #hasNote} to true if the LaserCAN detects an object, false otherwise
+	 */
 	public void updateNoteStatus() {
 		LaserCan.Measurement measurement = laserCan.getMeasurement();
 
