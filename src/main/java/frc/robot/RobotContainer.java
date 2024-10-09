@@ -199,6 +199,7 @@ public class RobotContainer {
 	public enum State {
 		IDLE,
 		INTAKING,
+		OUTTAKING,
 		PREPPING,
 		SHOOTING
 	}
@@ -214,7 +215,8 @@ public class RobotContainer {
 			robotState = State.PREPPING;
 		} else if (driverController.y().getAsBoolean() && !hasNote) {
 			robotState = State.INTAKING;
-
+		} else if (driverController.back().getAsBoolean()){ 
+			robotState = State.OUTTAKING;
 		} else {
 			robotState = State.IDLE;
 		}
@@ -232,14 +234,23 @@ public class RobotContainer {
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
 		switch (robotState) {
+			case OUTTAKING:
+				intake.eject();
+				feeder.eject();
+
+				break;
 			case INTAKING:
+				if (hasNote) {
+					robotState = State.IDLE;
+					break;
+				}
+
 				fieldRelative = false;
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = limelightIntake.aim_proportional(0.01);
-					System.out.println(rotationalSpeed);
-					if (rotationalSpeed <= 0.5)
-						xSpeed = -0.75;;
+					if (rotationalSpeed <= 0.2)
+						xSpeed = -0.75;
 				}
 
 				intake.intake();
@@ -249,10 +260,17 @@ public class RobotContainer {
 			case PREPPING:
 				if (limelightShooter.hasTarget()) {
 					rotationalSpeed = limelightShooter.aim_proportional(0.025);
-					xSpeed = limelightShooter.range_proportional(70, 57.5);
+					xSpeed = limelightShooter.range_proportional(85, 57.5);
 					fieldRelative = false;
 				}
-				if (Math.abs(rotationalSpeed) < 0.05 && Math.abs(xSpeed) < 0.03 && shooter.isReady(false)) {
+
+				System.out.println(swerve.getRobotVelocity().toString());
+
+				if (
+					Math.abs(swerve.getRobotVelocity().vxMetersPerSecond) < 0.05 &&
+					Math.abs(swerve.getRobotVelocity().vyMetersPerSecond) < 0.05 &&
+					Math.abs(swerve.getRobotVelocity().omegaRadiansPerSecond) < 0.05 &&
+					shooter.isReady(false)) {
 					robotState = State.SHOOTING;
 					break;
 				}
@@ -288,9 +306,8 @@ public class RobotContainer {
 		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
 			return;
 
-		//System.out.println(measurement.distance_mm);
 		hasNote = measurement.distance_mm <= 75;
-		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
