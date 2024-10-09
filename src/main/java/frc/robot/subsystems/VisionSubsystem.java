@@ -79,4 +79,12 @@ public class VisionSubsystem {
 	public boolean hasTarget() {
 		return LimelightHelpers.getTV(name);
 	}
+
+	public double getHorizontalAngleOffset() {
+		return LimelightHelpers.getTX(name);
+	}
+
+	public double getVerticalAngleOffset() {
+		return LimelightHelpers.getTY(name);
+	}
 }
