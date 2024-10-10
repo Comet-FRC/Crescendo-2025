@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -17,6 +18,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.AutonConstants;
-import frc.robot.LimelightHelpers;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
@@ -39,8 +41,6 @@ import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
-
-import com.ctre.phoenix6.hardware.Pigeon2;
 
 public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDrive swerveDrive;
@@ -582,6 +582,15 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getMaximumVelocity();
     }
 
+    public SwerveModuleState[] getModuleStates() {
+        return swerveDrive.getStates();
+    }
+
+    public SwerveModulePosition[] getModulePositions() {
+        return swerveDrive.getModulePositions();
+    }
     
-    
+    public double getRate() {
+        return ((Pigeon2)(swerveDrive.getGyro().getIMU())).getRate();
+    }
 }

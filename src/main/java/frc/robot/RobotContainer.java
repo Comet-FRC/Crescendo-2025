@@ -5,10 +5,12 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.AutonPrepareShootCommand;
 import frc.robot.commands.AutonShootCommand;
@@ -30,9 +31,12 @@ import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 import java.io.File;
+import java.util.logging.Level;
 
 import com.pathplanner.lib.auto.*;
-import com.pathplanner.lib.commands.PathPlannerAuto;
+
+import au.grapplerobotics.ConfigurationFailedException;
+import au.grapplerobotics.LaserCan;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -42,24 +46,33 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 public class RobotContainer {
 	/* Autonomous */
 	private final SendableChooser<Command> autoChooser;
-	
+
 	/* Controllers */
 	private final CommandXboxController driverController = new CommandXboxController(0);
 	private final Joystick operatorController = new Joystick(1);
-	
+
 	/* Buttons */
 	private final Trigger zeroGyroButton = driverController.a();
+	private final Trigger shooterButton = driverController.b();
 
 	private final Trigger ampButton = new JoystickButton(operatorController, 4);
-	private final Trigger intakeButton = new JoystickButton(operatorController, 5);
-	private final Trigger shooterButton = new JoystickButton(operatorController, 6);
+
 	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 	/* Subsystems */
 	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
-	private final VisionSubsystem vision = new VisionSubsystem(swerve, "limelight-shooter");
+
+	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 40, 13);
+	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", -10, 16.5);
+
+	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
+
+	/* Robot states */
+	public boolean hasNote = false;
+	private State robotState = State.IDLE;
+	private Timer shootTimer = new Timer();
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -76,25 +89,40 @@ public class RobotContainer {
 				
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
 			);
-		configureAutonCommands();
+		configureAutonCommands(	);
 		/* Configure the trigger bindings */
 		configureBindings();
 
 		autoChooser = AutoBuilder.buildAutoChooser();
 			SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+
+		// TODO: Maybe move this stuff to a dedicated sensor subsystem
+		try {
+            laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
+            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
+            laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
+        } catch (ConfigurationFailedException e) {
+            Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
+        }
 	}
 
 	private void configureAutonCommands() {
-		/* Subwoofer Shot */
-		
-		
+		/* Shoot */
+		NamedCommands.registerCommand("SubWoof",
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
+				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER))
+				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER))
+
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
+			);
+
 		/* Intake */
 		NamedCommands.registerCommand("Intake note",
-			Commands.runOnce(() -> { 
+			Commands.runOnce(() -> {
 				SmartDashboard.putString("Auto Status", "Beginning Intake");
 			})
 			.andThen(new IntakeCommand(intake, feeder))
-			.andThen(Commands.runOnce(() -> { 
+			.andThen(Commands.runOnce(() -> {
 				SmartDashboard.putString("Auto Status", "Intake Complete");
 			}))
 		);
@@ -114,15 +142,14 @@ public class RobotContainer {
 		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
 
 		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
-		
+
 		shooterButton.whileTrue(
-			//new PrepareShootCommand(shooter, feeder, Speed.SPEAKER)
-			/* .andThen(*/new ShootCommand(shooter, Speed.SPEAKER)
+			new ShootCommand(shooter, Speed.SPEAKER)
 			.withName("Shoot Command"));
-	
-		
-		
-		intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
+
+
+
+		//intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
 	}
 
 	/**
@@ -142,83 +169,146 @@ public class RobotContainer {
 		swerve.setMotorBrake(brake);
 	}
 
-	
-	public Joystick getOperatorController () {
-		return operatorController;
+	public SwerveSubsystem getSwerveSubsystem() {
+		return swerve;
 	}
 
-	// simple proportional turning control with Limelight.
-	// "proportional control" is a control algorithm in which the output is proportional to the error.
-	// in this case, we are going to return an angular velocity that is proportional to the 
-	// "tx" value from the Limelight.
-	double limelight_aim_proportional()
-	{    
-		// kP (constant of proportionality)
-		// this is a hand-tuned number that determines the aggressiveness of our proportional control loop
-		// if it is too high, the robot will oscillate.
-		// if it is too low, the robot will never reach its target
-		// if the robot never turns in the correct direction, kP should be inverted.
-		double kP = .035;
+	public void updateOdometry() {
+		SwerveDrivePoseEstimator poseEstimator = swerve.getPoseEstimator();
 
-		// tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
-		// your limelight 3 feed, tx should return roughly 31 degrees.
-		double targetingAngularVelocity = LimelightHelpers.getTX("limelight-shooter") * kP;
+		poseEstimator.update(
+			swerve.getHeading(),
+			swerve.getModulePositions());
 
-		// convert to radians per second for our drive method
-		targetingAngularVelocity *= swerve.getMaximumAngularVelocity();
+		boolean doRejectUpdate = false;
 
-		//invert since tx is positive when the target is to the right of the crosshair
-		targetingAngularVelocity *= -1.0;
+		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-shooter");
+		
+		// if our angular velocity is greater than 720 degrees per second, ignore vision updates
+		if (Math.abs(swerve.getRate()) > 720) {
+			doRejectUpdate = true;
+		} if(mt2.tagCount == 0) {
+			doRejectUpdate = true;
+		} if(!doRejectUpdate) {
+			poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+			poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
+		}
+  	}
 
-		return targetingAngularVelocity;
+	public enum State {
+		IDLE,
+		INTAKING,
+		OUTTAKING,
+		PREPPING,
+		SHOOTING
 	}
 
-	// simple proportional ranging control with Limelight's "ty" value
-	// this works best if your Limelight's mount height and target mount height are different.
-	// if your limelight and target are mounted at the same or similar heights, use "ta" (area) for target ranging rather than "ty"
-	double limelight_range_proportional()
-	{    
-		double kP = .1;
-		double targetingForwardSpeed = LimelightHelpers.getTY("limelight-shooter") * kP;
-		targetingForwardSpeed *= swerve.getMaximumVelocity();
-		targetingForwardSpeed *= -1.0;
+	/**
+	 * Updates the robot state
+	 */
+	public void updateState() {
+		if (driverController.b().getAsBoolean() && hasNote) {
+			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
+				return;
+			}
+			robotState = State.PREPPING;
+		} else if (driverController.y().getAsBoolean() && !hasNote) {
+			robotState = State.INTAKING;
+		} else if (driverController.back().getAsBoolean()){ 
+			robotState = State.OUTTAKING;
+		} else {
+			robotState = State.IDLE;
+		}
 
-		// this is bad but we will fix later
-		targetingForwardSpeed -= 4.3;
-		//double out = targetingForwardSpeed > 0 ? targetingForwardSpeed : 0;
-		return targetingForwardSpeed;
+		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
 
+	/**
+	 * Makes the robot move. Contains code to control auto-aim button presses
+	 * @param fieldRelative whether or not the robot is driving in field oriented mode
+	 */
 	public void drive(boolean fieldRelative) {
-		// Get the x speed. We are inverting this because Xbox controllers return
-		// negative values when we push forward.
-		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), OperatorConstants.LEFT_Y_DEADBAND) * swerve.getMaximumVelocity();
+		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
+		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
+		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
-		// Get the y speed or sideways/strafe speed. We are inverting this because
-		// we want a positive value when we pull to the left. Xbox controllers
-		// return positive values when you pull to the right by default.
-		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), OperatorConstants.LEFT_X_DEADBAND) * swerve.getMaximumVelocity();
+		switch (robotState) {
+			case OUTTAKING:
+				intake.eject();
+				feeder.eject();
 
-		// Get the rate of angular rotation. We are inverting this because we want a
-		// positive value when we pull to the left (remember, CCW is positive in
-		// mathematics). Xbox controllers return positive values when you pull to
-		// the right by default.
-		double rot = MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
+				break;
+			case INTAKING:
+				if (hasNote) {
+					robotState = State.IDLE;
+					break;
+				}
 
-		// while the A-button is pressed, overwrite some of the driving values with the output of our limelight methods
-		if(driverController.b().getAsBoolean())
-		{
-			final double rot_limelight = limelight_aim_proportional();
-			rot = rot_limelight;
+				fieldRelative = false;
 
-			final double forward_limelight = limelight_range_proportional();
-			xSpeed = forward_limelight;
+				if (limelightIntake.hasTarget()) {
+					rotationalSpeed = limelightIntake.aim_proportional(0.01);
+					if (rotationalSpeed <= 0.2)
+						xSpeed = -0.75;
+				}
 
-			//while using Limelight, turn off field-relative driving.
-			fieldRelative = false;
+				intake.intake();
+				feeder.intake();
+
+				break;
+			case PREPPING:
+				if (limelightShooter.hasTarget()) {
+					rotationalSpeed = limelightShooter.aim_proportional(0.025);
+					xSpeed = limelightShooter.range_proportional(85, 57.5);
+					fieldRelative = false;
+				}
+
+				System.out.println(swerve.getRobotVelocity().toString());
+
+				if (
+					Math.abs(swerve.getRobotVelocity().vxMetersPerSecond) < 0.05 &&
+					Math.abs(swerve.getRobotVelocity().vyMetersPerSecond) < 0.05 &&
+					Math.abs(swerve.getRobotVelocity().omegaRadiansPerSecond) < 0.05 &&
+					shooter.isReady(false)) {
+					robotState = State.SHOOTING;
+					break;
+				}
+				shooter.shoot(Speed.SPEAKER);
+				break;
+			case SHOOTING:
+				fieldRelative = false;
+				shootTimer.restart();
+				feeder.intake();
+				if (shootTimer.hasElapsed(Constants.Shooter.postShotTimeout)) {
+					robotState = State.IDLE;
+					feeder.stop();
+				}
+				break;
+			default:
+				robotState = State.IDLE;
+				fieldRelative = true;
+				shooter.stop();
+				intake.stop();
+				feeder.stop();
+				break;
 		}
 
-		swerve.drive(xSpeed, ySpeed, rot, fieldRelative, 0.002);
-		}
+		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
+	}
+
+	/**
+	 * Sets {@link #hasNote} to true if the LaserCAN detects an object, false otherwise
+	 */
+	public void updateNoteStatus() {
+		LaserCan.Measurement measurement = laserCan.getMeasurement();
+
+		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
+			return;
+
+		hasNote = measurement.distance_mm <= 75;
+		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		SmartDashboard.putBoolean("robot/hasNote", hasNote);
+	}
 
 }

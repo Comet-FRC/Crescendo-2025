@@ -1,44 +1,90 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import edu.wpi.first.math.util.Units;
 import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 
-public class VisionSubsystem extends SubsystemBase {
-    private final String limelightName;
-    private final SwerveSubsystem swerve;
+public class VisionSubsystem {
+    private final String name;
 
     /**
-     * 1 if valid target exists. 0 if no valid targets exist
+     * the angle, in degrees, at which the limelight is mounted
+     * (the angle back from the vertical)
      */
-    private int tv;
+    private final double mountAngle;
 
     /**
-     * Horiz. Offset From Crosshair To Target
-     * (LL1: -27 degrees to 27 degrees / LL2: -29.8 to 29.8 degrees)
+     * The distance, in inches, from the center of the lens to the floor
      */
-    private double tx;
+    private final double height;
     
+    public VisionSubsystem(String name, double mountAngle, double height) {
+        this.name = name;
+        this.mountAngle = mountAngle;
+        this.height = height;
+    }
+
     /**
-     * Vertical Offset From Crosshair To Target
-     * (LL1: -20.5 degrees to 20.5 degrees / LL2: -24.85 to 24.85 degrees)
+     * Returns the horizontal distance, in inches, of the limelight to the target
+     * @param ty the vertical offset angle of the target
+     * @param targetHeight the distance, in inches, of the target to the floor
      */
-    private double ty; 
+    public double getDistanceFromTarget(double targetHeight) {
+        double angleToGoalDegrees = mountAngle + LimelightHelpers.getTY(name);
+        double angleToGoalRadians = Units.degreesToRadians(angleToGoalDegrees);
 
-
-
-    // Constructor accepting the swerve subsystem's pose estimator
-    public VisionSubsystem(SwerveSubsystem swerve, String limelightName) {
-        this.limelightName = limelightName; // Store limelight name
-        this.swerve = swerve;
+        double distanceFromTarget = (targetHeight - height) / Math.tan(angleToGoalRadians);
+        
+		return distanceFromTarget;
     }
 
-    public void updateVision() {
+    /**
+	 * simple proportional turning control with Limelight.
+	 * "proportional control" is a control algorithm in which the output is proportional to the error.
+	 * in this case, we are going to return an angular velocity that is proportional to the 
+	 * "tx" value from the Limelight.*/
+	public double aim_proportional(double kP) {
+		// tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
+		// your limelight 3 feed, tx should return roughly 31 degrees.
+		double targetingAngularVelocity = LimelightHelpers.getTX(name) * kP;
 
-    }
+		// convert to radians per second for our drive method
+		targetingAngularVelocity *= Robot.getInstance().getRobotContainer().getSwerveSubsystem().getMaximumAngularVelocity();
+
+		//invert since tx is positive when the target is to the right of the crosshair
+		targetingAngularVelocity *= -1.0;
+
+		return targetingAngularVelocity;
+	}
+
+	/**
+	 * simple proportional ranging control with Limelight's "ty" value
+     * @param targetHeight the distance, in inches, from the floor to target
+	 */
+	public double range_proportional(double desiredDistance, double targetHeight)
+	{    
+		double kP = 0.075;
+
+		double currentDistance = getDistanceFromTarget(targetHeight);
+
+		double distanceError = currentDistance - desiredDistance;
+		double drivingAdjustment = kP * distanceError;
+
+		return drivingAdjustment;
+	}
+
+	/**
+	 * returns true if a target is visible
+	 */
+	public boolean hasTarget() {
+		return LimelightHelpers.getTV(name);
+	}
+
+	public double getHorizontalAngleOffset() {
+		return LimelightHelpers.getTX(name);
+	}
+
+	public double getVerticalAngleOffset() {
+		return LimelightHelpers.getTY(name);
+	}
 }
