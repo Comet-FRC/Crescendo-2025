@@ -6,34 +6,24 @@ package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.AutonPrepareShootCommand;
-import frc.robot.commands.AutonShootCommand;
-import frc.robot.commands.EjectCommand;
-import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.Speed;
+import frc.robot.subsystems.Vision.LimelightHelpers;
+import frc.robot.subsystems.Vision.LimelightIntake;
+import frc.robot.subsystems.Vision.LimelightShooter;
 
 import java.io.File;
 import java.util.logging.Level;
-
-import com.pathplanner.lib.auto.*;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
@@ -44,28 +34,18 @@ import au.grapplerobotics.LaserCan;
  * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-	/* Autonomous */
-	private final SendableChooser<Command> autoChooser;
-
 	/* Controllers */
 	private final CommandXboxController driverController = new CommandXboxController(0);
 	private final Joystick operatorController = new Joystick(1);
 
-	/* Buttons */
-	private final Trigger zeroGyroButton = driverController.a();
-	private final Trigger shooterButton = driverController.b();
-
-	private final Trigger ampButton = new JoystickButton(operatorController, 4);
-
-	private final Trigger ejectButton = new JoystickButton(operatorController, 7);
 	/* Subsystems */
 	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
 	private final IntakeSubsystem intake = new IntakeSubsystem();
 	private final FeederSubsystem feeder = new FeederSubsystem();
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 
-	private final VisionSubsystem limelightShooter = new VisionSubsystem("limelight-shooter", 40, 13);
-	private final VisionSubsystem limelightIntake = new VisionSubsystem("limelight-intake", -10, 16.5);
+	public final LimelightShooter limelightShooter = new LimelightShooter("limelight-shooter");
+	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
 
 	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
 
@@ -73,30 +53,14 @@ public class RobotContainer {
 	public boolean hasNote = false;
 	private State robotState = State.IDLE;
 	private Timer shootTimer = new Timer();
+
+	private final Field2d field = new Field2d();
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
-
 		DriverStation.silenceJoystickConnectionWarning(true);
-
-		/* REGISTERING COMMANDS FOR PATHPLANNER */
-		NamedCommands.registerCommand("SubWoof",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
-				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER))
-				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER)).withTimeout(2)
-				
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
-			);
-		configureAutonCommands(	);
-		/* Configure the trigger bindings */
-		configureBindings();
-
-		autoChooser = AutoBuilder.buildAutoChooser();
-			SmartDashboard.putData("auto/Auto Chooser", autoChooser);
-
-		// TODO: Maybe move this stuff to a dedicated sensor subsystem
 		try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
             laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
@@ -104,96 +68,35 @@ public class RobotContainer {
         } catch (ConfigurationFailedException e) {
             Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
         }
-	}
 
-	private void configureAutonCommands() {
-		/* Shoot */
-		NamedCommands.registerCommand("SubWoof",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Begin SW shot");})
-				.andThen(new AutonPrepareShootCommand(shooter, Speed.SPEAKER))
-				.andThen(new AutonShootCommand(shooter, feeder, intake, Speed.SPEAKER))
-
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "SW complete"); }))
-			);
-
-		/* Intake */
-		NamedCommands.registerCommand("Intake note",
-			Commands.runOnce(() -> {
-				SmartDashboard.putString("Auto Status", "Beginning Intake");
-			})
-			.andThen(new IntakeCommand(intake, feeder))
-			.andThen(Commands.runOnce(() -> {
-				SmartDashboard.putString("Auto Status", "Intake Complete");
-			}))
-		);
-	}
-
-
-	/**
-	 * Use this method to define your trigger->command mappings. Triggers can be created via the
-	 * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary predicate, or via the
-	 * named factories in {@link edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
-	 * {@link CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}
-	 * controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
-	 */
-	private void configureBindings() {
-		zeroGyroButton.onTrue((Commands.runOnce(swerve::zeroGyro)));
-
-		ampButton.whileTrue(new ShootCommand(shooter, Speed.AMP));
-
-		ejectButton.whileTrue(new EjectCommand(intake, feeder).withName("Eject"));
-
-		shooterButton.whileTrue(
-			new ShootCommand(shooter, Speed.SPEAKER)
-			.withName("Shoot Command"));
-
-
-
-		//intakeButton.whileTrue(new IntakeCommand(intake, feeder).withName("Intake"));
-	}
-
-	/**
-	 * Use this to pass the autonomous command to the main {@link Robot} class.
-	 * @return the command to run in autonomous
-	 */
-	public Command getAutonomousCommand() {
-		// An example command will be run in autonomous
-		return autoChooser.getSelected();
-	}
-
-	public void setDriveMode() {
-		//drivebase.setDefaultCommand();
-	}
-
-	public void setMotorBrake(boolean brake) {
-		swerve.setMotorBrake(brake);
+		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
+		SmartDashboard.putData("robot/field", field);
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
 		return swerve;
 	}
 
-	public void updateOdometry() {
-		SwerveDrivePoseEstimator poseEstimator = swerve.getPoseEstimator();
-
-		poseEstimator.update(
-			swerve.getHeading(),
-			swerve.getModulePositions());
+	public void updateRobotPose() {
+		swerve.getSwerveDrive().updateOdometry();
 
 		boolean doRejectUpdate = false;
 
-		LimelightHelpers.SetRobotOrientation("limelight-shooter", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-shooter");
+		LimelightHelpers.SetRobotOrientation("limelight-shooter", swerve.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-shooter");
 		
 		// if our angular velocity is greater than 720 degrees per second, ignore vision updates
 		if (Math.abs(swerve.getRate()) > 720) {
 			doRejectUpdate = true;
-		} if(mt2.tagCount == 0) {
-			doRejectUpdate = true;
-		} if(!doRejectUpdate) {
-			poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-			poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
 		}
+		if(mt2.tagCount == 0) {
+			doRejectUpdate = true;
+		}
+		if(!doRejectUpdate) {
+			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, VecBuilder.fill(.7,.7,9999999));
+		}
+
+		field.setRobotPose(swerve.getSwerveDrive().getPose());
   	}
 
 	public enum State {
@@ -204,16 +107,109 @@ public class RobotContainer {
 		SHOOTING
 	}
 
-	/**
-	 * Updates the robot state
-	 */
-	public void updateState() {
-		if (driverController.b().getAsBoolean() && hasNote) {
+	public void updateAutonState(){
+		updateNoteStatus();
+
+		if (hasNote) {
 			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
 				return;
 			}
 			robotState = State.PREPPING;
-		} else if (driverController.y().getAsBoolean() && !hasNote) {
+		} else {
+			robotState = State.INTAKING;
+		}
+	}
+
+	/**
+	 * Makes the robot move. Contains code to control auto-aim button presses
+	 * @param fieldRelative whether or not the robot is driving in field oriented mode
+	 */
+	public void autonDrive(boolean fieldRelative) {
+		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
+		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
+		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
+
+		switch (robotState) {
+			case INTAKING:
+				shooter.stop();
+
+				if (hasNote) {
+					intake.stop();
+					feeder.stop();
+					robotState = State.IDLE;
+					break;
+				}
+
+				fieldRelative = false;
+
+				if (limelightIntake.hasTarget()) {
+					rotationalSpeed = 0;
+					ySpeed = limelightIntake.proportionalY(Constants.INTAKE_STRAFE_KP);
+					System.out.println(limelightIntake.tx());
+					if (Math.abs(ySpeed) < 0.5) {
+						xSpeed = -2;
+					}			
+				} else {
+					rotationalSpeed = 0.6;
+				}
+
+				intake.intake();
+				feeder.intake();
+
+				break;
+			case PREPPING:
+				feeder.stop();
+				intake.stop();
+				
+				shooter.shoot(Speed.SPEAKER);
+
+				double distanceError = limelightShooter.getDistanceError();
+
+				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
+				xSpeed = limelightShooter.proportionalX(Constants.SPEAKER_APPROACH_KP);
+				fieldRelative = false;
+
+				/*if (limelightShooter.hasTarget()) {
+					rotationalSpeed = limelightShooter.aim_proportional(0.02);
+					xSpeed = limelightShooter.range_proportional(0.1, SmartDashboard.getNumber("robot/desired distance", 2.2), 57.13);
+					fieldRelative = false;
+				} else {
+					rotationalSpeed = limelightShooter.turn_proportional(swerve.getPose(), 0.025);
+				}*/
+
+				if (isShooterReady(distanceError, rotationalSpeed)) {
+					robotState = State.SHOOTING;
+					break;
+				}
+				break;
+			case SHOOTING:
+				fieldRelative = false;
+				shootTimer.restart();
+				feeder.intake();
+				if (shootTimer.hasElapsed(Constants.Shooter.postShotTimeout)) {
+					robotState = State.IDLE;
+					feeder.stop();
+				}
+				break;
+			default:
+				break;
+		}
+
+		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
+	}
+
+	/**
+	 * Updates the robot state
+	 */
+	public void updateState() {
+		updateNoteStatus();
+
+		if (driverController.rightBumper().getAsBoolean() && hasNote) {
+			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
+				return;
+			}
+			robotState = State.PREPPING;
+		} else if (driverController.leftBumper().getAsBoolean() && !hasNote) {
 			robotState = State.INTAKING;
 		} else if (driverController.back().getAsBoolean()){ 
 			robotState = State.OUTTAKING;
@@ -229,18 +225,23 @@ public class RobotContainer {
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
-		double xSpeed = MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
-		double ySpeed = MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
+		double xSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
+		double ySpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
 		switch (robotState) {
 			case OUTTAKING:
+				shooter.eject();
 				intake.eject();
 				feeder.eject();
 
 				break;
 			case INTAKING:
+				shooter.stop();
+
 				if (hasNote) {
+					intake.stop();
+					feeder.stop();
 					robotState = State.IDLE;
 					break;
 				}
@@ -248,33 +249,38 @@ public class RobotContainer {
 				fieldRelative = false;
 
 				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = limelightIntake.aim_proportional(0.01);
-					if (rotationalSpeed <= 0.2)
-						xSpeed = -0.75;
-				}
+					rotationalSpeed = 0;
+					ySpeed = limelightIntake.proportionalY(Constants.INTAKE_STRAFE_KP);
 
+					System.out.println("Horizontal Speed: " + ySpeed);
+					
+					// The bot is aligned to the note horizontally
+					if (Math.abs(limelightIntake.tx()) < 3 && ySpeed < Constants.INTAKE_STRAFE_THRESHOLD) {
+						ySpeed = 0;
+						xSpeed = -2;
+					}			
+				}
 				intake.intake();
 				feeder.intake();
-
 				break;
 			case PREPPING:
-				if (limelightShooter.hasTarget()) {
-					rotationalSpeed = limelightShooter.aim_proportional(0.025);
-					xSpeed = limelightShooter.range_proportional(85, 57.5);
-					fieldRelative = false;
+				feeder.stop();
+				intake.stop();
+				
+				shooter.shoot(Speed.SPEAKER);
+				if (!limelightShooter.hasTarget()) {
+					break;
 				}
+				double distanceError = limelightShooter.getDistanceError();
 
-				System.out.println(swerve.getRobotVelocity().toString());
+				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
+				xSpeed = limelightShooter.proportionalX(Constants.SPEAKER_APPROACH_KP);
+				fieldRelative = false;
 
-				if (
-					Math.abs(swerve.getRobotVelocity().vxMetersPerSecond) < 0.05 &&
-					Math.abs(swerve.getRobotVelocity().vyMetersPerSecond) < 0.05 &&
-					Math.abs(swerve.getRobotVelocity().omegaRadiansPerSecond) < 0.05 &&
-					shooter.isReady(false)) {
+				if (isShooterReady(distanceError, rotationalSpeed)) {
 					robotState = State.SHOOTING;
 					break;
 				}
-				shooter.shoot(Speed.SPEAKER);
 				break;
 			case SHOOTING:
 				fieldRelative = false;
@@ -299,6 +305,7 @@ public class RobotContainer {
 
 	/**
 	 * Sets {@link #hasNote} to true if the LaserCAN detects an object, false otherwise
+	 * @return returns the status of the note;
 	 */
 	public void updateNoteStatus() {
 		LaserCan.Measurement measurement = laserCan.getMeasurement();
@@ -311,4 +318,9 @@ public class RobotContainer {
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
+	private boolean isShooterReady(double distanceError, double rotationalSpeed) {
+		return Math.abs(distanceError) < 0.5 &&
+			rotationalSpeed < 0.05 &&
+			shooter.isReady(false);
+	}
 }

@@ -1,6 +1,6 @@
 //LimelightHelpers v1.9 (REQUIRES 2024.9.1)
 
-package frc.robot;
+package frc.robot.subsystems.Vision;
 
 import edu.wpi.first.networktables.DoubleArrayEntry;
 import edu.wpi.first.networktables.NetworkTable;
@@ -754,8 +754,6 @@ public class LimelightHelpers {
         }
         return null;
     }
-    /////
-    /////
 
     public static double getTX(String limelightName) {
         return getLimelightNTDouble(limelightName, "tx");

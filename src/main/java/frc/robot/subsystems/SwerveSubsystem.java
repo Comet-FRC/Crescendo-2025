@@ -593,4 +593,8 @@ public class SwerveSubsystem extends SubsystemBase {
     public double getRate() {
         return ((Pigeon2)(swerveDrive.getGyro().getIMU())).getRate();
     }
+
+    public SwerveDrive getSwerveDrive() {
+        return swerveDrive;
+    }
 }

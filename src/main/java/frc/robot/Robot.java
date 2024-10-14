@@ -7,7 +7,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +23,6 @@ public class Robot extends TimedRobot
 {
 
 	private static Robot instance;
-	private Command m_autonomousCommand;
 
 	private RobotContainer m_robotContainer;
 
@@ -75,7 +73,7 @@ public class Robot extends TimedRobot
 	@Override
 	public void disabledInit()
 	{
-		m_robotContainer.setMotorBrake(true);
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
 		disabledTimer.reset();
 		disabledTimer.start();
 	}
@@ -85,7 +83,7 @@ public class Robot extends TimedRobot
 	{
 		if (disabledTimer.hasElapsed(Constants.DrivebaseConstants.WHEEL_LOCK_TIME))
 		{
-			m_robotContainer.setMotorBrake(false);
+			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
 			disabledTimer.stop();
 		}
 	}
@@ -96,14 +94,8 @@ public class Robot extends TimedRobot
 	@Override
 	public void autonomousInit()
 	{
-		m_robotContainer.setMotorBrake(true);
-		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
-		// schedule the autonomous command (example)
-		if (m_autonomousCommand != null)
-		{
-			m_autonomousCommand.schedule();
-		}
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
+		m_robotContainer.limelightShooter.updateDesiredDistance();
 	}
 
 	/**
@@ -112,34 +104,22 @@ public class Robot extends TimedRobot
 	@Override
 	public void autonomousPeriodic()
 	{
-		m_robotContainer.updateNoteStatus();
-		m_robotContainer.updateOdometry();
-		m_robotContainer.drive(false);
+		m_robotContainer.updateRobotPose();
+		m_robotContainer.updateAutonState();
+		m_robotContainer.autonDrive(false);
 	}
 
 	@Override
 	public void teleopInit()
 	{
-		// This makes sure that the autonomous stops running when
-		// teleop starts running. If you want the autonomous to
-		// continue until interrupted by another command, remove
-		// this line or comment it out.
-		if (m_autonomousCommand != null)
-		{
-			m_autonomousCommand.cancel();
-		}
-		CommandScheduler.getInstance().cancelAll();
-		m_robotContainer.setDriveMode();
-		m_robotContainer.setMotorBrake(true);
+		m_robotContainer.limelightShooter.updateDesiredDistance();
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
 	}
 
-	/**
-	 * This function is called periodically during operator control.
-	 */
 	@Override
 	public void teleopPeriodic()
 	{
-		m_robotContainer.updateNoteStatus();
+		m_robotContainer.updateRobotPose();
 		m_robotContainer.updateState();
 		m_robotContainer.drive(true);
 	}
@@ -156,30 +136,6 @@ public class Robot extends TimedRobot
 		{
 			throw new RuntimeException(e);
 		}
-	}
-
-	/**
-	 * This function is called periodically during test mode.
-	 */
-	@Override
-	public void testPeriodic()
-	{
-	}
-
-	/**
-	 * This function is called once when the robot is first started up.
-	 */
-	@Override
-	public void simulationInit()
-	{
-	}
-
-	/**
-	 * This function is called periodically whilst in simulation.
-	 */
-	@Override
-	public void simulationPeriodic()
-	{
 	}
 
 	public static Logger getLogger() {
