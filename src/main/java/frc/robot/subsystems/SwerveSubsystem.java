@@ -5,12 +5,6 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,14 +15,12 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
-import frc.robot.Constants.AutonConstants;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
@@ -68,8 +60,6 @@ public class SwerveSubsystem extends SubsystemBase {
         // Disables cosine compensation
         // for simulations since it causes discrepancies not seen in real life.
         swerveDrive.setCosineCompensator(!SwerveDriveTelemetry.isSimulation);
-        
-        setupPathPlanner();
     }
 
     /**
@@ -80,40 +70,6 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public SwerveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
         swerveDrive = new SwerveDrive(driveCfg, controllerCfg, Constants.SWERVE.MAX_SPEED);
-    }
-
-    /**
-     * Setup AutoBuilder for PathPlanner.
-     */
-    public void setupPathPlanner() {
-        AutoBuilder.configureHolonomic(
-                this::getPose, // Robot pose supplier
-                this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getRobotVelocity, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::setChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your
-                                                 // Constants class
-                        AutonConstants.TRANSLATION_PID,
-                        // Translation PID constants
-                        AutonConstants.ANGLE_PID,
-                        // Rotation PID constants
-                        4.5,
-                        // Max module speed, in m/s
-                        swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),
-                        // Drive base radius in meters. Distance from robot center to furthest module.
-                        new ReplanningConfig()
-                // Default path replanning config. See the API for the options here
-                ),
-                () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red
-                    // alliance
-                    // This will flip the path being followed to the red side of the field.
-                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                    var alliance = DriverStation.getAlliance();
-                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-                },
-                this // Reference to this subsystem to set requirements
-        );
     }
 
     /**
@@ -140,40 +96,6 @@ public class SwerveSubsystem extends SubsystemBase {
                         new Config(),
                         this, swerveDrive),
                 3.0, 5.0, 3.0);
-    }
-
-    /**
-     * Get the path follower with events.
-     *
-     * @param pathName PathPlanner path name.
-     * @return {@link AutoBuilder#followPath(PathPlannerPath)} path command.
-     */
-    public Command getAutonomousCommand(String pathName) {
-        // Create a path following command using AutoBuilder. This will also trigger
-        // event markers.
-        return new PathPlannerAuto(pathName);
-    }
-
-    /**
-     * Use PathPlanner Path finding to go to a point on the field.
-     *
-     * @param pose Target {@link Pose2d} to go to.
-     * @return PathFinding command
-     */
-    public Command driveToPose(Pose2d pose) {
-        // Create the constraints to use while pathfinding
-        PathConstraints constraints = new PathConstraints(
-                swerveDrive.getMaximumVelocity(), 4.0,
-                swerveDrive.getMaximumAngularVelocity(), Units.degreesToRadians(720));
-
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-        return AutoBuilder.pathfindToPose(
-                pose,
-                constraints,
-                0.0, // Goal end velocity in meters/sec
-                0.0 // Rotation delay distance in meters. This is how far the robot should travel
-                    // before attempting to rotate.
-        );
     }
 
     /**
