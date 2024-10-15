@@ -12,9 +12,8 @@ public class LimelightShooter extends Limelight {
         super(name);
     }
 
-    public double proportionalX(double kP) {
+    public double forward_proportional(double kP) {
         double drivingAdjustment = kP * getDistanceError();
-
 		return drivingAdjustment;
     }
 
@@ -26,12 +25,8 @@ public class LimelightShooter extends Limelight {
 	public double aim_proportional(double kP) {
 		// tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
 		// your limelight 3 feed, tx should return roughly 31 degrees.
-		double targetingAngularVelocity = tx() * kP;
-
-		// convert to radians per second for our drive method
+		double targetingAngularVelocity = getTX() * kP;
 		targetingAngularVelocity *= Robot.getInstance().getRobotContainer().getSwerveSubsystem().getMaximumAngularVelocity();
-
-		//invert since tx is positive when the target is to the right of the crosshair
 		targetingAngularVelocity *= -1.0;
 
 		return targetingAngularVelocity;
@@ -74,13 +69,13 @@ public class LimelightShooter extends Limelight {
 	}
 
     @Override
-    public double ty() {
-        return LimelightHelpers.getTY(getName());
+    protected double getRawTX() {
+        return LimelightHelpers.getTX(getName());
     }
 
     @Override
-    public double tx() {
-        return LimelightHelpers.getTX(getName());
+    protected double getRawTY() {
+        return LimelightHelpers.getTY(getName());
     }
 
     public double getDistanceError() {

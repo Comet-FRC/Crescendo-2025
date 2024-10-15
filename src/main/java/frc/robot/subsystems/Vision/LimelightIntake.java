@@ -7,27 +7,33 @@ public class LimelightIntake extends Limelight {
         super(name);
     }
 
-    public double proportionalY(double kP) {
-        double delta_tx = tx();
-		double targetingSidewaysSpeed = delta_tx * kP;
+    public double strafe_proportional(double kP) {
+        kP *= Math.abs(getTY());
+        kP /= 100.0;
+        
+		double targetingSidewaysSpeed = getTX() * kP;
 		targetingSidewaysSpeed *= Robot.getInstance().getRobotContainer().getSwerveSubsystem().getMaximumVelocity();
 		targetingSidewaysSpeed *= -1;
 		return targetingSidewaysSpeed;
     }
 
     @Override
-    public double ty() {
-        return LimelightHelpers.getTY(getName());
-    }
+    protected double getRawTX() {
+        final double a = 0.002831;
+		final double b = 0.4219;
+		final double c = 11.37;
 
-    @Override
-    public double tx() {
-        final double a = 0.0345339;
-		final double n = 1.72763;
-		final double b = 14.174;
-		double target_tx =  a * Math.pow(ty(), n) + b;
+        double raw_ty = getRawTY();
+
+		double target_tx =  a*raw_ty*raw_ty + b*raw_ty + c;
+        
 		double delta_tx = target_tx - LimelightHelpers.getTX(getName());
 
         return delta_tx;
+    }
+
+    @Override
+    protected double getRawTY() {
+        return LimelightHelpers.getTY(getName());
     }
 }

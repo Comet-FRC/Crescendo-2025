@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -69,6 +70,9 @@ public class RobotContainer {
             Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
         }
 
+		// Press A to Zero Gyro
+		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
+		
 		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
 	}
@@ -78,6 +82,10 @@ public class RobotContainer {
 	}
 
 	public void updateRobotPose() {
+
+		limelightIntake.updateVisionData();
+		limelightShooter.updateVisionData();
+
 		swerve.getSwerveDrive().updateOdometry();
 
 		boolean doRejectUpdate = false;
@@ -144,8 +152,8 @@ public class RobotContainer {
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = 0;
-					ySpeed = limelightIntake.proportionalY(Constants.INTAKE_STRAFE_KP);
-					System.out.println(limelightIntake.tx());
+					ySpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
+					System.out.println(limelightIntake.getTX());
 					if (Math.abs(ySpeed) < 0.5) {
 						xSpeed = -2;
 					}			
@@ -166,7 +174,7 @@ public class RobotContainer {
 				double distanceError = limelightShooter.getDistanceError();
 
 				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
-				xSpeed = limelightShooter.proportionalX(Constants.SPEAKER_APPROACH_KP);
+				xSpeed = limelightShooter.forward_proportional(Constants.SPEAKER_APPROACH_KP);
 				fieldRelative = false;
 
 				/*if (limelightShooter.hasTarget()) {
@@ -177,7 +185,7 @@ public class RobotContainer {
 					rotationalSpeed = limelightShooter.turn_proportional(swerve.getPose(), 0.025);
 				}*/
 
-				if (isShooterReady(distanceError, rotationalSpeed)) {
+				if (isReadyToShoot(distanceError, rotationalSpeed)) {
 					robotState = State.SHOOTING;
 					break;
 				}
@@ -225,8 +233,8 @@ public class RobotContainer {
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
-		double xSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
-		double ySpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
+		double forwardSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
+		double strafeSpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
 		switch (robotState) {
@@ -250,15 +258,10 @@ public class RobotContainer {
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = 0;
-					ySpeed = limelightIntake.proportionalY(Constants.INTAKE_STRAFE_KP);
+					strafeSpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
 
-					System.out.println("Horizontal Speed: " + ySpeed);
-					
-					// The bot is aligned to the note horizontally
-					if (Math.abs(limelightIntake.tx()) < 3 && ySpeed < Constants.INTAKE_STRAFE_THRESHOLD) {
-						ySpeed = 0;
-						xSpeed = -2;
-					}			
+					forwardSpeed = -0.005 * (1.0 / Math.abs(strafeSpeed));
+					System.out.println(forwardSpeed);
 				}
 				intake.intake();
 				feeder.intake();
@@ -274,10 +277,10 @@ public class RobotContainer {
 				double distanceError = limelightShooter.getDistanceError();
 
 				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
-				xSpeed = limelightShooter.proportionalX(Constants.SPEAKER_APPROACH_KP);
+				forwardSpeed = limelightShooter.forward_proportional(Constants.SPEAKER_APPROACH_KP);
 				fieldRelative = false;
 
-				if (isShooterReady(distanceError, rotationalSpeed)) {
+				if (isReadyToShoot(distanceError, rotationalSpeed)) {
 					robotState = State.SHOOTING;
 					break;
 				}
@@ -300,7 +303,7 @@ public class RobotContainer {
 				break;
 		}
 
-		swerve.drive(xSpeed, ySpeed, rotationalSpeed, fieldRelative, 0.02);
+		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.02);
 	}
 
 	/**
@@ -318,9 +321,10 @@ public class RobotContainer {
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
-	private boolean isShooterReady(double distanceError, double rotationalSpeed) {
-		return Math.abs(distanceError) < 0.5 &&
-			rotationalSpeed < 0.05 &&
+	private boolean isReadyToShoot(double distanceError, double rotationalSpeed) {
+		System.out.println("distError " + distanceError + " rot " + rotationalSpeed);
+		return Math.abs(distanceError) < 0.2 &&
+			rotationalSpeed < 0.01 &&
 			shooter.isReady(false);
 	}
 }
