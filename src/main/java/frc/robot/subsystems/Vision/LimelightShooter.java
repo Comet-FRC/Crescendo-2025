@@ -1,5 +1,8 @@
 package frc.robot.subsystems.Vision;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -83,7 +86,14 @@ public class LimelightShooter extends Limelight {
     }
 
     public void updateDesiredDistance() {
-        desiredDistance = SmartDashboard.getNumber("robot/desired distance", 2.3);
+		double newDistance = SmartDashboard.getNumber("robot/desired distance", 2.3);
+
+		if (desiredDistance == newDistance) {
+			return;
+		}
+        desiredDistance = newDistance;
+		Robot.getLogger().log(Level.FINEST, "Robot shooter desired distance set to " + newDistance);
+		
     }
 
     public double getDesiredDistance() {

@@ -97,10 +97,10 @@ public class RobotContainer {
 		// if our angular velocity is greater than 720 degrees per second, ignore vision updates
 		if (Math.abs(swerve.getRate()) > 720) {
 			doRejectUpdate = true;
-		}
-		if(mt2.tagCount == 0) {
+		} else if(mt2.tagCount == 0) {
 			doRejectUpdate = true;
 		}
+		
 		if(!doRejectUpdate) {
 			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION_MEASUREMENT_STD_DEV);
 		}
