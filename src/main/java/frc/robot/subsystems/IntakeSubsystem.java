@@ -14,13 +14,19 @@ public class IntakeSubsystem extends SubsystemBase {
     private final CANSparkMax intakeMotor;
     static boolean intaking = false;
 
+    double speed = 0;
+
     public IntakeSubsystem() {
         intakeMotor = new CANSparkMax(Constants.Intake.motorID, MotorType.kBrushless);
         intakeMotor.setSmartCurrentLimit(80);
     }
 
     public void set(double speed) {
+        // Only set the speed if it's not already the speed.
+        if (speed == this.speed) return;
+
         intakeMotor.set(speed);
+        this.speed = speed;
     }
 
     public void intake() {

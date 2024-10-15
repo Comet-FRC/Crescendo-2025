@@ -20,6 +20,7 @@ public class FeederSubsystem extends SubsystemBase {
     private final VelocityVoltage flControl = new VelocityVoltage(0).withEnableFOC(true);
     private final VelocityVoltage frControl = new VelocityVoltage(0).withEnableFOC(true);
 
+    private double speed = 0;
 
     public FeederSubsystem() {
         feederMotorLeft = new TalonFX(Constants.Feeder.leftFeederID, "rio");
@@ -53,6 +54,10 @@ public class FeederSubsystem extends SubsystemBase {
 	}
 
     private void setFeederSpeed(double speed) {
+        // Only set the speed if it's not already the speed.
+        if (speed == this.speed) return;
+
+        this.speed = speed;
 		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speed)));
 		feederMotorRight.setControl(frControl.withVelocity(toRPS(speed)));
 	}
@@ -69,9 +74,5 @@ public class FeederSubsystem extends SubsystemBase {
 
     public void stop() {
         setFeederSpeed(0);
-    }
-
-    public double getTorqueCurrent() {
-        return feederMotorLeft.getTorqueCurrent().getValueAsDouble();
     }
 }

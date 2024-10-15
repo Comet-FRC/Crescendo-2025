@@ -4,7 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
 
@@ -21,6 +25,7 @@ public final class Constants {
 	public static final Matter CHASSIS    = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
 
+	
 	public static final double SHOOT_DISTANCE = 2.3; // in meters
 	public static final double SPEAKER_APPROACH_KP = 1;
 	public static final double SPEAKER_AIM_KP = 0.05;
@@ -28,6 +33,8 @@ public final class Constants {
 	public static final double INTAKE_TX_THRESHOLD = 5;
 
 	public static final double LIMELIGHT_DATA_SIZE = 5;
+
+	public static final Matrix<N3, N1> VISION_MEASUREMENT_STD_DEV = VecBuilder.fill(.7,.7,9999999);
 
 	public static final class SWERVE {
 		/**

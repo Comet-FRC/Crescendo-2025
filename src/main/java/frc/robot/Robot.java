@@ -88,9 +88,6 @@ public class Robot extends TimedRobot
 		}
 	}
 
-	/**
-	 * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
-	 */
 	@Override
 	public void autonomousInit()
 	{
@@ -98,13 +95,11 @@ public class Robot extends TimedRobot
 		m_robotContainer.limelightShooter.updateDesiredDistance();
 	}
 
-	/**
-	 * This function is called periodically during autonomous.
-	 */
 	@Override
 	public void autonomousPeriodic()
 	{
-		m_robotContainer.updateRobotPose();
+		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.updateAutonState();
 		m_robotContainer.autonDrive(false);
 	}
@@ -119,7 +114,8 @@ public class Robot extends TimedRobot
 	@Override
 	public void teleopPeriodic()
 	{
-		m_robotContainer.updateRobotPose();
+		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.updateState();
 		m_robotContainer.drive(true);
 	}

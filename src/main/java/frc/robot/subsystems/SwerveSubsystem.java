@@ -281,15 +281,6 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.drive(velocity);
     }
 
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("IMU/yaw", swerveDrive.getYaw().getDegrees());
-    }
-
-    @Override
-    public void simulationPeriodic() {
-    }
-
     /**
      * Get the swerve drive kinematics object.
      *

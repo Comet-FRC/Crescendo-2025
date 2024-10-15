@@ -53,6 +53,7 @@ public class RobotContainer {
 	/* Robot states */
 	public boolean hasNote = false;
 	private State robotState = State.IDLE;
+	private boolean isNewState = true;
 	private Timer shootTimer = new Timer();
 
 	private final Field2d field = new Field2d();
@@ -81,7 +82,7 @@ public class RobotContainer {
 		return swerve;
 	}
 
-	public void updateRobotPose() {
+	public void updateVision() {
 
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
@@ -101,7 +102,7 @@ public class RobotContainer {
 			doRejectUpdate = true;
 		}
 		if(!doRejectUpdate) {
-			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, VecBuilder.fill(.7,.7,9999999));
+			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION_MEASUREMENT_STD_DEV);
 		}
 
 		field.setRobotPose(swerve.getSwerveDrive().getPose());
@@ -115,6 +116,17 @@ public class RobotContainer {
 		SHOOTING
 	}
 
+	public void setRobotState(State state) {
+		// Already on the same state
+		if (robotState == state) {
+			return;
+		}
+
+		robotState = state;
+
+		SmartDashboard.putString("robot/robot state", robotState.toString());
+	}
+
 	public void updateAutonState(){
 		updateNoteStatus();
 
@@ -122,9 +134,9 @@ public class RobotContainer {
 			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
 				return;
 			}
-			robotState = State.PREPPING;
+			setRobotState(State.PREPPING);
 		} else {
-			robotState = State.INTAKING;
+			setRobotState(State.INTAKING);
 		}
 	}
 
@@ -210,22 +222,18 @@ public class RobotContainer {
 	 * Updates the robot state
 	 */
 	public void updateState() {
-		updateNoteStatus();
-
 		if (driverController.rightBumper().getAsBoolean() && hasNote) {
 			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
 				return;
 			}
-			robotState = State.PREPPING;
+			setRobotState(State.PREPPING);
 		} else if (driverController.leftBumper().getAsBoolean() && !hasNote) {
-			robotState = State.INTAKING;
+			setRobotState(State.INTAKING);
 		} else if (driverController.back().getAsBoolean()){ 
-			robotState = State.OUTTAKING;
+			setRobotState(State.OUTTAKING);
 		} else {
-			robotState = State.IDLE;
+			setRobotState(State.IDLE);
 		}
-
-		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
 
 	/**
@@ -261,6 +269,11 @@ public class RobotContainer {
 					strafeSpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
 
 					forwardSpeed = -0.005 * (1.0 / Math.abs(strafeSpeed));
+
+					// Cube the forward speed for a smoother start
+					if (forwardSpeed <= 1.0)
+						Math.pow(forwardSpeed, 3);
+
 					System.out.println(forwardSpeed);
 				}
 				intake.intake();
