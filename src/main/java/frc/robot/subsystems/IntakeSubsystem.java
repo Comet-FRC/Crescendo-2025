@@ -23,8 +23,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void set(double speed) {
         // Only set the speed if it's not already the speed.
-        if (speed == this.speed) return;
-
+        if (speed == this.speed) {
+            return;
+        }
+        
         intakeMotor.set(speed);
         this.speed = speed;
     }
@@ -41,6 +43,6 @@ public class IntakeSubsystem extends SubsystemBase {
      * Stops both wheels.
      */
     public void stop() {
-        intakeMotor.set(0);
+        set(0);
     }
 }

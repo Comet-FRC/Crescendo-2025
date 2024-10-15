@@ -17,6 +17,7 @@ public class LimelightShooter extends Limelight {
 
     public double forward_proportional(double kP) {
         double drivingAdjustment = kP * getDistanceError();
+		drivingAdjustment *= -1;
 		return drivingAdjustment;
     }
 

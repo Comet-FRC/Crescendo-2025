@@ -57,7 +57,8 @@
       "/SmartDashboard/SendableChooser[0]": "String Chooser",
       "/SmartDashboard/auto/Auto Chooser": "String Chooser",
       "/SmartDashboard/navX-Sensor[1]": "Gyro",
-      "/SmartDashboard/navX-Sensor[4]": "Gyro"
+      "/SmartDashboard/navX-Sensor[4]": "Gyro",
+      "/SmartDashboard/robot/field": "Field2d"
     },
     "windows": {
       "/SmartDashboard/Field": {
