@@ -53,7 +53,7 @@ public class FeederSubsystem extends SubsystemBase {
 		return rpm / 60.0;
 	}
 
-    private void setFeederSpeed(double speed) {
+    public void setFeederSpeed(double speed) {
         // Only set the speed if it's not already the speed.
         if (speed == this.speed) return;
 

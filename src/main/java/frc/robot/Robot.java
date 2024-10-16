@@ -99,9 +99,7 @@ public class Robot extends TimedRobot
 	public void autonomousPeriodic()
 	{
 		m_robotContainer.updateVision();
-		m_robotContainer.updateNoteStatus();
-		m_robotContainer.updateAutonState();
-		m_robotContainer.autonDrive(false);
+		m_robotContainer.drive(false);
 	}
 
 	@Override
@@ -115,8 +113,6 @@ public class Robot extends TimedRobot
 	public void teleopPeriodic()
 	{
 		m_robotContainer.updateVision();
-		m_robotContainer.updateNoteStatus();
-		m_robotContainer.updateState();
 		m_robotContainer.drive(true);
 	}
 

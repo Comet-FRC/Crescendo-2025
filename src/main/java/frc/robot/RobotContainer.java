@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.PrepShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -55,9 +56,15 @@ public class RobotContainer {
 	/* Robot states */
 	public boolean hasNote = false;
 	private State robotState = State.IDLE;
-	private Timer shootTimer = new Timer();
 
 	private final Field2d field = new Field2d();
+
+	private boolean isForwardOverriden = false;
+	private boolean isStrafeOverriden = false;
+	private boolean isRotationOverriden = false;
+	private double forwardSpeedOverride = 0;
+	private double strafeSpeedOverride = 0;
+	private double rotationalSpeedOverride = 0;
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -74,6 +81,10 @@ public class RobotContainer {
 
 		// Press A to Zero Gyro
 		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
+
+		driverController.rightBumper()
+			.and(driverController.leftBumper().negate())
+			.onTrue(new PrepShootCommand(shooter, limelightShooter));
 		
 		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
@@ -131,181 +142,42 @@ public class RobotContainer {
 		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
 
-	public void updateAutonState(){
-		updateNoteStatus();
-
-		if (hasNote) {
-			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
-				return;
-			}
-			setRobotState(State.PREPPING);
-		} else {
-			setRobotState(State.INTAKING);
-		}
-	}
-
-	/**
-	 * Makes the robot move. Contains code to control auto-aim button presses
-	 * @param fieldRelative whether or not the robot is driving in field oriented mode
-	 */
-	public void autonDrive(boolean fieldRelative) {
-		double forwardSpeed = 0;
-		double strafeSpeed = 0;
-		double rotationalSpeed = 0;
-
-		switch (robotState) {
-			case INTAKING:
-				shooter.stop();
-
-				if (hasNote) {
-					intake.stop();
-					feeder.stop();
-					robotState = State.IDLE;
-					break;
-				}
-
-				fieldRelative = false;
-
-				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = 0;
-					strafeSpeed = MathUtil.applyDeadband(limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP), 0.06);
-
-					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
-						forwardSpeed = -2;
-					} 
-				} else {
-					rotationalSpeed = -2;
-				}
-
-				intake.intake();
-				feeder.intake();
-				break;
-			case PREPPING:
-				feeder.stop();
-				intake.stop();
-				
-				shooter.shoot(Speed.SPEAKER);
-
-				double distanceError = limelightShooter.getDistanceError();
-
-				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
-				forwardSpeed = limelightShooter.forward_proportional(Constants.SPEAKER_APPROACH_KP);
-				fieldRelative = false;
-
-				/*if (limelightShooter.hasTarget()) {
-					rotationalSpeed = limelightShooter.aim_proportional(0.02);
-					xSpeed = limelightShooter.range_proportional(0.1, SmartDashboard.getNumber("robot/desired distance", 2.2), 57.13);
-					fieldRelative = false;
-				} else {
-					rotationalSpeed = limelightShooter.turn_proportional(swerve.getPose(), 0.025);
-				}*/
-
-				if (isReadyToShoot(distanceError)) {
-					robotState = State.SHOOTING;
-					break;
-				}
-				break;
-			case SHOOTING:
-				fieldRelative = false;
-				shootTimer.restart();
-				feeder.intake();
-				if (shootTimer.hasElapsed(Constants.Shooter.postShotTimeout)) {
-					robotState = State.IDLE;
-					feeder.stop();
-				}
-				break;
-			default:
-				break;
-		}
-
-		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.02);
-	}
-
-	/**
-	 * Updates the robot state
-	 */
-	public void updateState() {
-		if (driverController.rightBumper().getAsBoolean() && hasNote) {
-			if (robotState == State.PREPPING || robotState == State.SHOOTING) {
-				return;
-			}
-			setRobotState(State.PREPPING);
-		} else if (driverController.leftBumper().getAsBoolean() && !hasNote) {
-			setRobotState(State.INTAKING);
-		} else if (driverController.back().getAsBoolean()){ 
-			setRobotState(State.OUTTAKING);
-		} else {
-			setRobotState(State.IDLE);
-		}
-	}
-
 	/**
 	 * Makes the robot move. Contains code to control auto-aim button presses
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
+
+
 		double forwardSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
 		double strafeSpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
 
+
+		if (isForwardOverriden) {
+			forwardSpeed = forwardSpeedOverride;
+		}
+
+		if (isStrafeOverriden) {
+			strafeSpeed = strafeSpeedOverride;
+		}
+
+		if (isRotationOverriden) {
+			rotationalSpeed = rotationalSpeedOverride;
+		}
+
 		switch (robotState) {
 			case OUTTAKING:
-				shooter.eject();
-				intake.eject();
-				feeder.eject();
-
 				break;
 			case INTAKING:
-				shooter.stop();
-
-				if (hasNote) {
-					intake.stop();
-					feeder.stop();
-					robotState = State.IDLE;
-					break;
-				}
-
 				fieldRelative = false;
-
-				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = 0;
-					strafeSpeed = MathUtil.applyDeadband(limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP), 0.06);
-
-					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
-						forwardSpeed = -2;
-					} 
-				}
-				intake.intake();
-				feeder.intake();
 				break;
 			case PREPPING:
-				feeder.stop();
-				intake.stop();
-				
-				shooter.shoot(Speed.SPEAKER);
-				if (!limelightShooter.hasTarget()) {
-					break;
-				}
-				
-				double distanceError = limelightShooter.getDistanceError();
-
-				rotationalSpeed = limelightShooter.aim_proportional(Constants.SPEAKER_AIM_KP);
-				forwardSpeed = limelightShooter.forward_proportional(Constants.SPEAKER_APPROACH_KP);
+				if (!limelightShooter.hasTarget()) break;
 				fieldRelative = false;
-
-				if (isReadyToShoot(distanceError)) {
-					robotState = State.SHOOTING;
-					break;
-				}
 				break;
 			case SHOOTING:
 				fieldRelative = false;
-				shootTimer.restart();
-				feeder.intake();
-				if (shootTimer.hasElapsed(Constants.Shooter.postShotTimeout)) {
-					robotState = State.IDLE;
-					feeder.stop();
-				}
 				break;
 			default:
 				robotState = State.IDLE;
@@ -317,6 +189,23 @@ public class RobotContainer {
 		}
 
 		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.02);
+		
+		/*
+		 * The loop is over so we reset variables.
+		 * Next thing that runs is the command scheduler
+		 */
+		isForwardOverriden = false;
+		isStrafeOverriden = false;
+		isRotationOverriden = false;
+	}
+
+	/**
+	 * Sets hasNote
+	 */
+	public void setNoteStatus(boolean hasNote) {
+		this.hasNote = hasNote;
+		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
 	/**
@@ -334,15 +223,21 @@ public class RobotContainer {
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 
-	private boolean isReadyToShoot(double distanceError) {
-		ChassisSpeeds robotVelocity = swerve.getRobotVelocity();
+	public void setForwardSpeedOverride(double forwardSpeed) {
+		if (!isForwardOverriden)
+			isForwardOverriden = true;
+		forwardSpeedOverride = forwardSpeed;
+	}
 
-		// TODO: Check if these values look good
-		return
-			Math.abs(distanceError) < 0.025 &&
-			Math.abs(robotVelocity.vxMetersPerSecond) < 0.01 &&
-			Math.abs(robotVelocity.vyMetersPerSecond) < 0.01 &&
-			Math.abs(robotVelocity.omegaRadiansPerSecond) < 4 &&
-			shooter.isReady(false);
+	public void setStrafeSpeedOverride(double strafeSpeed) {
+		if (!isStrafeOverriden)
+			isStrafeOverriden = true;
+		strafeSpeedOverride = strafeSpeed;
+	}
+
+	public void setRotationalSpeedOverride(double rotationalSpeed) {
+		if (!isRotationOverriden)
+			isRotationOverriden = true;
+		rotationalSpeedOverride = rotationalSpeed;
 	}
 }

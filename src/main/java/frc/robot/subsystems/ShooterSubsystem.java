@@ -91,11 +91,11 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		return rpm / 60.0;
 	}
 
-	public void shoot(Speed speed) {
-		setVelocity(speed);
+	public void shoot() {
+		setVelocity(Speed.SPEAKER);
 	}
 
-	private void setVelocity(Speed speed) {
+	public void setVelocity(Speed speed) {
 		// The target speed is already set to that value, no action needed
 		if (speedTarget.equals(shooterSpeeds.get(speed))) {
 			return;
