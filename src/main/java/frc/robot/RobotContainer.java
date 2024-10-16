@@ -168,12 +168,15 @@ public class RobotContainer {
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = 0;
-					strafeSpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
+					strafeSpeed = MathUtil.applyDeadband(limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP), 0.06);
 
-					forwardSpeed = -0.005 * (1.0 / Math.abs(strafeSpeed));
+					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
+						forwardSpeed = -2;
+					} 
 				} else {
 					rotationalSpeed = -2;
 				}
+
 				intake.intake();
 				feeder.intake();
 				break;
@@ -271,10 +274,6 @@ public class RobotContainer {
 					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
 						forwardSpeed = -2;
 					} 
-					
-					/*else {
-						forwardSpeed = -0.0025 * (1.0 / Math.abs(strafeSpeed));
-					}*/
 				}
 				intake.intake();
 				feeder.intake();
@@ -338,6 +337,7 @@ public class RobotContainer {
 	private boolean isReadyToShoot(double distanceError) {
 		ChassisSpeeds robotVelocity = swerve.getRobotVelocity();
 
+		// TODO: Check if these values look good
 		return
 			Math.abs(distanceError) < 0.025 &&
 			Math.abs(robotVelocity.vxMetersPerSecond) < 0.01 &&
