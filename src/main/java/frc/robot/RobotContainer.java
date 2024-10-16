@@ -16,7 +16,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.PrepShootCommand;
+import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -84,7 +87,17 @@ public class RobotContainer {
 
 		driverController.rightBumper()
 			.and(driverController.leftBumper().negate())
-			.onTrue(new PrepShootCommand(shooter, limelightShooter));
+			.onTrue(
+				new PrepShootCommand(shooter, limelightShooter)
+				.andThen(new ShootCommand(shooter, feeder))
+			);
+
+		driverController.leftBumper()
+			.and(driverController.rightBumper().negate())
+			.onTrue(new IntakeCommand(intake, feeder, limelightIntake, laserCan));
+
+		driverController.back()
+			.onTrue(new OuttakeCommand(shooter, feeder, intake));
 		
 		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
