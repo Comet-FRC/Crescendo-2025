@@ -19,9 +19,9 @@ public class LimelightIntake extends Limelight {
 
     @Override
     protected double getRawTX() {
-        final double a = 0.002831;
-		final double b = 0.4219;
-		final double c = 11.37;
+        final double a = 0.01024;
+		final double b = 0.1129;
+		final double c = 13.9;
 
         double raw_ty = getRawTY();
 

@@ -5,15 +5,15 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.FeederSubsystem;
@@ -27,6 +27,8 @@ import frc.robot.subsystems.Vision.LimelightShooter;
 
 import java.io.File;
 import java.util.logging.Level;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
@@ -58,6 +60,10 @@ public class RobotContainer {
 	private Timer shootTimer = new Timer();
 
 	private final Field2d field = new Field2d();
+
+	private double laserCanDistance = 0;
+
+	private final SendableChooser<Command> autoChooser;
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -77,6 +83,18 @@ public class RobotContainer {
 		
 		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
+
+		autoChooser = AutoBuilder.buildAutoChooser(); // Default auto will be `Commands.none()`
+    	SmartDashboard.putData("Auto Mode", autoChooser);
+	}
+
+	/**
+	 * Use this to pass the autonomous command to the main {@link Robot} class.
+	 * @return the command to run in autonomous
+	 */
+	public Command getAutonomousCommand() {
+		// An example command will be run in autonomous
+		return autoChooser.getSelected();
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
@@ -148,43 +166,53 @@ public class RobotContainer {
 	 * Makes the robot move. Contains code to control auto-aim button presses
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
-	public void autonDrive(boolean fieldRelative) {
+	public void autonDrive(ChassisSpeeds chassisSpeeds) {
+		boolean fieldRelative = false;
+
 		double forwardSpeed = 0;
 		double strafeSpeed = 0;
 		double rotationalSpeed = 0;
 
 		switch (robotState) {
 			case INTAKING:
-				shooter.stop();
+			shooter.stop();
 
-				if (hasNote) {
-					intake.stop();
-					feeder.stop();
-					robotState = State.IDLE;
-					break;
-				}
+			fieldRelative = false;
 
-				fieldRelative = false;
-
-				if (limelightIntake.hasTarget()) {
-					rotationalSpeed = 0;
-					strafeSpeed = MathUtil.applyDeadband(limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP), 0.06);
-
-					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
-						forwardSpeed = -2;
-					} 
-				} else {
-					rotationalSpeed = -2;
-				}
-
-				intake.intake();
-				feeder.intake();
-				break;
+			if (limelightIntake.hasTarget()) {
+				rotationalSpeed = 0;
+				strafeSpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
+				if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < Constants.INTAKE_STRAFE_THRESHOLD &&
+					Math.abs(limelightIntake.getTX()) < 5
+				) {
+					forwardSpeed = -2;
+				} 
+			}
+			intake.intake();
+			feeder.intake();
+			break;
 			case PREPPING:
 				feeder.stop();
 				intake.stop();
 				
 				shooter.shoot(Speed.SPEAKER);
+
+				if (hasNote) {
+					if (laserCanDistance < 51) {
+						feeder.setVelocity(100);
+					} else {
+						feeder.stop();
+					}
+					/*double feederKp = 1500;
+					double diff = 52 - laserCanDistance;
+					diff *= feederKp;
+					diff = MathUtil.applyDeadband(diff, 50);
+					feeder.setVelocity(diff);
+					System.out.println(diff);*/
+					intake.stop();
+					
+					robotState = State.IDLE;
+				}
 
 				double distanceError = limelightShooter.getDistanceError();
 
@@ -230,7 +258,7 @@ public class RobotContainer {
 				return;
 			}
 			setRobotState(State.PREPPING);
-		} else if (driverController.leftBumper().getAsBoolean() && !hasNote) {
+		} else if (driverController.leftBumper().getAsBoolean()) {
 			setRobotState(State.INTAKING);
 		} else if (driverController.back().getAsBoolean()){ 
 			setRobotState(State.OUTTAKING);
@@ -259,8 +287,19 @@ public class RobotContainer {
 				shooter.stop();
 
 				if (hasNote) {
+					if (laserCanDistance < 51) {
+						feeder.setVelocity(100);
+					} else {
+						feeder.stop();
+					}
+					/*double feederKp = 1500;
+					double diff = 52 - laserCanDistance;
+					diff *= feederKp;
+					diff = MathUtil.applyDeadband(diff, 50);
+					feeder.setVelocity(diff);
+					System.out.println(diff);*/
 					intake.stop();
-					feeder.stop();
+					
 					robotState = State.IDLE;
 					break;
 				}
@@ -269,9 +308,10 @@ public class RobotContainer {
 
 				if (limelightIntake.hasTarget()) {
 					rotationalSpeed = 0;
-					strafeSpeed = MathUtil.applyDeadband(limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP), 0.06);
-
-					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < 0.01) {
+					strafeSpeed = limelightIntake.strafe_proportional(Constants.INTAKE_STRAFE_KP);
+					if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < Constants.INTAKE_STRAFE_THRESHOLD &&
+						Math.abs(limelightIntake.getTX()) < 5
+					) {
 						forwardSpeed = -2;
 					} 
 				}
@@ -330,7 +370,8 @@ public class RobotContainer {
 			return;
 
 		hasNote = measurement.distance_mm <= 75;
-		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		laserCanDistance = measurement.distance_mm;
+		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 

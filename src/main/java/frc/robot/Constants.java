@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.util.PIDConstants;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -11,6 +13,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
+
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean constants. This
@@ -27,10 +30,12 @@ public final class Constants {
 
 	
 	public static final double SHOOT_DISTANCE = 2.4; // in meters
-	public static final double SPEAKER_APPROACH_KP = 3;
-	public static final double SPEAKER_AIM_KP = 0.01;
-	public static final double INTAKE_STRAFE_KP = 0.05;
+	public static final double SPEAKER_APPROACH_KP = 3.1;
+	public static final double SPEAKER_AIM_KP = 0.011;
+	public static final double INTAKE_STRAFE_KP = 0.065;
 	public static final double INTAKE_TX_THRESHOLD = 5;
+	public static final double INTAKE_STRAFE_THRESHOLD = 0.1;
+	public static final double LASERCAN_DESIRED_DISTANCE = 50;
 
 	public static final double LIMELIGHT_DATA_SIZE = 5;
 
@@ -48,6 +53,11 @@ public final class Constants {
 	public static final class DrivebaseConstants {
 		// Hold time on motor brakes when disabled
 		public static final double WHEEL_LOCK_TIME = 10; // seconds
+	}
+
+	public static final class AutonConstants {
+		public static final PIDConstants TRANSLATION_PID = new PIDConstants(6, 0, 0);
+		public static final PIDConstants ANGLE_PID       = new PIDConstants(4, 0, 0.01);
 	}
 
 	public class Intake {

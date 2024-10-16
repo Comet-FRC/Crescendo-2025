@@ -1,7 +1,6 @@
 package frc.robot.subsystems.Vision;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;

@@ -2,25 +2,19 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.9471356546509068,
-      "y": 4.148470076299583
+      "x": 1.472998058688882,
+      "y": 5.599460783737701
     },
-    "rotation": 110.28255908891659
+    "rotation": 0
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "SubWoof"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "Test"
+            "pathName": "3rd Note"
           }
         }
       ]
