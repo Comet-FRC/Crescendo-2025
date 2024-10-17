@@ -18,11 +18,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
+import frc.robot.commands.AutoIntakeCommand;
 import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.PrepShootCommand;
 import frc.robot.commands.ShootCommand;
+import frc.robot.commands.AutoShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -93,6 +96,16 @@ public class RobotContainer {
             Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
         }
 
+		configureBindings();
+		
+		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
+		SmartDashboard.putData("robot/field", field);
+
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+	}
+
+	private void configureBindings() {
 		// Press A to Zero Gyro
 		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
 
@@ -101,21 +114,27 @@ public class RobotContainer {
 			.whileTrue(
 				new PrepShootCommand(shooter, limelightShooter)
 				.deadlineWith(new IndexNote(feeder, laserCan))
-				.andThen(new ShootCommand(shooter, feeder))
+				.andThen(new AutoShootCommand(shooter, feeder))
 			);
 
 		driverController.leftBumper()
 			.and(driverController.rightBumper().negate())
-			.whileTrue(new IntakeCommand(swerve, intake, feeder, limelightIntake, laserCan));
+			.whileTrue(new AutoIntakeCommand(swerve, intake, feeder, limelightIntake, laserCan));
 
 		driverController.back()
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
-		
-		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
-		SmartDashboard.putData("robot/field", field);
 
-		autoChooser = AutoBuilder.buildAutoChooser();
-		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+		// back button
+		new JoystickButton(operatorController, 9)
+			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
+
+		// left bumper
+		new JoystickButton(operatorController, 7)
+			.whileTrue(new IntakeCommand(intake, feeder));
+
+		// right bumper
+		new JoystickButton(operatorController, 8)
+			.whileTrue(new ShootCommand(shooter));		
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
@@ -126,7 +145,7 @@ public class RobotContainer {
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		NamedCommands.registerCommand("Intake",
 		Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Intaking");})
-			.andThen(new IntakeCommand(swerve, intake, feeder, limelightIntake, laserCan))
+			.andThen(new AutoIntakeCommand(swerve, intake, feeder, limelightIntake, laserCan))
 			.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Intake complete"); }))
 		);
 
@@ -135,7 +154,7 @@ public class RobotContainer {
 				.andThen(new PrepShootCommand(shooter, limelightShooter))
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
-				.andThen(new ShootCommand(shooter, feeder))
+				.andThen(new AutoShootCommand(shooter, feeder))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shot complete"); }))
 			);
 	}
