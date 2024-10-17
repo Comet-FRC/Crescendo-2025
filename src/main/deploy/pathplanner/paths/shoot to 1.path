@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 2.4,
-        "y": 5.496947290190876
+        "y": 5.599049222789803
       },
       "prevControl": null,
       "nextControl": {
         "x": 2.4133184068837275,
-        "y": 5.868227045096066
+        "y": 5.970328977694993
       },
       "isLocked": false,
       "linkedName": "middle shoot location"
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "middle start to middle notes",
+  "folder": "middle start to alliance notes",
   "previewStartingState": {
     "rotation": -179.127542877098,
     "velocity": 0

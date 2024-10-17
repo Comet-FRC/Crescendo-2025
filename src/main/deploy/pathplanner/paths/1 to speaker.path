@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 2.4,
-        "y": 5.496947290190876
+        "y": 5.599049222789803
       },
       "prevControl": {
         "x": 2.3854724252658386,
-        "y": 6.295198763237032
+        "y": 6.397300695835959
       },
       "nextControl": null,
       "isLocked": false,
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "middle start to middle notes",
+  "folder": "middle start to alliance notes",
   "previewStartingState": {
     "rotation": 178.93547198525013,
     "velocity": 0
