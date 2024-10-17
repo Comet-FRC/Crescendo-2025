@@ -36,4 +36,12 @@ public class LimelightIntake extends Limelight {
     protected double getRawTY() {
         return LimelightHelpers.getTY(getName());
     }
+
+    public void turnOnLED() {
+        LimelightHelpers.setLEDMode_ForceOn(getName());
+    }
+
+    public void turnOffLED() {
+        LimelightHelpers.setLEDMode_ForceOff(getName());
+    }
 }

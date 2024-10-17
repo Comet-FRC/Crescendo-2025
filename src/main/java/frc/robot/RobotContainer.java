@@ -124,17 +124,21 @@ public class RobotContainer {
 		driverController.back()
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 
-		// back button
-		new JoystickButton(operatorController, 9)
+		// back button (not B button)
+		new JoystickButton(operatorController, 7)
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 
 		// left bumper
-		new JoystickButton(operatorController, 7)
+		new JoystickButton(operatorController, 5)
 			.whileTrue(new IntakeCommand(intake, feeder));
 
 		// right bumper
-		new JoystickButton(operatorController, 8)
+		new JoystickButton(operatorController, 6)
 			.whileTrue(new ShootCommand(shooter));		
+
+		// right bumper
+		new JoystickButton(operatorController, 8)
+			.whileTrue(new IndexNote(feeder, laserCan));
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
@@ -175,20 +179,26 @@ public class RobotContainer {
 		LimelightHelpers.SetRobotOrientation("limelight-shooter", swerve.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-shooter");
 		
-		// if our angular velocity is greater than 720 degrees per second, ignore vision updates
-		if (Math.abs(swerve.getRate()) > 720) {
-			doRejectUpdate = true;
-		} else if(mt2.tagCount == 0) {
-			doRejectUpdate = true;
-		}
-		
-		if(!doRejectUpdate) {
-			//double estimatedRotation = -mt2.pose.getRotation().getDegrees();
-			//swerve.getSwerveDrive().setGyro(new Rotation3d(estimatedRotation, 0, 0));
-			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION_MEASUREMENT_STD_DEV);
+		try {
+			// if our angular velocity is greater than 720 degrees per second, ignore vision updates
+			if (Math.abs(swerve.getRate()) > 720) {
+				doRejectUpdate = true;
+			} else if(mt2.tagCount == 0) {
+				doRejectUpdate = true;
+			}
+			
+			if(!doRejectUpdate) {
+				//double estimatedRotation = -mt2.pose.getRotation().getDegrees();
+				//swerve.getSwerveDrive().setGyro(new Rotation3d(estimatedRotation, 0, 0));
+				swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION_MEASUREMENT_STD_DEV);
+			}
+
+			SmartDashboard.putNumber("robot/estimated rotation", mt2.pose.getRotation().getDegrees());
+		} catch (Exception e) {
+			Robot.getLogger().log(Level.SEVERE, e.getMessage());
 		}
 
-		SmartDashboard.putNumber("robot/estimated rotation", mt2.pose.getRotation().getDegrees());
+		
 		field.setRobotPose(swerve.getSwerveDrive().getPose());
   	}
 
@@ -271,15 +281,6 @@ public class RobotContainer {
 	}
 
 	/**
-	 * Sets hasNote
-	 */
-	public void setNoteStatus(boolean hasNote) {
-		this.hasNote = hasNote;
-		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
-		SmartDashboard.putBoolean("robot/hasNote", hasNote);
-	}
-
-	/**
 	 * Sets {@link #hasNote} to true if the LaserCAN detects an object, false otherwise
 	 * @return returns the status of the note;
 	 */
@@ -290,7 +291,12 @@ public class RobotContainer {
 			return;
 
 		hasNote = measurement.distance_mm <= 75;
-		//SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
+		if (hasNote) {
+			limelightIntake.turnOnLED();
+		} else {
+			limelightIntake.turnOffLED();
+		}
+		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}
 

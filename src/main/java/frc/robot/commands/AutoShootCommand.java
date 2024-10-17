@@ -35,7 +35,7 @@ public class AutoShootCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        return shootTimer.hasElapsed(Constants.Shooter.postShotTimeout);
+        return !Robot.getInstance().getRobotContainer().hasNote || shootTimer.hasElapsed(Constants.Shooter.postShotTimeout);
     }
 
     @Override

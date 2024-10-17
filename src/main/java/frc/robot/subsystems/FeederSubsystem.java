@@ -59,17 +59,17 @@ public class FeederSubsystem extends SubsystemBase {
 
         this.speed = speed;
 		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speed)));
-		feederMotorRight.setControl(frControl.withVelocity(toRPS(speed)));
+		feederMotorRight.setControl(frControl.withVelocity(toRPS(-speed)));
 	}
 
     public void intake() {
        
-        setVelocity(-750);
+        setVelocity(-500);
     }
 
     public void eject() {
        
-        setVelocity(750);
+        setVelocity(500);
     }
 
     public void stop() {

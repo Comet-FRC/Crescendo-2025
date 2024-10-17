@@ -108,6 +108,7 @@ public class Robot extends TimedRobot
 	public void autonomousPeriodic()
 	{
 		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.drive(false);
 	}
 
@@ -131,6 +132,7 @@ public class Robot extends TimedRobot
 	public void teleopPeriodic()
 	{
 		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.drive(true);
 	}
 

@@ -31,7 +31,6 @@ public class OuttakeCommand extends Command {
         shooter.stop();
         feeder.stop();
         intake.stop();
-        Robot.getInstance().getRobotContainer().updateNoteStatus();
         Robot.getInstance().getRobotContainer().setRobotState(State.IDLE);
     }
 }

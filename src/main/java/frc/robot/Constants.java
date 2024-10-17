@@ -33,7 +33,7 @@ public final class Constants {
 	public static final double SPEAKER_AIM_KP = 0.01;
 	public static final double INTAKE_STRAFE_KP = 0.05;
 	public static final double INTAKE_TX_THRESHOLD = 5;
-	public static final double INTAKE_STRAFE_THRESHOLD = 0.1;
+	public static final double INTAKE_STRAFE_THRESHOLD = 0.095;
 
 	public static final double LIMELIGHT_DATA_SIZE = 5;
 
@@ -63,7 +63,7 @@ public final class Constants {
 		public static final int motorID = 15;
 		/* Motor Speed Values */
 		public static final double intakingSpeed = 0.6;
-		public static final double ejectingSpeed = -0.6;
+		public static final double ejectingSpeed = -0.5;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;
@@ -96,6 +96,6 @@ public final class Constants {
 		public static final double kS = 0.21;  // Voltage to overcome static friction
 		public static final double RPMsPerVolt = 490;
 		/* Time to complete shot once Note no longer detected */
-		public static final double postShotTimeout = 0.35; // in seconds
+		public static final double postShotTimeout = 0.5; // in seconds
 	    }
 }

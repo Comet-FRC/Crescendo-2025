@@ -32,6 +32,11 @@ public class IndexNote extends Command {
     }
 
     @Override
+    public void initialize() {
+        robotContainer = Robot.getInstance().getRobotContainer();
+    }
+
+    @Override
     public void execute() {
         LaserCan.Measurement measurement = laserCan.getMeasurement();
 		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
@@ -39,8 +44,8 @@ public class IndexNote extends Command {
 
 		proximityDistanceMM = measurement.distance_mm;
 
-        robotContainer.setNoteStatus(true);
-        if (proximityDistanceMM < 51) {
+        //robotContainer.setNoteStatus(true);
+        if (proximityDistanceMM < 53) {
             feeder.setVelocity(100);
         } else {
             feeder.stop();
@@ -55,6 +60,7 @@ public class IndexNote extends Command {
     @Override
     public void end(boolean interrupted) {
         feeder.stop();
-        robotContainer.setRobotState(State.IDLE);
+        if (interrupted)
+            robotContainer.setRobotState(State.IDLE);
     }
 }
