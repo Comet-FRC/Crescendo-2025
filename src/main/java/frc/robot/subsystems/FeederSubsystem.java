@@ -53,7 +53,7 @@ public class FeederSubsystem extends SubsystemBase {
 		return rpm / 60.0;
 	}
 
-    public void setFeederSpeed(double speed) {
+    public void setVelocity(double speed) {
         // Only set the speed if it's not already the speed.
         if (speed == this.speed) return;
 
@@ -64,15 +64,15 @@ public class FeederSubsystem extends SubsystemBase {
 
     public void intake() {
        
-        setFeederSpeed(-500);
+        setVelocity(-750);
     }
 
     public void eject() {
        
-        setFeederSpeed(500);
+        setVelocity(750);
     }
 
     public void stop() {
-        setFeederSpeed(0);
+        setVelocity(0);
     }
 }

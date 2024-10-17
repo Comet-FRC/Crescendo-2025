@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import au.grapplerobotics.LaserCan;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -32,7 +33,7 @@ public class PrepShootCommand extends Command {
         double forwardSpeed = limelightShooter.forward_proportional(Constants.SPEAKER_APPROACH_KP);
 
         Robot.getInstance().getRobotContainer().setForwardSpeedOverride(forwardSpeed);
-        Robot.getInstance().getRobotContainer().setRotationalSpeedOverride(rotationalSpeed);
+        Robot.getInstance().getRobotContainer().overrideRotationalSpeed(rotationalSpeed);
     }
 
 

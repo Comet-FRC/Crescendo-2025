@@ -13,9 +13,12 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.PrepShootCommand;
@@ -32,6 +35,9 @@ import frc.robot.subsystems.Vision.LimelightShooter;
 import java.io.File;
 import java.util.logging.Level;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
 
@@ -41,6 +47,9 @@ import au.grapplerobotics.LaserCan;
  * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+	/* Autonomous */
+	private final SendableChooser<Command> autoChooser;
+
 	/* Controllers */
 	private final CommandXboxController driverController = new CommandXboxController(0);
 	private final Joystick operatorController = new Joystick(1);
@@ -73,6 +82,8 @@ public class RobotContainer {
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
+		registerPathplannerCommands();
+
 		DriverStation.silenceJoystickConnectionWarning(true);
 		try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
@@ -87,24 +98,50 @@ public class RobotContainer {
 
 		driverController.rightBumper()
 			.and(driverController.leftBumper().negate())
-			.onTrue(
+			.whileTrue(
 				new PrepShootCommand(shooter, limelightShooter)
+				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(new ShootCommand(shooter, feeder))
 			);
 
 		driverController.leftBumper()
 			.and(driverController.rightBumper().negate())
-			.onTrue(new IntakeCommand(intake, feeder, limelightIntake, laserCan));
+			.whileTrue(new IntakeCommand(swerve, intake, feeder, limelightIntake, laserCan));
 
 		driverController.back()
-			.onTrue(new OuttakeCommand(shooter, feeder, intake));
+			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 		
 		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
+
+		autoChooser = AutoBuilder.buildAutoChooser();
+		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
 		return swerve;
+	}
+
+	private void registerPathplannerCommands() {
+		/* REGISTERING COMMANDS FOR PATHPLANNER */
+		NamedCommands.registerCommand("Intake",
+		Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Intaking");})
+			.andThen(new IntakeCommand(swerve, intake, feeder, limelightIntake, laserCan))
+			.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Intake complete"); }))
+		);
+
+		NamedCommands.registerCommand("Shoot",
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Prepping");})
+				.andThen(new PrepShootCommand(shooter, limelightShooter))
+				.deadlineWith(new IndexNote(feeder, laserCan))
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
+				.andThen(new ShootCommand(shooter, feeder))
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shot complete"); }))
+			);
+	}
+
+	public Command getAutonomousCommand() {
+		return autoChooser.getSelected();
 	}
 
 	public void updateVision() {
@@ -154,6 +191,8 @@ public class RobotContainer {
 
 		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
+
+	
 
 	/**
 	 * Makes the robot move. Contains code to control auto-aim button presses
@@ -242,13 +281,13 @@ public class RobotContainer {
 		forwardSpeedOverride = forwardSpeed;
 	}
 
-	public void setStrafeSpeedOverride(double strafeSpeed) {
+	public void overrideStrafeSpeed(double strafeSpeed) {
 		if (!isStrafeOverriden)
 			isStrafeOverriden = true;
 		strafeSpeedOverride = strafeSpeed;
 	}
 
-	public void setRotationalSpeedOverride(double rotationalSpeed) {
+	public void overrideRotationalSpeed(double rotationalSpeed) {
 		if (!isRotationOverriden)
 			isRotationOverriden = true;
 		rotationalSpeedOverride = rotationalSpeed;

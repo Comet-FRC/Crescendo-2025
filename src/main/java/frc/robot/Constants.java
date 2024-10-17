@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.util.PIDConstants;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -31,6 +33,7 @@ public final class Constants {
 	public static final double SPEAKER_AIM_KP = 0.01;
 	public static final double INTAKE_STRAFE_KP = 0.05;
 	public static final double INTAKE_TX_THRESHOLD = 5;
+	public static final double INTAKE_STRAFE_THRESHOLD = 0.1;
 
 	public static final double LIMELIGHT_DATA_SIZE = 5;
 
@@ -48,6 +51,11 @@ public final class Constants {
 	public static final class DrivebaseConstants {
 		// Hold time on motor brakes when disabled
 		public static final double WHEEL_LOCK_TIME = 10; // seconds
+	}
+
+	public static final class AutonConstants {
+		public static final PIDConstants TRANSLATION_PID = new PIDConstants(6, 0, 0);
+		public static final PIDConstants ANGLE_PID       = new PIDConstants(4, 0, 0.01);
 	}
 
 	public class Intake {
@@ -88,6 +96,6 @@ public final class Constants {
 		public static final double kS = 0.21;  // Voltage to overcome static friction
 		public static final double RPMsPerVolt = 490;
 		/* Time to complete shot once Note no longer detected */
-		public static final double postShotTimeout = 0.1; // in seconds
+		public static final double postShotTimeout = 0.35; // in seconds
 	    }
 }

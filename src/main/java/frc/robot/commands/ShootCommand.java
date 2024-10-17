@@ -20,10 +20,17 @@ public class ShootCommand extends Command {
 
     @Override
     public void initialize() {
+        shootTimer.reset();
         shooter.shoot();
         feeder.intake();
-        shootTimer.start();
         Robot.getInstance().getRobotContainer().setRobotState(State.SHOOTING);
+    }
+
+    @Override
+    public void execute() {
+        if (!Robot.getInstance().getRobotContainer().hasNote) {
+            shootTimer.start();
+        }
     }
 
     @Override
