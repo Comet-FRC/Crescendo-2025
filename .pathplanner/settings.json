@@ -3,7 +3,7 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "middle start"
+    "middle start to middle notes"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,
