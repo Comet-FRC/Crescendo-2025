@@ -277,7 +277,7 @@ public class RobotContainer {
 		}
 
 		limelightIntake.setLEDMode(ledMode);
-		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.02);
+		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.01);
 		
 		/*
 		 * The loop is over so we reset variables.
