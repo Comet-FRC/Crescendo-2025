@@ -28,12 +28,12 @@ public final class Constants {
 	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
 
 	
-	public static final double SHOOT_DISTANCE = 2.3; // in meters
+	public static final double SHOOT_DISTANCE = 2.4; // in meters
 	public static final double SPEAKER_APPROACH_KP = 3;
 	public static final double SPEAKER_AIM_KP = 0.01;
-	public static final double INTAKE_STRAFE_KP = 0.05;
-	public static final double INTAKE_TX_THRESHOLD = 5;
-	public static final double INTAKE_STRAFE_THRESHOLD = 0.095;
+	public static final double INTAKE_STRAFE_KP = 0.02;
+	public static final double INTAKE_TX_THRESHOLD = 2.5;
+	public static final double INTAKE_STRAFE_THRESHOLD = 0.08;
 
 	public static final double LIMELIGHT_DATA_SIZE = 5;
 

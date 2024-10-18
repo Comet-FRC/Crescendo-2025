@@ -21,6 +21,7 @@ public class AutoIntakeCommand extends Command {
     private RobotContainer robotContainer;
     
     Timer postIntakeTimer = new Timer();
+    double forwardSpeed = 0;
 
     public AutoIntakeCommand(SwerveSubsystem swerve,
         IntakeSubsystem intake,
@@ -57,10 +58,14 @@ public class AutoIntakeCommand extends Command {
         robotContainer.overrideStrafeSpeed(strafeSpeed);
 
         if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < Constants.INTAKE_STRAFE_THRESHOLD &&
-            Math.abs(limelight.getTX()) < 4.5) 
+            Math.abs(limelight.getTX()) <= Constants.INTAKE_TX_THRESHOLD) 
         {
-            robotContainer.setForwardSpeedOverride(-2);
-        } 
+            robotContainer.setForwardSpeedOverride(forwardSpeed);
+            if (forwardSpeed > -2)
+                forwardSpeed -= 0.05;
+        } else {
+            forwardSpeed = 0;
+        }
     }
 
     @Override

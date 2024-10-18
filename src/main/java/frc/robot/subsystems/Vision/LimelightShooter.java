@@ -3,8 +3,11 @@ package frc.robot.subsystems.Vision;
 import java.util.logging.Level;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class LimelightShooter extends Limelight {
@@ -82,21 +85,25 @@ public class LimelightShooter extends Limelight {
     }
 
     public double getDistanceError() {
-        return desiredDistance - getDistance();
+        return getDesiredDistance() - getDistance();
     }
 
     public void updateDesiredDistance() {
-		double newDistance = SmartDashboard.getNumber("robot/desired distance", 2.3);
+		double newDistance = SmartDashboard.getNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
 
 		if (desiredDistance == newDistance) {
 			return;
 		}
         desiredDistance = newDistance;
 		Robot.getLogger().log(Level.FINEST, "Robot shooter desired distance set to " + newDistance);
-		
     }
-
-    public double getDesiredDistance() {
-        return desiredDistance;
-    }
+	
+	public double getDesiredDistance() {
+		Pose3d pose = LimelightHelpers.getCameraPose3d_TargetSpace(getName());
+		double x = pose.getX();
+		double y = pose.getY();
+		double deltaAngle = Math.abs(Units.radiansToDegrees(Math.atan2(x, y)));
+		SmartDashboard.putNumber("robot/shooter delta angle", deltaAngle);
+		return desiredDistance - 0.1 * (1-deltaAngle/50.0);
+	}
 }

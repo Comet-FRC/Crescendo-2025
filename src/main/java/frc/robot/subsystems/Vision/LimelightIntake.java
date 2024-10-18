@@ -3,17 +3,18 @@ package frc.robot.subsystems.Vision;
 import frc.robot.Robot;
 
 public class LimelightIntake extends Limelight {
+    private LED_MODE ledMode;
+
     public LimelightIntake(String name) {
         super(name);
     }
 
     public double strafe_proportional(double kP) {
         kP *= Math.abs(getTY());
-        kP /= 50.0;
+        kP /= 75;
         
 		double targetingSidewaysSpeed = getTX() * kP;
 		targetingSidewaysSpeed *= Robot.getInstance().getRobotContainer().getSwerveSubsystem().getMaximumVelocity();
-		targetingSidewaysSpeed *= -1;
 		return targetingSidewaysSpeed;
     }
 
@@ -47,6 +48,10 @@ public class LimelightIntake extends Limelight {
     }
 
     public void setLEDMode(LED_MODE mode) {
+        if (ledMode == mode) return;
+
+        ledMode = mode;
+
         switch (mode) {
             case OFF:
                 LimelightHelpers.setLEDMode_ForceOff(getName());
