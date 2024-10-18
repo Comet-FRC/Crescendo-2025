@@ -124,15 +124,15 @@ public class RobotContainer {
 		new JoystickButton(operatorController, 7)
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 
-		// left bumper
+		// left bumper -> intake
 		new JoystickButton(operatorController, 5)
 			.whileTrue(new IntakeCommand(intake, feeder));
 
-		// right bumper
+		// right bumper -> shoot
 		new JoystickButton(operatorController, 6)
 			.whileTrue(new ShootCommand(shooter));		
 
-		// right bumper
+		// start button -> indexes note for testing
 		new JoystickButton(operatorController, 8)
 			.whileTrue(new IndexNote(feeder, laserCan));
 	}
