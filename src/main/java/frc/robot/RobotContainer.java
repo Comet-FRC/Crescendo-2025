@@ -34,6 +34,7 @@ import frc.robot.subsystems.ShooterSubsystem.Speed;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightIntake;
 import frc.robot.subsystems.Vision.LimelightShooter;
+import frc.robot.subsystems.Vision.LimelightIntake.LED_MODE;
 
 import java.io.File;
 import java.util.logging.Level;
@@ -247,6 +248,15 @@ public class RobotContainer {
 			rotationalSpeed = rotationalSpeedOverride;
 		}
 
+		// Logic to control the led on the limelight
+		LED_MODE ledMode = LED_MODE.OFF;
+
+		if (hasNote) {
+			ledMode = LED_MODE.ON;
+		} else {
+			ledMode = LED_MODE.OFF;
+		}
+
 		switch (robotState) {
 			case OUTTAKING:
 				break;
@@ -254,10 +264,12 @@ public class RobotContainer {
 				fieldRelative = false;
 				break;
 			case PREPPING:
+				ledMode = LED_MODE.BLINKING;
 				if (!limelightShooter.hasTarget()) break;
 				fieldRelative = false;
 				break;
 			case SHOOTING:
+				ledMode = LED_MODE.BLINKING;
 				fieldRelative = false;
 				break;
 			default:
@@ -269,6 +281,7 @@ public class RobotContainer {
 				break;
 		}
 
+		limelightIntake.setLEDMode(ledMode);
 		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.02);
 		
 		/*
@@ -291,11 +304,6 @@ public class RobotContainer {
 			return;
 
 		hasNote = measurement.distance_mm <= 75;
-		if (hasNote) {
-			limelightIntake.turnOnLED();
-		} else {
-			limelightIntake.turnOffLED();
-		}
 		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
 	}

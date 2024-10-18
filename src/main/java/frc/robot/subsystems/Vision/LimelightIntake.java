@@ -37,11 +37,23 @@ public class LimelightIntake extends Limelight {
         return LimelightHelpers.getTY(getName());
     }
 
-    public void turnOnLED() {
-        LimelightHelpers.setLEDMode_ForceOn(getName());
+    public enum LED_MODE {
+        OFF,
+        ON,
+        BLINKING
     }
 
-    public void turnOffLED() {
-        LimelightHelpers.setLEDMode_ForceOff(getName());
+    public void setLEDMode(LED_MODE mode) {
+        switch (mode) {
+            case OFF:
+                LimelightHelpers.setLEDMode_ForceOff(getName());
+                break;
+            case ON:
+                LimelightHelpers.setLEDMode_ForceOn(getName());
+                break;
+            case BLINKING:
+                LimelightHelpers.setLEDMode_ForceBlink(getName());
+                break;
+        }
     }
 }
