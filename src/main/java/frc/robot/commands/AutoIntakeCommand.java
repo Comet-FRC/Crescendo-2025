@@ -62,7 +62,7 @@ public class AutoIntakeCommand extends Command {
         {
             robotContainer.setForwardSpeedOverride(forwardSpeed);
             if (forwardSpeed > -2)
-                forwardSpeed -= 0.02;
+                forwardSpeed -= 0.01;
         } else {
             forwardSpeed -= 0.02;
         }

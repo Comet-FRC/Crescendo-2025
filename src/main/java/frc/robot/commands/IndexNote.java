@@ -40,7 +40,7 @@ public class IndexNote extends Command {
 		proximityDistanceMM = measurement.distance_mm;
 
         //robotContainer.setNoteStatus(true);
-        if (proximityDistanceMM < 53) {
+        if (proximityDistanceMM < 51) {
             feeder.setVelocity(100);
         } else {
             feeder.stop();

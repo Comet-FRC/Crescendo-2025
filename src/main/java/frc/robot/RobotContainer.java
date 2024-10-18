@@ -259,12 +259,10 @@ public class RobotContainer {
 				fieldRelative = false;
 				break;
 			case PREPPING:
-				ledMode = LED_MODE.BLINKING;
 				if (!limelightShooter.hasTarget()) break;
 				fieldRelative = false;
 				break;
 			case SHOOTING:
-				ledMode = LED_MODE.BLINKING;
 				fieldRelative = false;
 				break;
 			default:
