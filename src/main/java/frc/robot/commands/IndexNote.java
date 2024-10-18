@@ -1,16 +1,11 @@
 package frc.robot.commands;
 
 import au.grapplerobotics.LaserCan;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.RobotContainer.State;
 import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.Vision.LimelightIntake;
 
 public class IndexNote extends Command {
     private final FeederSubsystem feeder;
