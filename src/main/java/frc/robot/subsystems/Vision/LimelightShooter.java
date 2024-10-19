@@ -89,13 +89,13 @@ public class LimelightShooter extends Limelight {
     }
 
     public void updateDesiredDistance() {
-		double newDistance = SmartDashboard.getNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
+		double newDistance = SmartDashboard.getNumber("robot/desired speaker distance", Constants.SPEAKER_DISTANCE);
 
 		if (desiredDistance == newDistance) {
 			return;
 		}
         desiredDistance = newDistance;
-		Robot.getLogger().log(Level.FINEST, "Robot shooter desired distance set to " + newDistance);
+		Robot.getLogger().log(Level.FINEST, "desired speaker distance set to " + newDistance);
     }
 	
 	public double getDesiredDistance() {

@@ -95,6 +95,10 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		setVelocity(Speed.SPEAKER);
 	}
 
+	public void amp() {
+		setVelocity(Speed.AMP);
+	}
+
 	public void setVelocity(Speed speed) {
 		// The target speed is already set to that value, no action needed
 		if (speedTarget.equals(shooterSpeeds.get(speed))) {

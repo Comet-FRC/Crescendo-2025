@@ -19,7 +19,7 @@ import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.AutoIntakeCommand;
 import frc.robot.commands.OuttakeCommand;
-import frc.robot.commands.PrepShootCommand;
+import frc.robot.commands.PrepAmpCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AutoShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
@@ -76,6 +76,8 @@ public class RobotContainer {
 	private double forwardSpeedOverride = 0;
 	private double strafeSpeedOverride = 0;
 	private double rotationalSpeedOverride = 0;
+
+	private boolean isDrivingToPose = false;
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -94,7 +96,8 @@ public class RobotContainer {
 
 		configureBindings();
 		
-		SmartDashboard.putNumber("robot/desired distance", Constants.SHOOT_DISTANCE);
+		SmartDashboard.putNumber("robot/desired speaker distance", Constants.SPEAKER_DISTANCE);
+		SmartDashboard.putNumber("robot/desired amp distance", Constants.AMP_DISTANCE);
 		SmartDashboard.putData("robot/field", field);
 
 		autoChooser = AutoBuilder.buildAutoChooser();
@@ -108,7 +111,7 @@ public class RobotContainer {
 		driverController.rightBumper()
 			.and(driverController.leftBumper().negate())
 			.whileTrue(
-				new PrepShootCommand(shooter, limelightShooter)
+				new PrepAmpCommand(shooter, limelightShooter)
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(new AutoShootCommand(shooter, feeder))
 			);
@@ -119,6 +122,15 @@ public class RobotContainer {
 
 		driverController.back()
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
+
+		driverController.rightTrigger()
+			.whileTrue(
+				Commands.runOnce(() -> isDrivingToPose = true)
+				.andThen(swerve.driveToPose(null))
+				//.alongWith(new PrepAmpCommand(shooter, limelightShooter))
+				.andThen(new AutoShootCommand(shooter, feeder))
+				.finallyDo(() -> isDrivingToPose = false)
+			);
 
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
@@ -151,7 +163,7 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("Shoot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Prepping");})
-				.andThen(new PrepShootCommand(shooter, limelightShooter))
+				.andThen(new PrepAmpCommand(shooter, limelightShooter))
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
 				.andThen(new AutoShootCommand(shooter, feeder))
@@ -224,7 +236,7 @@ public class RobotContainer {
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
-
+		if (isDrivingToPose) return;
 
 		double forwardSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
 		double strafeSpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
@@ -257,6 +269,8 @@ public class RobotContainer {
 				break;
 			case INTAKING:
 				fieldRelative = false;
+				forwardSpeed *= -1;
+				strafeSpeed *= -1;
 				break;
 			case PREPPING:
 				if (!limelightShooter.hasTarget()) break;

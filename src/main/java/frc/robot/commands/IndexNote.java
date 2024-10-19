@@ -17,7 +17,7 @@ public class IndexNote extends Command {
 
     /**
      * Tries to adjust note position so that it's in the same spot every time. This
-     * should probably be run in parallel with {@link PrepShootCommand} so that as the
+     * should probably be run in parallel with {@link PrepAmpCommand} so that as the
      * robot is revving its shooter motor, the feeder fixes the note
      */
     public IndexNote(FeederSubsystem feeder, LaserCan laserCan)
