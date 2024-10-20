@@ -25,8 +25,8 @@ public class PrepShootCommand extends Command {
         var alliance = DriverStation.getAlliance();
         boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
 
-        if (isRedAlliance) LimelightHelpers.setPriorityTagID(getName(), 4);
-        else LimelightHelpers.setPriorityTagID(getName(), 7);
+        if (isRedAlliance) LimelightHelpers.setPriorityTagID(limelightShooter.getName(), 4);
+        else LimelightHelpers.setPriorityTagID(limelightShooter.getName(), 7);
 
         shooter.shoot();
         Robot.getInstance().getRobotContainer().setRobotState(State.PREPPING);

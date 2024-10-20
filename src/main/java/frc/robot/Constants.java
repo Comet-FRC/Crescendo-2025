@@ -29,7 +29,8 @@ public final class Constants {
 
 	
 	public static final double SPEAKER_DISTANCE = 2.4; // in meters
-	public static final double AMP_DISTANCE = 0.5; // in meters
+	public static final double AMP_DISTANCE = 1; // in meters
+	public static final double AMP_APPROACH_KP = 1;
 	public static final double SPEAKER_APPROACH_KP = 3;
 	public static final double SPEAKER_AIM_KP = 0.01;
 	public static final double INTAKE_STRAFE_KP = 0.02;

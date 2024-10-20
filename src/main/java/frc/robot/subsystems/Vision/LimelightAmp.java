@@ -20,12 +20,24 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
-public class LimelightShooter extends Limelight {
+public class LimelightAmp extends Limelight {
     private double desiredDistance;
 
-    public LimelightShooter(String name) {
+	private int priorityTagID = 6;
+
+    public LimelightAmp(String name) {
         super(name);
     }
+
+	
+
+	public void setPriorityTagID(int id) {
+		if (priorityTagID != id) {
+			LimelightHelpers.setPriorityTagID(getName(), priorityTagID);
+		}
+		priorityTagID = id;
+		
+	}
 
     public double forward_proportional(double kP) {
         double drivingAdjustment = kP * getDistanceError();
@@ -95,25 +107,16 @@ public class LimelightShooter extends Limelight {
     }
 
     public double getDistanceError() {
-        return getDesiredDistance() - getDistance();
+        return desiredDistance - getDistance();
     }
 
     public void updateDesiredDistance() {
-		double newDistance = SmartDashboard.getNumber("robot/desired speaker distance", Constants.SPEAKER_DISTANCE);
+		double newDistance = SmartDashboard.getNumber("robot/desired amp distance", Constants.AMP_DISTANCE);
 
 		if (desiredDistance == newDistance) {
 			return;
 		}
         desiredDistance = newDistance;
-		Robot.getLogger().log(Level.FINEST, "desired speaker distance set to " + newDistance);
+		Robot.getLogger().log(Level.FINEST, "desired amp distance set to " + newDistance);
     }
-	
-	public double getDesiredDistance() {
-		Pose3d pose = LimelightHelpers.getCameraPose3d_TargetSpace(getName());
-		double x = pose.getX();
-		double y = pose.getY();
-		double deltaAngle = Math.abs(Units.radiansToDegrees(Math.atan2(x, y)));
-		SmartDashboard.putNumber("robot/shooter delta angle", deltaAngle);
-		return desiredDistance - 0.1 * (1-deltaAngle/50.0);
-	}
 }

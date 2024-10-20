@@ -12,9 +12,12 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -29,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.AutonConstants;
 import frc.robot.Constants.SWERVE;
+import frc.robot.Robot;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
@@ -134,6 +138,23 @@ public class SwerveSubsystem extends SubsystemBase {
         );
     }
     
+    public Command driveToAmp() {
+        AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
+		var alliance = DriverStation.getAlliance();
+        boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+
+        int priorityTagID;
+
+        if (isRedAlliance) priorityTagID = 5;
+        else priorityTagID = 6;
+
+        Pose2d ampPose = aprilTagFieldLayout.getTagPose(priorityTagID).orElseThrow().toPose2d();
+
+        Pose2d targetPose = ampPose.plus(new Transform2d(new Translation2d(10,0), new Rotation2d(Units.degreesToRadians(180))));
+
+        return driveToPose(targetPose);
+	}
 
     /**
      * Command to characterize the robot drive motors using SysId

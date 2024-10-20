@@ -10,19 +10,18 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer.State;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.Vision.LimelightAmp;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightShooter;
 
 public class PrepAmpCommand extends Command {
 
     private final ShooterSubsystem shooter;
-    private final LimelightShooter limelightShooter;
+    private final LimelightAmp limelightAmp;
 
-    private Pose3d targetPose;
-
-    public PrepAmpCommand(ShooterSubsystem shooter, LimelightShooter limelightShooter) {
+    public PrepAmpCommand(ShooterSubsystem shooter, LimelightAmp limelightAmp) {
         this.shooter = shooter;
-        this.limelightShooter = limelightShooter;
+        this.limelightAmp = limelightAmp;
     }
 
     @Override
@@ -30,15 +29,8 @@ public class PrepAmpCommand extends Command {
         var alliance = DriverStation.getAlliance();
         boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
 
-        int priorityTagID;
-
-        if (isRedAlliance) priorityTagID = 5;
-        else priorityTagID = 6;
-
-        LimelightHelpers.setPriorityTagID(getName(), priorityTagID);
-        
-        AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
-        targetPose = aprilTagFieldLayout.getTagPose(priorityTagID).get();
+        if (isRedAlliance) LimelightHelpers.setPriorityTagID(limelightAmp.getName(), 5);
+        else LimelightHelpers.setPriorityTagID(limelightAmp.getName(), 6);
 
         shooter.amp();
         Robot.getInstance().getRobotContainer().setRobotState(State.PREPPING);
@@ -46,20 +38,23 @@ public class PrepAmpCommand extends Command {
 
     @Override
     public void execute() {
+        if (!limelightAmp.hasTarget()) return;
+
+        double rotationalSpeed = limelightAmp.aim_proportional(Constants.SPEAKER_AIM_KP);
+        double forwardSpeed = limelightAmp.forward_proportional(Constants.AMP_APPROACH_KP);
+
+        Robot.getInstance().getRobotContainer().setForwardSpeedOverride(forwardSpeed);
+        Robot.getInstance().getRobotContainer().overrideRotationalSpeed(rotationalSpeed);
     }
 
 
     @Override
     public boolean isFinished() {
-        // if there is no target, then obviously shoot prep isn't done
-        if (!limelightShooter.hasTarget()) {
-            return false;
-        }
         return isReadyToShoot();
     }
 
     private boolean isReadyToShoot() {
-        double distanceError = limelightShooter.getDistanceError();
+        double distanceError = limelightAmp.getDistanceError();
 		ChassisSpeeds robotVelocity = Robot.getInstance().getRobotContainer().getSwerveSubsystem().getRobotVelocity();
 
 		// TODO: Check if these values look good

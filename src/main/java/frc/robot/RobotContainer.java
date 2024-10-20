@@ -4,7 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -20,6 +26,7 @@ import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.AutoIntakeCommand;
 import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.PrepAmpCommand;
+import frc.robot.commands.PrepShootCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AutoShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
@@ -28,6 +35,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightIntake;
+import frc.robot.subsystems.Vision.LimelightAmp;
 import frc.robot.subsystems.Vision.LimelightShooter;
 import frc.robot.subsystems.Vision.LimelightIntake.LED_MODE;
 
@@ -60,6 +68,7 @@ public class RobotContainer {
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 
 	public final LimelightShooter limelightShooter = new LimelightShooter("limelight-shooter");
+	public final LimelightAmp limelightAmp = new LimelightAmp("limelight-shooter");
 	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
 
 	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
@@ -111,7 +120,7 @@ public class RobotContainer {
 		driverController.rightBumper()
 			.and(driverController.leftBumper().negate())
 			.whileTrue(
-				new PrepAmpCommand(shooter, limelightShooter)
+				new PrepShootCommand(shooter, limelightShooter)
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(new AutoShootCommand(shooter, feeder))
 			);
@@ -123,14 +132,21 @@ public class RobotContainer {
 		driverController.back()
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 
-		driverController.rightTrigger()
+		driverController.b()
 			.whileTrue(
 				Commands.runOnce(() -> isDrivingToPose = true)
-				.andThen(swerve.driveToPose(null))
+				.andThen(swerve.driveToAmp())
 				//.alongWith(new PrepAmpCommand(shooter, limelightShooter))
-				.andThen(new AutoShootCommand(shooter, feeder))
+				//.andThen(new AutoShootCommand(shooter, feeder))
 				.finallyDo(() -> isDrivingToPose = false)
 			);
+
+		/*driverController.b()
+			.whileTrue(
+				new PrepAmpCommand(shooter, limelightAmp)
+				.andThen(new AutoShootCommand(shooter, feeder))
+			);*/
+
 
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
@@ -163,7 +179,7 @@ public class RobotContainer {
 
 		NamedCommands.registerCommand("Shoot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Prepping");})
-				.andThen(new PrepAmpCommand(shooter, limelightShooter))
+				.andThen(new PrepAmpCommand(shooter, limelightAmp))
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
 				.andThen(new AutoShootCommand(shooter, feeder))
@@ -179,6 +195,7 @@ public class RobotContainer {
 
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
+		limelightAmp.updateVisionData();
 
 		swerve.getSwerveDrive().updateOdometry();
 
@@ -269,8 +286,6 @@ public class RobotContainer {
 				break;
 			case INTAKING:
 				fieldRelative = false;
-				forwardSpeed *= -1;
-				strafeSpeed *= -1;
 				break;
 			case PREPPING:
 				if (!limelightShooter.hasTarget()) break;
