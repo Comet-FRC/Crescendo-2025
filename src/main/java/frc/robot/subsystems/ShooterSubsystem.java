@@ -44,7 +44,8 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		SUBWOOFER,
 		AMP,
 		SPEAKER,
-		EJECT
+		EJECT,
+		THROW
 	}
 
 	private final EnumMap<Speed, ShooterSpeed> shooterSpeeds = new EnumMap<>(Map.ofEntries(
@@ -52,7 +53,8 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		Map.entry(Speed.SPEAKER, new ShooterSpeed(3100, 3100)),
 		Map.entry(Speed.AMP, new ShooterSpeed(650, 1150)),
 		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000)),
-		Map.entry(Speed.EJECT, new ShooterSpeed(-500, -500))
+		Map.entry(Speed.EJECT, new ShooterSpeed(-500, -500)),
+		Map.entry(Speed.THROW, new ShooterSpeed(2500, 2500))
 	));
 
 	public ShooterSubsystem() {

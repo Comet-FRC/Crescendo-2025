@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -14,6 +15,8 @@ public class PrepShootCommand extends Command {
 
     private final ShooterSubsystem shooter;
     private final LimelightShooter limelightShooter;
+
+    private final Timer shootTimer = new Timer(); 
 
     public PrepShootCommand(ShooterSubsystem shooter, LimelightShooter limelightShooter) {
         this.shooter = shooter;
@@ -30,6 +33,8 @@ public class PrepShootCommand extends Command {
 
         shooter.shoot();
         Robot.getInstance().getRobotContainer().setRobotState(State.PREPPING);
+
+        shootTimer.restart();
     }
 
     @Override
@@ -50,7 +55,7 @@ public class PrepShootCommand extends Command {
         if (!limelightShooter.hasTarget()) {
             return false;
         }
-        return isReadyToShoot();
+        return isReadyToShoot() || shootTimer.hasElapsed(5);
     }
 
     private boolean isReadyToShoot() {
@@ -59,10 +64,10 @@ public class PrepShootCommand extends Command {
 
 		// TODO: Check if these values look good
 		return
-			Math.abs(distanceError) < 0.025 &&
-			Math.abs(robotVelocity.vxMetersPerSecond) < 0.01 &&
-			Math.abs(robotVelocity.vyMetersPerSecond) < 0.01 &&
-			Math.abs(robotVelocity.omegaRadiansPerSecond) < 4 &&
+			Math.abs(distanceError) <= 0.032 &&
+			Math.abs(robotVelocity.vxMetersPerSecond) <= 0.025 &&
+			Math.abs(robotVelocity.vyMetersPerSecond) <= 0.025 &&
+			Math.abs(robotVelocity.omegaRadiansPerSecond) < 4.2 &&
 			shooter.isReady(false);
 	}
 

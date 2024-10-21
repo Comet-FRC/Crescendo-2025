@@ -28,7 +28,7 @@ public final class Constants {
 	public static final double LOOP_TIME  = 0.13; //s, 20ms + 110ms sprk max velocity lag
 
 	
-	public static final double SPEAKER_DISTANCE = 2.4; // in meters
+	public static final double SPEAKER_DISTANCE = 2.34; // in meters
 	public static final double AMP_DISTANCE = 1; // in meters
 	public static final double AMP_APPROACH_KP = 1;
 	public static final double SPEAKER_APPROACH_KP = 3;
@@ -64,7 +64,7 @@ public final class Constants {
 		/* IDs */
 		public static final int motorID = 15;
 		/* Motor Speed Values */
-		public static final double intakingSpeed = 0.74;
+		public static final double intakingSpeed = 0.5;
 		public static final double ejectingSpeed = -0.5;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;

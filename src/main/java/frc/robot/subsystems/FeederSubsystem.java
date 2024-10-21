@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class FeederSubsystem extends SubsystemBase {
-    private final TalonFX feederMotorLeft;
+    public final TalonFX feederMotorLeft;
     private final TalonFX feederMotorRight;
 
     private final VelocityVoltage flControl = new VelocityVoltage(0).withEnableFOC(true);
@@ -64,7 +64,7 @@ public class FeederSubsystem extends SubsystemBase {
 
     public void intake() {
        
-        setVelocity(-500);
+        setVelocity(-900);
     }
 
     public void eject() {

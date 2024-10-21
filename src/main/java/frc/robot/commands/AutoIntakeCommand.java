@@ -60,11 +60,9 @@ public class AutoIntakeCommand extends Command {
         if (swerve.getSwerveDrive().getRobotVelocity().vyMetersPerSecond < Constants.INTAKE_STRAFE_THRESHOLD &&
             Math.abs(limelight.getTX()) <= Constants.INTAKE_TX_THRESHOLD) 
         {
-            robotContainer.setForwardSpeedOverride(forwardSpeed);
-            if (forwardSpeed > -2)
-                forwardSpeed -= 0.01;
+            robotContainer.setForwardSpeedOverride(-2);
         } else {
-            forwardSpeed -= 0.02;
+            robotContainer.setForwardSpeedOverride(0);
         }
     }
 

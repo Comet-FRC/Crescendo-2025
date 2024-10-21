@@ -88,6 +88,7 @@ public class Robot extends TimedRobot
 			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
 			disabledTimer.stop();
 		}
+		m_robotContainer.updateNoteStatus();
 	}
 
 	@Override

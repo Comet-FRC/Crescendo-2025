@@ -152,17 +152,22 @@ public class RobotContainer {
 		new JoystickButton(operatorController, 7)
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
 
-		// left bumper -> intake
-		new JoystickButton(operatorController, 5)
+		// start button -> intake
+		new JoystickButton(operatorController, 8)
 			.whileTrue(new IntakeCommand(intake, feeder));
 
 		// right bumper -> shoot
 		new JoystickButton(operatorController, 6)
 			.whileTrue(new ShootCommand(shooter));		
 
-		// start button -> indexes note for testing
-		new JoystickButton(operatorController, 8)
-			.whileTrue(new IndexNote(feeder, laserCan));
+		// left bumper -> intake note, then index it
+		new JoystickButton(operatorController, 5)
+		.whileTrue(
+			new IntakeCommand(intake, feeder)
+			.onlyWhile(() -> !hasNote)
+			.onlyWhile(() -> feeder.feederMotorLeft.getTorqueCurrent().getValueAsDouble() > -25)
+			.andThen(new IndexNote(feeder, laserCan))
+		);
 	}
 
 	public SwerveSubsystem getSwerveSubsystem() {
@@ -172,18 +177,24 @@ public class RobotContainer {
 	private void registerPathplannerCommands() {
 		/* REGISTERING COMMANDS FOR PATHPLANNER */
 		NamedCommands.registerCommand("Intake",
-		Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Intaking");})
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Intaking");})
 			.andThen(new AutoIntakeCommand(swerve, intake, feeder, limelightIntake, laserCan))
 			.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Intake complete"); }))
 		);
 
 		NamedCommands.registerCommand("Shoot",
 			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Prepping");})
-				.andThen(new PrepAmpCommand(shooter, limelightAmp))
+				.andThen(new PrepShootCommand(shooter, limelightShooter))
 				.deadlineWith(new IndexNote(feeder, laserCan))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
 				.andThen(new AutoShootCommand(shooter, feeder))
 				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shot complete"); }))
+			);
+
+		NamedCommands.registerCommand("Index Note",
+			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Indexing");})
+				.andThen(new IndexNote(feeder, laserCan))
+				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Indexing complete"); }))
 			);
 	}
 
@@ -253,24 +264,13 @@ public class RobotContainer {
 	 * @param fieldRelative whether or not the robot is driving in field oriented mode
 	 */
 	public void drive(boolean fieldRelative) {
+
+		SmartDashboard.putNumber("robot/feeder torque current", feeder.feederMotorLeft.getTorqueCurrent().getValueAsDouble());
 		if (isDrivingToPose) return;
 
 		double forwardSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
 		double strafeSpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
 		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
-
-
-		if (isForwardOverriden) {
-			forwardSpeed = forwardSpeedOverride;
-		}
-
-		if (isStrafeOverriden) {
-			strafeSpeed = strafeSpeedOverride;
-		}
-
-		if (isRotationOverriden) {
-			rotationalSpeed = rotationalSpeedOverride;
-		}
 
 		// Logic to control the led on the limelight
 		LED_MODE ledMode = LED_MODE.OFF;
@@ -286,6 +286,8 @@ public class RobotContainer {
 				break;
 			case INTAKING:
 				fieldRelative = false;
+				forwardSpeed *= -1;
+				strafeSpeed *= -1;
 				break;
 			case PREPPING:
 				if (!limelightShooter.hasTarget()) break;
@@ -301,6 +303,18 @@ public class RobotContainer {
 				intake.stop();
 				feeder.stop();
 				break;
+		}
+
+		if (isForwardOverriden) {
+			forwardSpeed = forwardSpeedOverride;
+		}
+
+		if (isStrafeOverriden) {
+			strafeSpeed = strafeSpeedOverride;
+		}
+
+		if (isRotationOverriden) {
+			rotationalSpeed = rotationalSpeedOverride;
 		}
 
 		limelightIntake.setLEDMode(ledMode);

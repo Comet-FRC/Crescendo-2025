@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Robot;
 import frc.robot.RobotContainer.State;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.Speed;
 
 public class ShootCommand extends Command {
     ShooterSubsystem shooter;
@@ -14,7 +15,7 @@ public class ShootCommand extends Command {
 
     @Override
     public void initialize() {
-        shooter.shoot();
+        shooter.setVelocity(Speed.THROW);
         Robot.getInstance().getRobotContainer().setRobotState(State.SHOOTING);
     }
 
