@@ -6,7 +6,10 @@ import java.util.Map;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -15,6 +18,8 @@ private static TalonFX top;
 private static TalonFX bottom;
 private final VelocityVoltage topControl = new VelocityVoltage(0).withEnableFOC(true);
 private final VelocityVoltage bottomControl = new VelocityVoltage(0).withEnableFOC(true);
+
+private final Timer motorTimer = new Timer();
 
 private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
@@ -38,21 +43,24 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		STOP,
 		SUBWOOFER,
 		AMP,
-		SPEAKER
+		SPEAKER,
+		EJECT,
+		THROW
 	}
 
 	private final EnumMap<Speed, ShooterSpeed> shooterSpeeds = new EnumMap<>(Map.ofEntries(
 		Map.entry(Speed.STOP, new ShooterSpeed(0, 0)),
-		Map.entry(Speed.SPEAKER, new ShooterSpeed(3000, 3000)),
+		Map.entry(Speed.SPEAKER, new ShooterSpeed(3100, 3100)),
 		Map.entry(Speed.AMP, new ShooterSpeed(650, 1150)),
-		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000))
+		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000)),
+		Map.entry(Speed.EJECT, new ShooterSpeed(-500, -500)),
+		Map.entry(Speed.THROW, new ShooterSpeed(2500, 2500))
 	));
 
 	public ShooterSubsystem() {
 		top = new TalonFX(Constants.Shooter.topShooterID, "rio");
 		bottom = new TalonFX(Constants.Shooter.bottomShooterID, "rio");
 		applyConfigs();
-
 		//SmartDashboard.putNumber("shooter/speed", 0.0);
 		//SmartDashboard.putNumber("shooter/Top RPM adjustment", 0.0);
 		//SmartDashboard.putNumber("shooter/Bottom RPM adjustment", 0.0);
@@ -60,8 +68,8 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
 	private void applyConfigs() {
 		var shooterMotorConfig = new TalonFXConfiguration();
-		shooterMotorConfig.MotorOutput.NeutralMode = Constants.Shooter.motorNeutralValue;
-		shooterMotorConfig.MotorOutput.Inverted = Constants.Shooter.motorOutputInverted;
+		shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+		shooterMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		shooterMotorConfig.Voltage.PeakForwardVoltage = Constants.Shooter.peakForwardVoltage;
 		shooterMotorConfig.Voltage.PeakReverseVoltage = Constants.Shooter.peakReverseVoltage;
 
@@ -85,16 +93,30 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		return rpm / 60.0;
 	}
 
-	public void shoot(Speed speed) {
-		setVelocity(speed);
+	public void shoot() {
+		setVelocity(Speed.SPEAKER);
 	}
 
-	private void setVelocity(Speed speed) {
+	public void amp() {
+		setVelocity(Speed.AMP);
+	}
+
+	public void setVelocity(Speed speed) {
+		// The target speed is already set to that value, no action needed
+		if (speedTarget.equals(shooterSpeeds.get(speed))) {
+			return;
+		}
+
+		motorTimer.restart();
 		speedTarget = shooterSpeeds.get(speed);
 		double topSpeed = speedTarget.topMotorSpeed;
 		double bottomSpeed = speedTarget.bottomMotorSpeed;
 		top.setControl(topControl.withVelocity(toRPS(topSpeed)));
 		bottom.setControl(bottomControl.withVelocity(toRPS(bottomSpeed)));
+	}
+
+	public void eject() {
+		setVelocity(Speed.EJECT);
 	}
 
 	public void stop() {
@@ -107,8 +129,12 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 	 * @return
 	 */
 	public boolean isReady(boolean precise) {
+		if (motorTimer.hasElapsed(1))
+			return true;
+
 		boolean topIsReady = Math.abs(toRPM(top.getVelocity().getValueAsDouble()) - speedTarget.topMotorSpeed) < (precise ? Constants.Shooter.maxRPMErrorLong : Constants.Shooter.maxRPMError);
 		boolean bottomIsReady = Math.abs(toRPM(bottom.getVelocity().getValueAsDouble()) - speedTarget.bottomMotorSpeed) < (precise ? Constants.Shooter.maxRPMErrorLong : Constants.Shooter.maxRPMError);
+
 		return topIsReady && bottomIsReady;
 	}
 }

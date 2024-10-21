@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.9471356546509068,
-      "y": 4.148470076299583
+      "x": 0.8075334669187857,
+      "y": 4.253160111258494
     },
-    "rotation": 110.28255908891659
+    "rotation": 114.70243022777134
   },
   "command": {
     "type": "sequential",
@@ -14,13 +14,19 @@
         {
           "type": "named",
           "data": {
-            "name": "SubWoof"
+            "name": "Shoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Test"
+            "pathName": "right side shoot to e"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake"
           }
         }
       ]

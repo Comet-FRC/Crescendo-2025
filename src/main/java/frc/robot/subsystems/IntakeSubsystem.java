@@ -14,38 +14,35 @@ public class IntakeSubsystem extends SubsystemBase {
     private final CANSparkMax intakeMotor;
     static boolean intaking = false;
 
+    double speed = 0;
+
     public IntakeSubsystem() {
         intakeMotor = new CANSparkMax(Constants.Intake.motorID, MotorType.kBrushless);
         intakeMotor.setSmartCurrentLimit(80);
     }
 
     public void set(double speed) {
+        // Only set the speed if it's not already the speed.
+        if (speed == this.speed) {
+            return;
+        }
+        
         intakeMotor.set(speed);
+        this.speed = speed;
     }
 
     public void intake() {
-        intakeMotor.set(Constants.Intake.intakingSpeed);
+        set(Constants.Intake.intakingSpeed);
     }
 
     public void eject() {
-        intakeMotor.set(Constants.Intake.ejectingSpeed);
+        set(Constants.Intake.ejectingSpeed);
     }
 
     /**
      * Stops both wheels.
      */
     public void stop() {
-        intakeMotor.set(0);
+        set(0);
     }
-
-    /*@Override
-    public void periodic() {
-        double current = intakeMotor.getTorqueCurrent().getValueAsDouble();
-        boolean active = (current > 20.0);
-
-        if (active && !intaking) {
-        }
-        SmartDashboard.putNumber("intake/torqueCurrent", current);
-
-    }*/
 }

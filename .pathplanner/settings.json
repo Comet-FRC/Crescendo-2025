@@ -1,15 +1,16 @@
 {
-  "robotWidth": 0.9,
-  "robotLength": 0.9,
+  "robotWidth": 0.87,
+  "robotLength": 0.84,
   "holonomicMode": true,
   "pathFolders": [
-    "New Folder"
+    "amp side start",
+    "middle start to alliance notes",
+    "right side start (side with no notes)"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
-  "maxModuleSpeed": 4.5,
-  "choreoProjectPath": null
+  "maxModuleSpeed": 4.5
 }

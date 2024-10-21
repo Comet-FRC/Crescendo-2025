@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -11,39 +12,41 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.AutonConstants;
-import frc.robot.LimelightHelpers;
+import frc.robot.Constants.SWERVE;
+import frc.robot.Robot;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
-import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
-import swervelib.parser.SwerveControllerConfiguration;
-import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
-
 public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDrive swerveDrive;
+
+    
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
@@ -54,7 +57,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
         // objects being created.
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.NONE;
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.SWERVE.MAX_SPEED);
@@ -64,28 +67,15 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // Heading correction should only be used while controlling the robot via angle.
         swerveDrive.setHeadingCorrection(true); 
-        
-        // Disables cosine compensation
-        // for simulations since it causes discrepancies not seen in real life.
-        swerveDrive.setCosineCompensator(!SwerveDriveTelemetry.isSimulation);
-        
-        setupPathPlanner();
-    }
+        swerveDrive.setCosineCompensator(true);
 
-    /**
-     * Construct the swerve drive.
-     *
-     * @param driveCfg      SwerveDriveConfiguration for the swerve.
-     * @param controllerCfg Swerve Controller.
-     */
-    public SwerveSubsystem(SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
-        swerveDrive = new SwerveDrive(driveCfg, controllerCfg, Constants.SWERVE.MAX_SPEED);
+        setupPathPlanner();
     }
 
     /**
      * Setup AutoBuilder for PathPlanner.
      */
-    public void setupPathPlanner() {
+    private void setupPathPlanner() {
         AutoBuilder.configureHolonomic(
                 this::getPose, // Robot pose supplier
                 this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
@@ -97,7 +87,7 @@ public class SwerveSubsystem extends SubsystemBase {
                         // Translation PID constants
                         AutonConstants.ANGLE_PID,
                         // Rotation PID constants
-                        4.5,
+                        SWERVE.MAX_SPEED,
                         // Max module speed, in m/s
                         swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),
                         // Drive base radius in meters. Distance from robot center to furthest module.
@@ -115,6 +105,56 @@ public class SwerveSubsystem extends SubsystemBase {
                 this // Reference to this subsystem to set requirements
         );
     }
+
+    /**
+     * Get the path follower with events.
+     *
+     * @param pathName PathPlanner path name.
+     * @return {@link AutoBuilder#followPath(PathPlannerPath)} path command.
+     */
+    public Command getAutonomousCommand(String pathName) {
+        // Create a path following command using AutoBuilder. This will also trigger
+        // event markers.
+        return new PathPlannerAuto(pathName);
+    }
+    /**
+     * Use PathPlanner Path finding to go to a point on the field.
+     *
+     * @param pose Target {@link Pose2d} to go to.
+     * @return PathFinding command
+     */
+    public Command driveToPose(Pose2d pose) {
+        // Create the constraints to use while pathfinding
+        PathConstraints constraints = new PathConstraints(
+                swerveDrive.getMaximumVelocity(), 4.0,
+                swerveDrive.getMaximumAngularVelocity(), Units.degreesToRadians(720));
+        // Since AutoBuilder is configured, we can use it to build pathfinding commands
+        return AutoBuilder.pathfindToPose(
+                pose,
+                constraints,
+                0.0, // Goal end velocity in meters/sec
+                0.0 // Rotation delay distance in meters. This is how far the robot should travel
+                    // before attempting to rotate.
+        );
+    }
+    
+    public Command driveToAmp() {
+        AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
+		var alliance = DriverStation.getAlliance();
+        boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+
+        int priorityTagID;
+
+        if (isRedAlliance) priorityTagID = 5;
+        else priorityTagID = 6;
+
+        Pose2d ampPose = aprilTagFieldLayout.getTagPose(priorityTagID).orElseThrow().toPose2d();
+
+        Pose2d targetPose = ampPose.plus(new Transform2d(new Translation2d(10,0), new Rotation2d(Units.degreesToRadians(180))));
+
+        return driveToPose(targetPose);
+	}
 
     /**
      * Command to characterize the robot drive motors using SysId
@@ -140,40 +180,6 @@ public class SwerveSubsystem extends SubsystemBase {
                         new Config(),
                         this, swerveDrive),
                 3.0, 5.0, 3.0);
-    }
-
-    /**
-     * Get the path follower with events.
-     *
-     * @param pathName PathPlanner path name.
-     * @return {@link AutoBuilder#followPath(PathPlannerPath)} path command.
-     */
-    public Command getAutonomousCommand(String pathName) {
-        // Create a path following command using AutoBuilder. This will also trigger
-        // event markers.
-        return new PathPlannerAuto(pathName);
-    }
-
-    /**
-     * Use PathPlanner Path finding to go to a point on the field.
-     *
-     * @param pose Target {@link Pose2d} to go to.
-     * @return PathFinding command
-     */
-    public Command driveToPose(Pose2d pose) {
-        // Create the constraints to use while pathfinding
-        PathConstraints constraints = new PathConstraints(
-                swerveDrive.getMaximumVelocity(), 4.0,
-                swerveDrive.getMaximumAngularVelocity(), Units.degreesToRadians(720));
-
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-        return AutoBuilder.pathfindToPose(
-                pose,
-                constraints,
-                0.0, // Goal end velocity in meters/sec
-                0.0 // Rotation delay distance in meters. This is how far the robot should travel
-                    // before attempting to rotate.
-        );
     }
 
     /**
@@ -359,15 +365,6 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.drive(velocity);
     }
 
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("IMU/yaw", swerveDrive.getYaw().getDegrees());
-    }
-
-    @Override
-    public void simulationPeriodic() {
-    }
-
     /**
      * Get the swerve drive kinematics object.
      *
@@ -541,24 +538,6 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Get the {@link SwerveController} in the swerve drive.
-     *
-     * @return {@link SwerveController} from the {@link SwerveDrive}.
-     */
-    public SwerveController getSwerveController() {
-        return swerveDrive.swerveController;
-    }
-
-    /**
-     * Get the {@link SwerveDriveConfiguration} object.
-     *
-     * @return The {@link SwerveDriveConfiguration} for the current drive.
-     */
-    public SwerveDriveConfiguration getSwerveDriveConfiguration() {
-        return swerveDrive.swerveDriveConfiguration;
-    }
-
-    /**
      * Lock the swerve drive to prevent it from moving.
      */
     public void lock() {
@@ -582,6 +561,19 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getMaximumVelocity();
     }
 
+    public SwerveModuleState[] getModuleStates() {
+        return swerveDrive.getStates();
+    }
+
+    public SwerveModulePosition[] getModulePositions() {
+        return swerveDrive.getModulePositions();
+    }
     
-    
+    public double getRate() {
+        return ((Pigeon2)(swerveDrive.getGyro().getIMU())).getRate();
+    }
+
+    public SwerveDrive getSwerveDrive() {
+        return swerveDrive;
+    }
 }

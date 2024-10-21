@@ -2,37 +2,37 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.4710281167025202,
-      "y": 1.9868993847397571
+      "x": 1.0488653076071586,
+      "y": 6.638632536524332
     },
-    "rotation": -0.013675950332706544
+    "rotation": -122.57405713457247
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "New Path"
+            "pathName": "ampside move to a"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Fixed SW Shot"
+            "name": "Intake"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 4.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "To Midfield"
+            "name": "Index Note"
           }
         }
       ]

@@ -75,7 +75,7 @@ public class Robot extends TimedRobot
 	@Override
 	public void disabledInit()
 	{
-		m_robotContainer.setMotorBrake(true);
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
 		disabledTimer.reset();
 		disabledTimer.start();
 	}
@@ -85,20 +85,19 @@ public class Robot extends TimedRobot
 	{
 		if (disabledTimer.hasElapsed(Constants.DrivebaseConstants.WHEEL_LOCK_TIME))
 		{
-			m_robotContainer.setMotorBrake(false);
+			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
 			disabledTimer.stop();
 		}
+		m_robotContainer.updateNoteStatus();
 	}
 
-	/**
-	 * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
-	 */
 	@Override
 	public void autonomousInit()
 	{
-		m_robotContainer.setMotorBrake(true);
-		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
+		m_robotContainer.limelightShooter.updateDesiredDistance();
 
+		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 		// schedule the autonomous command (example)
 		if (m_autonomousCommand != null)
 		{
@@ -106,12 +105,11 @@ public class Robot extends TimedRobot
 		}
 	}
 
-	/**
-	 * This function is called periodically during autonomous.
-	 */
 	@Override
 	public void autonomousPeriodic()
 	{
+		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.drive(false);
 	}
 
@@ -127,16 +125,15 @@ public class Robot extends TimedRobot
 			m_autonomousCommand.cancel();
 		}
 		CommandScheduler.getInstance().cancelAll();
-		m_robotContainer.setDriveMode();
-		m_robotContainer.setMotorBrake(true);
+		m_robotContainer.limelightShooter.updateDesiredDistance();
+		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
 	}
 
-	/**
-	 * This function is called periodically during operator control.
-	 */
 	@Override
 	public void teleopPeriodic()
 	{
+		m_robotContainer.updateVision();
+		m_robotContainer.updateNoteStatus();
 		m_robotContainer.drive(true);
 	}
 
@@ -152,30 +149,6 @@ public class Robot extends TimedRobot
 		{
 			throw new RuntimeException(e);
 		}
-	}
-
-	/**
-	 * This function is called periodically during test mode.
-	 */
-	@Override
-	public void testPeriodic()
-	{
-	}
-
-	/**
-	 * This function is called once when the robot is first started up.
-	 */
-	@Override
-	public void simulationInit()
-	{
-	}
-
-	/**
-	 * This function is called periodically whilst in simulation.
-	 */
-	@Override
-	public void simulationPeriodic()
-	{
 	}
 
 	public static Logger getLogger() {

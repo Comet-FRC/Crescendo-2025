@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.9471356546509068,
-        "y": 4.148470076299583
+        "x": 2.4,
+        "y": 5.599049222789803
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.8594919206445772,
-        "y": 2.4150717815077387
+        "x": 2.079166627469058,
+        "y": 5.181359498521466
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "middle shoot location"
     },
     {
       "anchor": {
-        "x": 2.6513193714406413,
-        "y": 2.0937114234845327
+        "x": 1.8935267500164632,
+        "y": 4.076802227678529
       },
       "prevControl": {
-        "x": 1.6513193714406413,
-        "y": 2.0937114234845327
+        "x": 1.0117373321166396,
+        "y": 4.123212197041678
       },
       "nextControl": null,
       "isLocked": false,
@@ -38,14 +38,14 @@
     "maxAngularAcceleration": 720.0
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 0,
+    "velocity": 1.0,
+    "rotation": -179.02897806892088,
     "rotateFast": false
   },
   "reversed": false,
-  "folder": null,
+  "folder": "middle start to alliance notes",
   "previewStartingState": {
-    "rotation": 110.28255908891659,
+    "rotation": 180.0,
     "velocity": 0
   },
   "useDefaultConstraints": true

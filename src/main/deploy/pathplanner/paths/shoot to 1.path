@@ -1,0 +1,52 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.4,
+        "y": 5.599049222789803
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.4133184068837275,
+        "y": 5.970328977694993
+      },
+      "isLocked": false,
+      "linkedName": "middle shoot location"
+    },
+    {
+      "anchor": {
+        "x": 2.2183965355585036,
+        "y": 6.165250849020216
+      },
+      "prevControl": {
+        "x": 1.9956286826153902,
+        "y": 5.868227045096066
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 1.0,
+    "rotation": -130.50284838533221,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "middle start to alliance notes",
+  "previewStartingState": {
+    "rotation": -179.127542877098,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}
