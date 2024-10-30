@@ -4,13 +4,7 @@
 
 package frc.robot;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -25,7 +19,6 @@ import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.AutoIntakeCommand;
 import frc.robot.commands.OuttakeCommand;
-import frc.robot.commands.PrepAmpCommand;
 import frc.robot.commands.PrepShootCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AutoShootCommand;
@@ -35,7 +28,6 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightIntake;
-import frc.robot.subsystems.Vision.LimelightAmp;
 import frc.robot.subsystems.Vision.LimelightShooter;
 import frc.robot.subsystems.Vision.LimelightIntake.LED_MODE;
 
@@ -68,7 +60,6 @@ public class RobotContainer {
 	private final ShooterSubsystem shooter = new ShooterSubsystem();
 
 	public final LimelightShooter limelightShooter = new LimelightShooter("limelight-shooter");
-	public final LimelightAmp limelightAmp = new LimelightAmp("limelight-shooter");
 	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
 
 	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
@@ -206,7 +197,6 @@ public class RobotContainer {
 
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
-		limelightAmp.updateVisionData();
 
 		swerve.getSwerveDrive().updateOdometry();
 
