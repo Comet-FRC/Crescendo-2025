@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.IndexNote;
@@ -24,6 +25,7 @@ import frc.robot.commands.ShootCommand;
 import frc.robot.commands.AutoShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LaserCanSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision.LimelightHelpers;
@@ -62,7 +64,7 @@ public class RobotContainer {
 	public final LimelightShooter limelightShooter = new LimelightShooter("limelight-shooter");
 	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
 
-	private final LaserCan laserCan = new LaserCan(Constants.Feeder.laserCanID);
+	private final LaserCanSubsystem laserCan = new LaserCanSubsystem();
 
 	/* Robot states */
 	public boolean hasNote = false;
@@ -86,13 +88,6 @@ public class RobotContainer {
 		registerPathplannerCommands();
 
 		DriverStation.silenceJoystickConnectionWarning(true);
-		try {
-            laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
-            laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
-            laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
-        } catch (ConfigurationFailedException e) {
-            Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
-        }
 
 		configureBindings();
 		
@@ -112,7 +107,7 @@ public class RobotContainer {
 			.and(driverController.leftBumper().negate())
 			.whileTrue(
 				new PrepShootCommand(shooter, limelightShooter)
-				.deadlineWith(new IndexNote(feeder, laserCan))
+				.deadlineWith(new IndexNote(feeder))
 				.andThen(new AutoShootCommand(shooter, feeder))
 			);
 
@@ -132,13 +127,6 @@ public class RobotContainer {
 				.finallyDo(() -> isDrivingToPose = false)
 			);
 
-		/*driverController.b()
-			.whileTrue(
-				new PrepAmpCommand(shooter, limelightAmp)
-				.andThen(new AutoShootCommand(shooter, feeder))
-			);*/
-
-
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
 			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
@@ -154,10 +142,16 @@ public class RobotContainer {
 		// left bumper -> intake note, then index it
 		new JoystickButton(operatorController, 5)
 		.whileTrue(
-			new IntakeCommand(intake, feeder)
-			.onlyWhile(() -> !hasNote)
-			.onlyWhile(() -> feeder.feederMotorLeft.getTorqueCurrent().getValueAsDouble() > -25)
-			.andThen(new IndexNote(feeder, laserCan))
+			Commands.runOnce(() -> setRobotState(State.INTAKING))
+			.andThen(
+				new IntakeCommand(intake, feeder)
+				.onlyWhile(() -> !hasNote)
+				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
+			)
+			.andThen(
+				new IndexNote(feeder)
+				.onlyWhile(() -> laserCan.getDistanceMM() < 51)
+			).finallyDo(() -> setRobotState(State.IDLE))
 		);
 	}
 
@@ -309,14 +303,6 @@ public class RobotContainer {
 
 		limelightIntake.setLEDMode(ledMode);
 		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.01);
-		
-		/*
-		 * The loop is over so we reset variables.
-		 * Next thing that runs is the command scheduler
-		 */
-		isForwardOverriden = false;
-		isStrafeOverriden = false;
-		isRotationOverriden = false;
 	}
 
 	/**
@@ -332,23 +318,5 @@ public class RobotContainer {
 		hasNote = measurement.distance_mm <= 75;
 		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
 		SmartDashboard.putBoolean("robot/hasNote", hasNote);
-	}
-
-	public void setForwardSpeedOverride(double forwardSpeed) {
-		if (!isForwardOverriden)
-			isForwardOverriden = true;
-		forwardSpeedOverride = forwardSpeed;
-	}
-
-	public void overrideStrafeSpeed(double strafeSpeed) {
-		if (!isStrafeOverriden)
-			isStrafeOverriden = true;
-		strafeSpeedOverride = strafeSpeed;
-	}
-
-	public void overrideRotationalSpeed(double rotationalSpeed) {
-		if (!isRotationOverriden)
-			isRotationOverriden = true;
-		rotationalSpeedOverride = rotationalSpeed;
 	}
 }

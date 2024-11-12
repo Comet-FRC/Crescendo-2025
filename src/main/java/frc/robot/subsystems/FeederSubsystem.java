@@ -75,4 +75,13 @@ public class FeederSubsystem extends SubsystemBase {
     public void stop() {
         setVelocity(0);
     }
+
+    public double getTorqueCurrent() {
+        double sum = 0;
+        sum += feederMotorLeft.getTorqueCurrent().getValueAsDouble();
+        sum += feederMotorRight.getTorqueCurrent().getValueAsDouble();
+        sum /= 2.0;
+
+        return sum;
+    }
 }
