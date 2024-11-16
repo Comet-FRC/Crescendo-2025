@@ -49,17 +49,17 @@ public class FeederSubsystem extends SubsystemBase {
 		feederMotorRight.getConfigurator().apply(feederMotorConfig);
 	}
 
-    private double toRPS(double rpm) {
-		return rpm / 60.0;
+    public void setVelocity(double speedRPM) {
+        // Only set the speed if it's not already the speed.
+        if (speedRPM == this.speed) return;
+
+        this.speed = speedRPM;
+		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
+		feederMotorRight.setControl(frControl.withVelocity(toRPS(-speedRPM)));
 	}
 
-    public void setVelocity(double speed) {
-        // Only set the speed if it's not already the speed.
-        if (speed == this.speed) return;
-
-        this.speed = speed;
-		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speed)));
-		feederMotorRight.setControl(frControl.withVelocity(toRPS(-speed)));
+    private double toRPS(double rpm) {
+		return rpm / 60.0;
 	}
 
     public void intake() {

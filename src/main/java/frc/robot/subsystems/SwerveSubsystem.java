@@ -254,24 +254,27 @@ public class SwerveSubsystem extends SubsystemBase {
      * Command to drive the robot using translative values and heading as angular
      * velocity.
      *
-     * @param translationX     Translation in the X direction. Cubed for smoother
-     *                         controls.
-     * @param translationY     Translation in the Y direction. Cubed for smoother
-     *                         controls.
-     * @param angularRotationX Angular velocity of the robot to set. Cubed for
-     *                         smoother controls.
+     * @param translationX     Translation in the X direction.
+     * @param translationY     Translation in the Y direction.
+     * @param angularRotationX Angular velocity of the robot to set.
      * @return Drive command.
      */
-    public Command driveCommand(DoubleSupplier translationX, DoubleSupplier translationY,
-            DoubleSupplier angularRotationX) {
+    public Command driveCommand(
+        DoubleSupplier translationX,
+        DoubleSupplier translationY,
+        DoubleSupplier angularRotationX
+    ) {
+        double xVelocity = Math.pow(translationX.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+        double yVelocity = Math.pow(translationY.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+        double angularVelocity = Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity();
+
         return run(() -> {
             // Make the robot move
-            swerveDrive.drive(SwerveMath.scaleTranslation(new Translation2d(
-                    translationX.getAsDouble() * swerveDrive.getMaximumVelocity(),
-                    translationY.getAsDouble() * swerveDrive.getMaximumVelocity()), 0.8),
-                    Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity(),
-                    true,
-                    false);
+            swerveDrive.drive(
+                new Translation2d(xVelocity, yVelocity),
+                angularVelocity,
+                true,
+                false);
         });
     }
 

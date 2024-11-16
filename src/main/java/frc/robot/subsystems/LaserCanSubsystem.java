@@ -32,4 +32,12 @@ public class LaserCanSubsystem extends SubsystemBase {
         double distanceMeters = measurement.distance_mm;
 		return distanceMeters;
     }
+
+    public boolean hasObject() {
+        return getDistanceMM() <= 75;
+    }
+
+    public boolean isNoteIndexed() {
+        return getDistanceMM() < 50;
+    }
 }

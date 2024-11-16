@@ -18,11 +18,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
-import frc.robot.commands.AutoIntakeCommand;
 import frc.robot.commands.OuttakeCommand;
-import frc.robot.commands.PrepShootCommand;
 import frc.robot.commands.ShootCommand;
-import frc.robot.commands.AutoShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LaserCanSubsystem;
@@ -31,16 +28,11 @@ import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightIntake;
 import frc.robot.subsystems.Vision.LimelightShooter;
-import frc.robot.subsystems.Vision.LimelightIntake.LED_MODE;
 
 import java.io.File;
 import java.util.logging.Level;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-
-import au.grapplerobotics.ConfigurationFailedException;
-import au.grapplerobotics.LaserCan;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -67,19 +59,10 @@ public class RobotContainer {
 	private final LaserCanSubsystem laserCan = new LaserCanSubsystem();
 
 	/* Robot states */
-	public boolean hasNote = false;
+	private boolean hasIndexedNote = false;
 	private State robotState = State.IDLE;
 
 	private final Field2d field = new Field2d();
-
-	private boolean isForwardOverriden = false;
-	private boolean isStrafeOverriden = false;
-	private boolean isRotationOverriden = false;
-	private double forwardSpeedOverride = 0;
-	private double strafeSpeedOverride = 0;
-	private double rotationalSpeedOverride = 0;
-
-	private boolean isDrivingToPose = false;
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -90,42 +73,24 @@ public class RobotContainer {
 		DriverStation.silenceJoystickConnectionWarning(true);
 
 		configureBindings();
-		
-		SmartDashboard.putNumber("robot/desired speaker distance", Constants.SPEAKER_DISTANCE);
-		SmartDashboard.putNumber("robot/desired amp distance", Constants.AMP_DISTANCE);
+	
 		SmartDashboard.putData("robot/field", field);
 
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+
+		swerve.setDefaultCommand(
+			swerve.driveCommand(
+				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
+			)
+		);
 	}
 
 	private void configureBindings() {
 		// Press A to Zero Gyro
 		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
-
-		driverController.rightBumper()
-			.and(driverController.leftBumper().negate())
-			.whileTrue(
-				new PrepShootCommand(shooter, limelightShooter)
-				.deadlineWith(new IndexNote(feeder))
-				.andThen(new AutoShootCommand(shooter, feeder))
-			);
-
-		driverController.leftBumper()
-			.and(driverController.rightBumper().negate())
-			.whileTrue(new AutoIntakeCommand(swerve, intake, feeder, limelightIntake, laserCan));
-
-		driverController.back()
-			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
-
-		driverController.b()
-			.whileTrue(
-				Commands.runOnce(() -> isDrivingToPose = true)
-				.andThen(swerve.driveToAmp())
-				//.alongWith(new PrepAmpCommand(shooter, limelightShooter))
-				//.andThen(new AutoShootCommand(shooter, feeder))
-				.finallyDo(() -> isDrivingToPose = false)
-			);
 
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
@@ -145,13 +110,12 @@ public class RobotContainer {
 			Commands.runOnce(() -> setRobotState(State.INTAKING))
 			.andThen(
 				new IntakeCommand(intake, feeder)
-				.onlyWhile(() -> !hasNote)
+				.onlyWhile(() -> !laserCan.hasObject())
 				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
 			)
-			.andThen(
-				new IndexNote(feeder)
-				.onlyWhile(() -> laserCan.getDistanceMM() < 51)
-			).finallyDo(() -> setRobotState(State.IDLE))
+			.andThen(new IndexNote(feeder, laserCan))
+			.andThen(() -> setRobotState(State.REVVING))
+			.handleInterrupt(() -> setRobotState(State.IDLE))
 		);
 	}
 
@@ -160,27 +124,6 @@ public class RobotContainer {
 	}
 
 	private void registerPathplannerCommands() {
-		/* REGISTERING COMMANDS FOR PATHPLANNER */
-		NamedCommands.registerCommand("Intake",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Intaking");})
-			.andThen(new AutoIntakeCommand(swerve, intake, feeder, limelightIntake, laserCan))
-			.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Intake complete"); }))
-		);
-
-		NamedCommands.registerCommand("Shoot",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Prepping");})
-				.andThen(new PrepShootCommand(shooter, limelightShooter))
-				.deadlineWith(new IndexNote(feeder, laserCan))
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shooting"); }))
-				.andThen(new AutoShootCommand(shooter, feeder))
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Shot complete"); }))
-			);
-
-		NamedCommands.registerCommand("Index Note",
-			Commands.runOnce(() -> {SmartDashboard.putString("Auto Status", "Indexing");})
-				.andThen(new IndexNote(feeder, laserCan))
-				.andThen(Commands.runOnce(() -> {  SmartDashboard.putString("Auto Status", "Indexing complete"); }))
-			);
 	}
 
 	public Command getAutonomousCommand() {
@@ -188,7 +131,6 @@ public class RobotContainer {
 	}
 
 	public void updateVision() {
-
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
 
@@ -218,7 +160,6 @@ public class RobotContainer {
 			Robot.getLogger().log(Level.SEVERE, e.getMessage());
 		}
 
-		
 		field.setRobotPose(swerve.getSwerveDrive().getPose());
   	}
 
@@ -226,6 +167,7 @@ public class RobotContainer {
 		IDLE,
 		INTAKING,
 		OUTTAKING,
+		REVVING,
 		PREPPING,
 		SHOOTING
 	}
@@ -237,86 +179,10 @@ public class RobotContainer {
 		}
 
 		robotState = state;
-
 		SmartDashboard.putString("robot/robot state", robotState.toString());
 	}
 
-	
-
-	/**
-	 * Makes the robot move. Contains code to control auto-aim button presses
-	 * @param fieldRelative whether or not the robot is driving in field oriented mode
-	 */
-	public void drive(boolean fieldRelative) {
-
-		SmartDashboard.putNumber("robot/feeder torque current", feeder.feederMotorLeft.getTorqueCurrent().getValueAsDouble());
-		if (isDrivingToPose) return;
-
-		double forwardSpeed = -MathUtil.applyDeadband(driverController.getLeftY(), 0.02) * swerve.getMaximumVelocity();
-		double strafeSpeed = -MathUtil.applyDeadband(driverController.getLeftX(), 0.02) * swerve.getMaximumVelocity();
-		double rotationalSpeed = -MathUtil.applyDeadband(driverController.getRightX(), 0.02) * swerve.getMaximumAngularVelocity();
-
-		// Logic to control the led on the limelight
-		LED_MODE ledMode = LED_MODE.OFF;
-
-		if (hasNote) {
-			ledMode = LED_MODE.ON;
-		} else {
-			ledMode = LED_MODE.OFF;
-		}
-
-		switch (robotState) {
-			case OUTTAKING:
-				break;
-			case INTAKING:
-				fieldRelative = false;
-				forwardSpeed *= -1;
-				strafeSpeed *= -1;
-				break;
-			case PREPPING:
-				if (!limelightShooter.hasTarget()) break;
-				fieldRelative = false;
-				break;
-			case SHOOTING:
-				fieldRelative = false;
-				break;
-			default:
-				robotState = State.IDLE;
-				fieldRelative = true;
-				shooter.stop();
-				intake.stop();
-				feeder.stop();
-				break;
-		}
-
-		if (isForwardOverriden) {
-			forwardSpeed = forwardSpeedOverride;
-		}
-
-		if (isStrafeOverriden) {
-			strafeSpeed = strafeSpeedOverride;
-		}
-
-		if (isRotationOverriden) {
-			rotationalSpeed = rotationalSpeedOverride;
-		}
-
-		limelightIntake.setLEDMode(ledMode);
-		swerve.drive(forwardSpeed, strafeSpeed, rotationalSpeed, fieldRelative, 0.01);
-	}
-
-	/**
-	 * Sets {@link #hasNote} to true if the LaserCAN detects an object, false otherwise
-	 * @return returns the status of the note;
-	 */
 	public void updateNoteStatus() {
-		LaserCan.Measurement measurement = laserCan.getMeasurement();
-
-		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
-			return;
-
-		hasNote = measurement.distance_mm <= 75;
-		SmartDashboard.putNumber("robot/proximityDistance", measurement.distance_mm);
-		SmartDashboard.putBoolean("robot/hasNote", hasNote);
+		this.hasIndexedNote = laserCan.isNoteIndexed();
 	}
 }

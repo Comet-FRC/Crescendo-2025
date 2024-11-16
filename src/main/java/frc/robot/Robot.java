@@ -115,7 +115,6 @@ public class Robot extends TimedRobot
 	{
 		m_robotContainer.updateVision();
 		m_robotContainer.updateNoteStatus();
-		m_robotContainer.drive(false);
 	}
 
 	@Override
@@ -139,7 +138,6 @@ public class Robot extends TimedRobot
 	{
 		m_robotContainer.updateVision();
 		m_robotContainer.updateNoteStatus();
-		m_robotContainer.drive(true);
 	}
 
 	@Override
