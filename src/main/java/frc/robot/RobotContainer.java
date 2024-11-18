@@ -115,7 +115,6 @@ public class RobotContainer {
 				Commands.deferredProxy(
 					() -> Commands.parallel(
 						swerve.driveToPose(targetShootReference.getPose()),
-						//swerve.driveToPose(new Pose2d(new Translation2d(1.83, 5.49), new Rotation2d(3.14))),
 						Commands.runOnce(() -> shooter.setVelocity(targetShootReference.getShooterSpeed()))
 						.andThen(Commands.waitUntil(() -> shooter.isReady(false)))
 					)
