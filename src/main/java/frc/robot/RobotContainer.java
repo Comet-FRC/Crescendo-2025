@@ -121,7 +121,7 @@ public class RobotContainer {
 				Commands.runOnce(
 					() -> {
 						setState(State.SHOOTING);
-						intake.intake();
+						feeder.intake();
 					}
 				)
 			)
@@ -129,7 +129,7 @@ public class RobotContainer {
 			.finallyDo(
 				() -> {
 					shooter.stop();
-					intake.stop();
+					feeder.stop();
 					setState(State.IDLE);
 				}
 			)
