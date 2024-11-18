@@ -1,6 +1,8 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotContainer;
+import frc.robot.RobotContainer.State;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -14,6 +16,8 @@ public class OuttakeCommand extends Command {
         this.shooter = shooter;
         this.feeder = feeder;
         this.intake = intake;
+
+        addRequirements(shooter, feeder, intake);
     }
 
     @Override
@@ -21,6 +25,7 @@ public class OuttakeCommand extends Command {
         shooter.eject();
         feeder.eject();
         intake.eject();
+        RobotContainer.setState(State.OUTTAKING);
     }
 
     @Override
@@ -28,5 +33,6 @@ public class OuttakeCommand extends Command {
         shooter.stop();
         feeder.stop();
         intake.stop();
+        RobotContainer.setState(State.OUTTAKING);
     }
 }
