@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -27,7 +28,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	/**
 	 * Represents the speeds of the top and bottom motors of the shooter.
 	 */
-	public class ShooterSpeed {
+	public static class ShooterSpeed {
 		double topMotorSpeed;
 		double bottomMotorSpeed;
 
@@ -101,6 +102,9 @@ public class ShooterSubsystem extends SubsystemBase {
 		top = new TalonFX(Constants.Shooter.topShooterID, "rio");
 		bottom = new TalonFX(Constants.Shooter.bottomShooterID, "rio");
 		applyConfigs();
+
+		SmartDashboard.putNumber("robot/shooter/topSpeed", 2000);
+		SmartDashboard.putNumber("robot/shooter/bottomSpeed", 2000);
 	}
 
 	private void applyConfigs() {

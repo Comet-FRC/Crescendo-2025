@@ -86,7 +86,10 @@
       "SmartDashboard": {
         "open": true,
         "robot": {
-          "open": true
+          "open": true,
+          "shooter": {
+            "open": true
+          }
         },
         "shooter": {
           "open": false

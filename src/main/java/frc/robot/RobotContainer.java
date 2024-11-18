@@ -143,9 +143,22 @@ public class RobotContainer {
 		new JoystickButton(operatorController, 8)
 			.whileTrue(new IntakeCommand(intake, feeder));
 
-		// right bumper -> prep, then shoot
+		// right bumper -> spin shooter wheels
+		
+		/*
+		/new JoystickButton(operatorController, 6)
+			.whileTrue(new ShootCommand(shooter));	
+		*/
+
 		new JoystickButton(operatorController, 6)
-			.whileTrue(new ShootCommand(shooter));		
+			.whileTrue(
+				new ShootCommand(shooter)
+				.finallyDo(
+					() -> {
+						SmartDashboard.putString("robot/shooter/last shoot pose", swerve.getPose().toString());
+					}
+				)
+			);		
 
 		// left bumper -> intake note, then index it
 		new JoystickButton(operatorController, 5)
