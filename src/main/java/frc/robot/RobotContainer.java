@@ -117,8 +117,15 @@ public class RobotContainer {
 					)
 				)
 			)
-			.andThen(Commands.runOnce(() -> setState(State.SHOOTING)))
-			.andThen(Commands.runOnce(() -> intake.intake()))
+			.andThen(
+				Commands.runOnce(
+					() -> {
+						setState(State.SHOOTING);
+						intake.intake();
+					}
+				)
+			)
+			.andThen(Commands.waitUntil(() -> !hasIndexedNote))
 			.finallyDo(
 				() -> {
 					shooter.stop();
