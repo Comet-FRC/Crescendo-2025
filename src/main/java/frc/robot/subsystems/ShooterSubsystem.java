@@ -1,27 +1,27 @@
 package frc.robot.subsystems;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class ShooterSubsystem extends SubsystemBase {
-private static TalonFX top;
-private static TalonFX bottom;
-private final VelocityVoltage topControl = new VelocityVoltage(0).withEnableFOC(true);
-private final VelocityVoltage bottomControl = new VelocityVoltage(0).withEnableFOC(true);
+	private static TalonFX top;
+	private static TalonFX bottom;
+	private final VelocityVoltage topControl = new VelocityVoltage(0).withEnableFOC(true);
+	private final VelocityVoltage bottomControl = new VelocityVoltage(0).withEnableFOC(true);
 
-private final Timer motorTimer = new Timer();
+	private final Timer motorTimer = new Timer();
 
-private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
+	private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 
 	/**
 	 * Represents the speeds of the top and bottom motors of the shooter.
@@ -36,36 +36,69 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		}
 	}
 
-	/**
-	 * 
-	 */
-	public enum Speed {
-		STOP,
-		SUBWOOFER,
-		AMP,
-		SPEAKER,
-		EJECT,
-		THROW,
-		REV
+	public class ShootReference {
+		private Pose2d pose;
+		private ShooterSpeed shooterSpeed;
+
+		ShootReference(
+			Pose2d fieldRelativePose,
+			ShooterSpeed shooterSpeed
+		) {
+			pose = fieldRelativePose;
+			this.shooterSpeed = shooterSpeed;
+		}
+
+		ShootReference(
+			double xPos,
+			double yPos,
+			double rot,
+			ShooterSpeed shooterSpeed
+					) {
+			pose = new Pose2d(new Translation2d(xPos, yPos), new Rotation2d(rot));
+			this.shooterSpeed = shooterSpeed;
+		}
+
+		public ShootReference() {
+            pose = new Pose2d();
+			this.shooterSpeed = new ShooterSpeed(0, 0);
+        }
+
+        public Pose2d getPose() {
+			return pose;
+		}
+
+		public ShooterSpeed getShooterSpeed() {
+			return shooterSpeed;
+		}
+
+		public double calculateDistance(Pose2d o) {
+			return pose.getTranslation().getDistance(o.getTranslation());
+		}
 	}
 
-	private final EnumMap<Speed, ShooterSpeed> shooterSpeeds = new EnumMap<>(Map.ofEntries(
-		Map.entry(Speed.STOP, new ShooterSpeed(0, 0)),
-		Map.entry(Speed.SPEAKER, new ShooterSpeed(3100, 3100)),
-		Map.entry(Speed.AMP, new ShooterSpeed(650, 1150)),
-		Map.entry(Speed.SUBWOOFER, new ShooterSpeed(1000, 6000)),
-		Map.entry(Speed.EJECT, new ShooterSpeed(-500, -500)),
-		Map.entry(Speed.THROW, new ShooterSpeed(2500, 2500)),
-		Map.entry(Speed.REV, new ShooterSpeed(500,500))
-	));
+	final ShootReference[] SPEAKER_RANGE_TABLE = {
+		new ShootReference(1.831, 5.494, 180, new ShooterSpeed(3100, 3100))
+	};
+
+	public ShootReference getClosestShootReference(Pose2d robotPose) {
+		ShootReference closestShootReference = null;
+		double closestDistance = Double.MAX_VALUE;
+
+		for (int i=0; i<SPEAKER_RANGE_TABLE.length; ++i) {
+			double newDistance = SPEAKER_RANGE_TABLE[i].calculateDistance(robotPose);
+			if (newDistance < closestDistance) {
+				closestDistance = newDistance;
+				closestShootReference = SPEAKER_RANGE_TABLE[i];
+			}
+		}
+
+		return closestShootReference;
+	}
 
 	public ShooterSubsystem() {
 		top = new TalonFX(Constants.Shooter.topShooterID, "rio");
 		bottom = new TalonFX(Constants.Shooter.bottomShooterID, "rio");
 		applyConfigs();
-		//SmartDashboard.putNumber("shooter/speed", 0.0);
-		//SmartDashboard.putNumber("shooter/Top RPM adjustment", 0.0);
-		//SmartDashboard.putNumber("shooter/Bottom RPM adjustment", 0.0);
 	}
 
 	private void applyConfigs() {
@@ -95,22 +128,13 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 		return rpm / 60.0;
 	}
 
-	public void shoot() {
-		setVelocity(Speed.SPEAKER);
-	}
-
-	public void amp() {
-		setVelocity(Speed.AMP);
-	}
-
-	public void setVelocity(Speed speed) {
+	public void setVelocity(ShooterSpeed speed) {
 		// The target speed is already set to that value, no action needed
-		if (speedTarget.equals(shooterSpeeds.get(speed))) {
+		if (speedTarget.equals(speed)) {
 			return;
 		}
-
 		motorTimer.restart();
-		speedTarget = shooterSpeeds.get(speed);
+		speedTarget = speed;
 		double topSpeed = speedTarget.topMotorSpeed;
 		double bottomSpeed = speedTarget.bottomMotorSpeed;
 		top.setControl(topControl.withVelocity(toRPS(topSpeed)));
@@ -118,11 +142,11 @@ private ShooterSpeed speedTarget = new ShooterSpeed(0, 0);
 	}
 
 	public void eject() {
-		setVelocity(Speed.EJECT);
+		setVelocity(new ShooterSpeed(-500, -500));
 	}
 
 	public void stop() {
-		setVelocity(Speed.STOP);
+		setVelocity(new ShooterSpeed(0, 0));
 	}
 
 	/**

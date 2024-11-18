@@ -26,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -45,8 +46,6 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDrive swerveDrive;
 
-    
-
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -65,9 +64,13 @@ public class SwerveSubsystem extends SubsystemBase {
         }
 
         // Heading correction should only be used while controlling the robot via angle.
-        swerveDrive.setHeadingCorrection(true); 
-        swerveDrive.setCosineCompensator(true);
 
+        if (RobotBase.isReal()) {
+            swerveDrive.setHeadingCorrection(true); 
+            swerveDrive.setCosineCompensator(true);
+            swerveDrive.setAutoCenteringModules(true);
+        }
+    
         setupPathPlanner();
     }
 
@@ -294,11 +297,14 @@ public class SwerveSubsystem extends SubsystemBase {
         ) {
         return run(() -> {
             // Make the robot move
-            driveFieldOriented(swerveDrive.swerveController.getTargetSpeeds(translationX.getAsDouble(),
+            driveFieldOriented(
+                swerveDrive.swerveController.getTargetSpeeds(translationX.getAsDouble(),
                     translationY.getAsDouble(),
                     rotation.getAsDouble() * Math.PI,
                     swerveDrive.getOdometryHeading().getRadians(),
-                    swerveDrive.getMaximumVelocity()));
+                    swerveDrive.getMaximumVelocity()
+                )
+            );
         });
     }
 

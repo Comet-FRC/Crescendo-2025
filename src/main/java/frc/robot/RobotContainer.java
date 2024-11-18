@@ -8,6 +8,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,6 +24,7 @@ import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LaserCanSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.ShooterSubsystem.ShootReference;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision.LimelightHelpers;
 import frc.robot.subsystems.Vision.LimelightIntake;
@@ -61,6 +63,8 @@ public class RobotContainer {
 	private boolean hasIndexedNote = false;
 	private State robotState = State.IDLE;
 
+	private ShootReference targetShootReference = shooter.new ShootReference();
+
 	private final Field2d field = new Field2d();
 	
 	/**
@@ -78,18 +82,47 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 
-		swerve.setDefaultCommand(
-			swerve.driveCommand(
-				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
-				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
-				() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
-			)
-		);
+		if (!RobotBase.isSimulation()) {
+
+			swerve.setDefaultCommand(
+				swerve.driveCommand(
+					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
+					() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
+					() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
+				)
+			);
+		} else {
+			swerve.setDefaultCommand(
+				swerve.simDriveCommand(
+					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
+					() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
+					() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
+				)
+			);
+		}
 	}
 
 	private void configureBindings() {
 		// Press A to Zero Gyro
 		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
+
+		// right bumper -> prep, then shoot
+		driverController.rightBumper().whileTrue(
+			Commands.runOnce(() -> setRobotState(State.PREPPING))
+			.andThen(Commands.runOnce(() -> targetShootReference = shooter.getClosestShootReference(swerve.getPose())))
+			.andThen(Commands.parallel(
+				swerve.driveToPose(targetShootReference.getPose()),
+				Commands.runOnce(() -> shooter.setVelocity(targetShootReference.getShooterSpeed()))
+				.andThen(Commands.waitUntil(() -> shooter.isReady(false)))
+			))
+			.andThen(Commands.runOnce(() -> setRobotState(State.SHOOTING)))
+			.andThen(new IntakeCommand(intake, feeder))
+			.handleInterrupt(() -> {
+					shooter.stop();
+					setRobotState(State.IDLE);
+				}
+			)
+		);
 
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
@@ -99,7 +132,7 @@ public class RobotContainer {
 		new JoystickButton(operatorController, 8)
 			.whileTrue(new IntakeCommand(intake, feeder));
 
-		// right bumper -> shoot
+		// right bumper -> prep, then shoot
 		new JoystickButton(operatorController, 6)
 			.whileTrue(new ShootCommand(shooter));		
 
@@ -130,6 +163,9 @@ public class RobotContainer {
 	}
 
 	public void updateVision() {
+		if (RobotBase.isSimulation())
+			return;
+
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
 
