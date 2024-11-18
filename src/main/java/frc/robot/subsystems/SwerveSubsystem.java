@@ -11,6 +11,7 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -63,6 +64,17 @@ public class SwerveSubsystem extends SubsystemBase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        // This adds the trajectories on the field display
+        // Subscribe to PathPlanner path updates
+        PathPlannerLogging.setLogActivePathCallback((poses) -> {
+            swerveDrive.field.getObject("path").setPoses(poses);
+        });
+
+        // Subscribe to PathPlanner target pose updates
+        PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+            swerveDrive.field.getObject("target").setPose(pose);
+        });
 
         // Heading correction should only be used while controlling the robot via angle.
         //swerveDrive.setHeadingCorrection(true);

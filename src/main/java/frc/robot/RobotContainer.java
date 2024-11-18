@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -64,8 +63,6 @@ public class RobotContainer {
 	private static State robotState = State.IDLE;
 
 	private ShootReference targetShootReference = shooter.new ShootReference();
-
-	private final Field2d field = new Field2d();
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -76,8 +73,6 @@ public class RobotContainer {
 		DriverStation.silenceJoystickConnectionWarning(true);
 
 		configureBindings();
-	
-		SmartDashboard.putData("robot/field", field);
 
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
@@ -194,7 +189,6 @@ public class RobotContainer {
 		swerve.getSwerveDrive().updateOdometry();
 
 		if (RobotBase.isSimulation()) {
-			field.setRobotPose(swerve.getSwerveDrive().getPose());
 			return;
 		}
 
@@ -221,8 +215,6 @@ public class RobotContainer {
 		} catch (Exception e) {
 			Robot.getLogger().log(Level.SEVERE, e.getMessage());
 		}
-
-		field.setRobotPose(swerve.getSwerveDrive().getPose());
   	}
 
 	public void updateNoteStatus() {
