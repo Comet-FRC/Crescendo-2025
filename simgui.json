@@ -79,12 +79,15 @@
     "Retained Values": {
       "open": false
     },
-    "Transitory Values": {
-      "open": false
-    },
     "transitory": {
+      "LiveWindow": {
+        "open": true
+      },
       "SmartDashboard": {
         "open": true,
+        "robot": {
+          "open": true
+        },
         "shooter": {
           "open": false
         }

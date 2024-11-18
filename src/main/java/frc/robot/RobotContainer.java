@@ -5,6 +5,9 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -61,7 +64,7 @@ public class RobotContainer {
 
 	/* Robot states */
 	private boolean hasIndexedNote = false;
-	private State robotState = State.IDLE;
+	private static State robotState = State.IDLE;
 
 	private ShootReference targetShootReference = shooter.new ShootReference();
 
@@ -82,24 +85,17 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 
-		if (RobotBase.isReal()) {
-			swerve.setDefaultCommand(
-				swerve.driveCommand(
-					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
-					() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
-					() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
-				)
-			);
-		} else {
-			Robot.getLogger().log(Level.INFO, "Using Simulation Drive Command");
-			swerve.setDefaultCommand(
-				swerve.simDriveCommand(
-					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
-					() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
-					() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
-				)
-			);
+		if (RobotBase.isSimulation()) {
+			swerve.getSwerveDrive().setHeadingCorrection(true);
 		}
+
+		swerve.setDefaultCommand(
+			swerve.driveCommand(
+				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
+			)
+		);
 	}
 
 	private void configureBindings() {
@@ -108,18 +104,29 @@ public class RobotContainer {
 
 		// right bumper -> prep, then shoot
 		driverController.rightBumper().whileTrue(
-			Commands.runOnce(() -> setRobotState(State.PREPPING))
-			.andThen(Commands.runOnce(() -> targetShootReference = shooter.getClosestShootReference(swerve.getPose())))
-			.andThen(Commands.parallel(
-				swerve.driveToPose(targetShootReference.getPose()),
-				Commands.runOnce(() -> shooter.setVelocity(targetShootReference.getShooterSpeed()))
-				.andThen(Commands.waitUntil(() -> shooter.isReady(false)))
-			))
-			.andThen(Commands.runOnce(() -> setRobotState(State.SHOOTING)))
-			.andThen(new IntakeCommand(intake, feeder))
+			Commands.runOnce(
+				() -> {
+					setState(State.PREPPING);
+					targetShootReference = shooter.getClosestShootReference(swerve.getPose());
+					SmartDashboard.putString("robot/target pose", targetShootReference.getPose().toString());
+				}
+			)
+			.andThen(
+				Commands.deferredProxy(
+					() -> Commands.parallel(
+						swerve.driveToPose(targetShootReference.getPose()),
+						//swerve.driveToPose(new Pose2d(new Translation2d(1.83, 5.49), new Rotation2d(3.14))),
+						Commands.runOnce(() -> shooter.setVelocity(targetShootReference.getShooterSpeed()))
+						.andThen(Commands.waitUntil(() -> shooter.isReady(false)))
+					)
+				)
+			)
+			.andThen(Commands.runOnce(() -> setState(State.SHOOTING)))
+			.andThen(Commands.runOnce(() -> intake.intake()))
 			.handleInterrupt(() -> {
 					shooter.stop();
-					setRobotState(State.IDLE);
+					intake.stop();
+					setState(State.IDLE);
 				}
 			)
 		);
@@ -139,15 +146,15 @@ public class RobotContainer {
 		// left bumper -> intake note, then index it
 		new JoystickButton(operatorController, 5)
 		.whileTrue(
-			Commands.runOnce(() -> setRobotState(State.INTAKING))
+			Commands.runOnce(() -> setState(State.INTAKING))
 			.andThen(
 				new IntakeCommand(intake, feeder)
 				.onlyWhile(() -> !laserCan.hasObject())
 				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
 			)
 			.andThen(new IndexNote(feeder, laserCan))
-			.andThen(() -> setRobotState(State.REVVING))
-			.handleInterrupt(() -> setRobotState(State.IDLE))
+			.andThen(() -> setState(State.REVVING))
+			.handleInterrupt(() -> setState(State.IDLE))
 		);
 	}
 
@@ -201,6 +208,10 @@ public class RobotContainer {
 		field.setRobotPose(swerve.getSwerveDrive().getPose());
   	}
 
+	public void updateNoteStatus() {
+		this.hasIndexedNote = laserCan.isNoteIndexed();
+	}
+
 	public enum State {
 		IDLE,
 		INTAKING,
@@ -210,17 +221,14 @@ public class RobotContainer {
 		SHOOTING
 	}
 
-	public void setRobotState(State state) {
-		// Already on the same state
-		if (robotState == state) {
+	public static void setState(State newState) {
+
+        // Already on the same state
+		if (robotState == newState) {
 			return;
 		}
 
-		robotState = state;
-		SmartDashboard.putString("robot/robot state", robotState.toString());
-	}
-
-	public void updateNoteStatus() {
-		this.hasIndexedNote = laserCan.isNoteIndexed();
-	}
+        robotState = newState;
+        SmartDashboard.putString("robot/robot state", robotState.toString());
+    }
 }

@@ -27,6 +27,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -36,6 +37,8 @@ import frc.robot.Constants.SWERVE;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
@@ -66,7 +69,7 @@ public class SwerveSubsystem extends SubsystemBase {
         // Heading correction should only be used while controlling the robot via angle.
         //swerveDrive.setHeadingCorrection(true);
         //swerveDrive.setAutoCenteringModules(true);
-        //swerveDrive.setCosineCompensator(true);
+        swerveDrive.setCosineCompensator(false);
     
         setupPathPlanner();
     }
@@ -116,6 +119,8 @@ public class SwerveSubsystem extends SubsystemBase {
         // event markers.
         return new PathPlannerAuto(pathName);
     }
+
+
     /**
      * Use PathPlanner Path finding to go to a point on the field.
      *
@@ -264,12 +269,11 @@ public class SwerveSubsystem extends SubsystemBase {
         DoubleSupplier translationY,
         DoubleSupplier angularRotationX
     ) {
-        double xVelocity = Math.pow(translationX.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
-        double yVelocity = Math.pow(translationY.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
-        double angularVelocity = Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity();
-
         return run(() -> {
-            // Make the robot move
+            double xVelocity = Math.pow(translationX.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+            double yVelocity = Math.pow(translationY.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+            double angularVelocity = Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity();
+
             swerveDrive.drive(
                 new Translation2d(xVelocity, yVelocity),
                 angularVelocity,
@@ -295,20 +299,17 @@ public class SwerveSubsystem extends SubsystemBase {
         return run(() -> {
             swerveDrive.setHeadingCorrection(true);
 
+            driveCommand(translationX, translationY, angularRotationX);
+            /*
             double xVelocity = Math.pow(translationX.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
             double yVelocity = Math.pow(translationY.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
             double angularVelocity = Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity();            
 
-            // Make the robot move
-            driveFieldOriented(
-                swerveDrive.swerveController.getTargetSpeeds(
-                    xVelocity,
-                    yVelocity,
-                    angularVelocity,
-                    swerveDrive.getOdometryHeading().getRadians(),
-                    getMaximumVelocity()
-                )
-            );
+            swerveDrive.drive(
+                new Translation2d(xVelocity, yVelocity),
+                angularVelocity,
+                true,
+                false);*/
         });
     }
 
@@ -583,5 +584,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public SwerveDrive getSwerveDrive() {
         return swerveDrive;
+    }
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putString("robot/pose", getPose().toString());
     }
 }

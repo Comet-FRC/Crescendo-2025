@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -53,8 +54,8 @@ public class ShooterSubsystem extends SubsystemBase {
 			double yPos,
 			double rot,
 			ShooterSpeed shooterSpeed
-					) {
-			pose = new Pose2d(new Translation2d(xPos, yPos), new Rotation2d(rot));
+		) {
+			this.pose = new Pose2d(new Translation2d(xPos, yPos), new Rotation2d(rot));
 			this.shooterSpeed = shooterSpeed;
 		}
 
@@ -64,7 +65,7 @@ public class ShooterSubsystem extends SubsystemBase {
         }
 
         public Pose2d getPose() {
-			return pose;
+			return this.pose;
 		}
 
 		public ShooterSpeed getShooterSpeed() {
@@ -77,7 +78,8 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	final ShootReference[] SPEAKER_RANGE_TABLE = {
-		new ShootReference(1.831, 5.494, 180, new ShooterSpeed(3100, 3100))
+		new ShootReference(1.831, 5.494, Units.degreesToRadians(180), new ShooterSpeed(3100, 3100)),
+		new ShootReference(1.78, 4.88, Units.degreesToRadians(153.25), new ShooterSpeed(3100, 3100))
 	};
 
 	public ShootReference getClosestShootReference(Pose2d robotPose) {
