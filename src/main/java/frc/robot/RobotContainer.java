@@ -5,9 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -122,7 +119,8 @@ public class RobotContainer {
 			)
 			.andThen(Commands.runOnce(() -> setState(State.SHOOTING)))
 			.andThen(Commands.runOnce(() -> intake.intake()))
-			.handleInterrupt(() -> {
+			.finallyDo(
+				() -> {
 					shooter.stop();
 					intake.stop();
 					setState(State.IDLE);
