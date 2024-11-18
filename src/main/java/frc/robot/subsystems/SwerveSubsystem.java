@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -69,6 +70,10 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.setCosineCompensator(false);
     
         setupPathPlanner();
+
+        // DO THIS AFTER CONFIGURATION OF YOUR DESIRED PATHFINDER
+        // see https://pathplanner.dev/pplib-pathfinding.html#java-warmup
+        PathfindingCommand.warmupCommand().schedule();
     }
 
     /**
