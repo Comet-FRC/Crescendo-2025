@@ -64,12 +64,9 @@ public class SwerveSubsystem extends SubsystemBase {
         }
 
         // Heading correction should only be used while controlling the robot via angle.
-
-        if (RobotBase.isReal()) {
-            swerveDrive.setHeadingCorrection(true); 
-            swerveDrive.setCosineCompensator(true);
-            swerveDrive.setAutoCenteringModules(true);
-        }
+        //swerveDrive.setHeadingCorrection(true);
+        //swerveDrive.setAutoCenteringModules(true);
+        //swerveDrive.setCosineCompensator(true);
     
         setupPathPlanner();
     }
@@ -293,16 +290,23 @@ public class SwerveSubsystem extends SubsystemBase {
     public Command simDriveCommand(
         DoubleSupplier translationX,
         DoubleSupplier translationY,
-        DoubleSupplier rotation
+        DoubleSupplier angularRotationX
         ) {
         return run(() -> {
+            swerveDrive.setHeadingCorrection(true);
+
+            double xVelocity = Math.pow(translationX.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+            double yVelocity = Math.pow(translationY.getAsDouble(), 3) * swerveDrive.getMaximumVelocity();
+            double angularVelocity = Math.pow(angularRotationX.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity();            
+
             // Make the robot move
             driveFieldOriented(
-                swerveDrive.swerveController.getTargetSpeeds(translationX.getAsDouble(),
-                    translationY.getAsDouble(),
-                    rotation.getAsDouble() * Math.PI,
+                swerveDrive.swerveController.getTargetSpeeds(
+                    xVelocity,
+                    yVelocity,
+                    angularVelocity,
                     swerveDrive.getOdometryHeading().getRadians(),
-                    swerveDrive.getMaximumVelocity()
+                    getMaximumVelocity()
                 )
             );
         });
@@ -567,10 +571,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public double getMaximumVelocity() {
         return swerveDrive.getMaximumVelocity();
-    }
-
-    public SwerveModuleState[] getModuleStates() {
-        return swerveDrive.getStates();
     }
 
     public SwerveModulePosition[] getModulePositions() {

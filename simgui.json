@@ -30,6 +30,9 @@
         "header": {
           "open": false
         }
+      },
+      "window": {
+        "visible": false
       }
     }
   },
@@ -62,17 +65,27 @@
         "left": 150,
         "right": 2961,
         "top": 79,
-        "width": 16.541748046875
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
       }
     }
   },
   "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
+    "Retained Values": {
+      "open": false
+    },
+    "Transitory Values": {
+      "open": false
+    },
     "transitory": {
       "SmartDashboard": {
+        "open": true,
         "shooter": {
-          "open": false
-        },
-        "swerve": {
           "open": false
         }
       }
@@ -80,8 +93,5 @@
   },
   "NetworkTables Info": {
     "visible": true
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

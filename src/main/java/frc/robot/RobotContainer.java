@@ -82,8 +82,7 @@ public class RobotContainer {
 		autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 
-		if (!RobotBase.isSimulation()) {
-
+		if (RobotBase.isReal()) {
 			swerve.setDefaultCommand(
 				swerve.driveCommand(
 					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
@@ -92,6 +91,7 @@ public class RobotContainer {
 				)
 			);
 		} else {
+			Robot.getLogger().log(Level.INFO, "Using Simulation Drive Command");
 			swerve.setDefaultCommand(
 				swerve.simDriveCommand(
 					() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
@@ -163,13 +163,16 @@ public class RobotContainer {
 	}
 
 	public void updateVision() {
-		if (RobotBase.isSimulation())
-			return;
 
 		limelightIntake.updateVisionData();
 		limelightShooter.updateVisionData();
 
 		swerve.getSwerveDrive().updateOdometry();
+
+		if (RobotBase.isSimulation()) {
+			field.setRobotPose(swerve.getSwerveDrive().getPose());
+			return;
+		}
 
 		boolean doRejectUpdate = false;
 
