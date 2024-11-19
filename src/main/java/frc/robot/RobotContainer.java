@@ -21,6 +21,7 @@ import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.LaserCanSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.ShooterSubsystem.ShootReference;
@@ -32,6 +33,7 @@ import frc.robot.subsystems.Vision.LimelightShooter;
 import java.io.File;
 import java.util.logging.Level;
 
+import com.ctre.phoenix.led.CANdle;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 /**
@@ -57,6 +59,8 @@ public class RobotContainer {
 	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
 
 	private final LaserCanSubsystem laserCan = new LaserCanSubsystem();
+
+	private final LEDSubsystem led = new LEDSubsystem(21);
 
 	/* Robot states */
 	private boolean hasIndexedNote = false;
