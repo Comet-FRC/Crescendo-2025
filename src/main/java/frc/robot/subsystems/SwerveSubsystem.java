@@ -72,9 +72,11 @@ public class SwerveSubsystem extends SubsystemBase {
         });
 
         // Subscribe to PathPlanner target pose updates
+        /*
         PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
             swerveDrive.field.getObject("target").setPose(pose);
         });
+        */
 
         // Heading correction should only be used while controlling the robot via angle.
         //swerveDrive.setHeadingCorrection(true);
