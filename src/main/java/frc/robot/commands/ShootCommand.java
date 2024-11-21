@@ -17,6 +17,8 @@ public class ShootCommand extends Command {
 
     @Override
     public void initialize() {
+        
+        // For setting the range table
         double topSpeed = SmartDashboard.getNumber("robot/shooter/topSpeed", 0);
         double bottomSpeed = SmartDashboard.getNumber("robot/shooter/bottomSpeed", 0);
         ShooterSpeed speed = new ShooterSpeed(topSpeed, bottomSpeed);

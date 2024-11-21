@@ -3,20 +3,33 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
 import com.ctre.phoenix.led.CANdleConfiguration;
-
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import com.ctre.phoenix.led.RainbowAnimation;
 
 /**
  * @see https://api.ctr-electronics.com/phoenix/release/java/com/ctre/phoenix/led/CANdle.html
  */
-public class LEDSubsystem extends SubsystemBase {
+public class LED {
+
+    /* Singleton */
+	
+	private static LED instance = null;
+	
+	public static LED getInstance() {
+		if (instance == null) instance = new LED();
+		return instance;
+	}
+
+	/* Implementation */
+
     private final CANdle candle;
 
-    public LEDSubsystem(int deviceID) {
-        candle = new CANdle(deviceID);
+    private LED() {
+        candle = new CANdle(21);
         configureCANdle();
 
-        setColor(255, 255, 255);
+        //setColor(255, 255, 255);
+        RainbowAnimation anim = new RainbowAnimation(1, 0.5, 68);
+        candle.animate(anim);
     }
 
     void configureCANdle() {

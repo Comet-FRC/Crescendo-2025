@@ -11,12 +11,24 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class IntakeSubsystem extends SubsystemBase {
+
+	/* Singleton */
+	
+	private static IntakeSubsystem instance = null;
+	
+	public static IntakeSubsystem getInstance() {
+		if (instance == null) instance = new IntakeSubsystem();
+		return instance;
+	}
+
+	/* Implementation */
+
     private final CANSparkMax intakeMotor;
     static boolean intaking = false;
 
     double speed = 0;
 
-    public IntakeSubsystem() {
+    private IntakeSubsystem() {
         intakeMotor = new CANSparkMax(Constants.Intake.motorID, MotorType.kBrushless);
         intakeMotor.setSmartCurrentLimit(80);
     }

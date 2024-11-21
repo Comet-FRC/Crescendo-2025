@@ -4,7 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -15,25 +20,24 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.robot.Constants.Feeder;
 import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.OuttakeCommand;
 import frc.robot.commands.ShootCommand;
+import frc.robot.commands.shooter.AutoShoot;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.LEDSubsystem;
-import frc.robot.subsystems.LaserCanSubsystem;
+import frc.robot.subsystems.LED;
+import frc.robot.subsystems.ProximitySensor;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.ShooterSubsystem.ShootReference;
 import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.Vision.LimelightHelpers;
-import frc.robot.subsystems.Vision.LimelightIntake;
-import frc.robot.subsystems.Vision.LimelightShooter;
+import frc.robot.utils.LimelightHelpers;
 
 import java.io.File;
-import java.util.logging.Level;
 
-import com.ctre.phoenix.led.CANdle;
+import org.littletonrobotics.junction.Logger;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 
 /**
@@ -42,43 +46,46 @@ import com.pathplanner.lib.auto.AutoBuilder;
  * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-	/* Autonomous */
+	/* Subsystems */
+	private final SwerveSubsystem swerve;
+	private final IntakeSubsystem intake;
+	private final FeederSubsystem feeder;
+	private final ShooterSubsystem shooter;
+
+	private final ProximitySensor sensor;
+	private final LED led;
+
 	private final SendableChooser<Command> autoChooser;
 
-	/* Controllers */
-	private final CommandXboxController driverController = new CommandXboxController(0);
-	private final Joystick operatorController = new Joystick(1);
-
-	/* Subsystems */
-	private final SwerveSubsystem swerve = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve/neo"));
-	private final IntakeSubsystem intake = new IntakeSubsystem();
-	private final FeederSubsystem feeder = new FeederSubsystem();
-	private final ShooterSubsystem shooter = new ShooterSubsystem();
-
-	public final LimelightShooter limelightShooter = new LimelightShooter("limelight-shooter");
-	public final LimelightIntake limelightIntake = new LimelightIntake("limelight-intake");
-
-	private final LaserCanSubsystem laserCan = new LaserCanSubsystem();
-
-	private final LEDSubsystem led = new LEDSubsystem(21);
+	private final CommandXboxController driverController;
+	private final Joystick operatorController;
 
 	/* Robot states */
-	private boolean hasIndexedNote = false;
+	public static boolean hasIndexedNote = false;
 	private static State robotState = State.IDLE;
-
-	private ShootReference targetShootReference = shooter.new ShootReference();
 	
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
-		registerPathplannerCommands();
+		this.swerve = SwerveSubsystem.getInstance();
+		this.intake = IntakeSubsystem.getInstance();
+		this.feeder = FeederSubsystem.getInstance();
+		this.shooter = ShooterSubsystem.getInstance();
+
+		this.sensor = ProximitySensor.getInstance();
+		this.led = LED.getInstance();
+
+		this.driverController = new CommandXboxController(0);
+		this.operatorController = new Joystick(1);
+
+		this.registerPathplannerCommands();
 
 		DriverStation.silenceJoystickConnectionWarning(true);
 
 		configureBindings();
 
-		autoChooser = AutoBuilder.buildAutoChooser();
+		this.autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 
 		if (RobotBase.isSimulation()) {
@@ -89,9 +96,24 @@ public class RobotContainer {
 			swerve.driveCommand(
 				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
 				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
-				() -> -MathUtil.applyDeadband(driverController.getRightY(), 0.02)
+				() -> -MathUtil.applyDeadband(driverController.getRightX(), 0.02)
 			)
 		);
+
+		// Sets the color of the LEDS once
+		led.setColor(255, 255, 255);
+
+
+		AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
+		var alliance = DriverStation.getAlliance();
+        boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+        int priorityTagID = isRedAlliance ? 4 : 7;
+
+        Pose2d tagPose = aprilTagFieldLayout.getTagPose(priorityTagID).orElseThrow().toPose2d();
+        Pose2d targetPose = tagPose.plus(new Transform2d(0.35, 0, new Rotation2d()));
+
+		Logger.recordOutput("field/poses/speaker pose", targetPose);
 	}
 
 	private void configureBindings() {
@@ -100,38 +122,7 @@ public class RobotContainer {
 
 		// right bumper -> prep, then shoot
 		driverController.rightBumper().whileTrue(
-			Commands.runOnce(
-				() -> {
-					setState(State.PREPPING);
-					targetShootReference = shooter.getClosestShootReference(swerve.getPose());
-					SmartDashboard.putString("robot/target pose", targetShootReference.getPose().toString());
-				}
-			)
-			.andThen(
-				Commands.deferredProxy(
-					() -> Commands.parallel(
-						swerve.driveToPose(targetShootReference.getPose()),
-						Commands.runOnce(() -> shooter.setVelocity(targetShootReference.getShooterSpeed()))
-						.andThen(Commands.waitUntil(() -> shooter.isReady(false)))
-					)
-				)
-			)
-			.andThen(
-				Commands.runOnce(
-					() -> {
-						setState(State.SHOOTING);
-						feeder.intake();
-					}
-				)
-			)
-			.andThen(Commands.waitUntil(() -> !hasIndexedNote))
-			.finallyDo(
-				() -> {
-					shooter.stop();
-					feeder.stop();
-					setState(State.IDLE);
-				}
-			)
+			new AutoShoot()
 		);
 
 		// back button (not B button)
@@ -165,10 +156,10 @@ public class RobotContainer {
 			Commands.runOnce(() -> setState(State.INTAKING))
 			.andThen(
 				new IntakeCommand(intake, feeder)
-				.onlyWhile(() -> !laserCan.hasObject())
+				.onlyWhile(() -> !sensor.hasObject())
 				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
 			)
-			.andThen(new IndexNote(feeder, laserCan))
+			.andThen(new IndexNote())
 			.andThen(() -> setState(State.REVVING))
 			.handleInterrupt(() -> setState(State.IDLE))
 		);
@@ -186,10 +177,6 @@ public class RobotContainer {
 	}
 
 	public void updateVision() {
-
-		limelightIntake.updateVisionData();
-		limelightShooter.updateVisionData();
-
 		swerve.getSwerveDrive().updateOdometry();
 
 		if (RobotBase.isSimulation()) {
@@ -210,19 +197,18 @@ public class RobotContainer {
 			}
 			
 			if(!doRejectUpdate) {
-				//double estimatedRotation = -mt2.pose.getRotation().getDegrees();
+				//double estimatedRotation = mt2.pose.getRotation().getDegrees();
 				//swerve.getSwerveDrive().setGyro(new Rotation3d(estimatedRotation, 0, 0));
 				swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION_MEASUREMENT_STD_DEV);
 			}
 
 			SmartDashboard.putNumber("robot/estimated rotation", mt2.pose.getRotation().getDegrees());
 		} catch (Exception e) {
-			Robot.getLogger().log(Level.SEVERE, e.getMessage());
 		}
   	}
 
 	public void updateNoteStatus() {
-		this.hasIndexedNote = laserCan.isNoteIndexed();
+		this.hasIndexedNote = sensor.isNoteIndexed();
 	}
 
 	public enum State {

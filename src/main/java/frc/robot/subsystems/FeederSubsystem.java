@@ -10,27 +10,45 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 
 public class FeederSubsystem extends SubsystemBase {
+
+	/* Singleton */
+	
+	private static FeederSubsystem instance = null;
+	
+	public static FeederSubsystem getInstance() {
+		if (instance == null) instance = new FeederSubsystem();
+		return instance;
+	}
+
+	/* Implementation */
+
     public final TalonFX feederMotorLeft;
     private final TalonFX feederMotorRight;
 
-    private final VelocityVoltage flControl = new VelocityVoltage(0).withEnableFOC(true);
-    private final VelocityVoltage frControl = new VelocityVoltage(0).withEnableFOC(true);
+    private final VelocityVoltage flControl;
+    private final VelocityVoltage frControl;
+
 
     private double speed = 0;
 
-    public FeederSubsystem() {
-        feederMotorLeft = new TalonFX(Constants.Feeder.leftFeederID, "rio");
-        feederMotorRight = new TalonFX(Constants.Feeder.rightFeederID, "rio");
+    private FeederSubsystem() {
+        this.feederMotorLeft = new TalonFX(Constants.Feeder.leftFeederID, "rio");
+        this.feederMotorRight = new TalonFX(Constants.Feeder.rightFeederID, "rio");
+        this.flControl = new VelocityVoltage(0).withEnableFOC(true);
+        this.frControl = new VelocityVoltage(0).withEnableFOC(true);
 
         applyConfigs();
     }
 
     private void applyConfigs() {
-		var feederMotorConfig = new TalonFXConfiguration();
+		TalonFXConfiguration feederMotorConfig = new TalonFXConfiguration();
 		feederMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		feederMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Intake.peakForwardVoltage;
@@ -44,9 +62,8 @@ public class FeederSubsystem extends SubsystemBase {
 		feederMotorConfig.Slot0.kA = 0.0;
 		feederMotorConfig.Slot0.kG = 0.0;
         
-
-		feederMotorLeft.getConfigurator().apply(feederMotorConfig);
-		feederMotorRight.getConfigurator().apply(feederMotorConfig);
+		this.feederMotorLeft.getConfigurator().apply(feederMotorConfig);
+		this.feederMotorRight.getConfigurator().apply(feederMotorConfig);
 	}
 
     public void setVelocity(double speedRPM) {
@@ -54,17 +71,22 @@ public class FeederSubsystem extends SubsystemBase {
         if (speedRPM == this.speed) return;
 
         this.speed = speedRPM;
-		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
-		feederMotorRight.setControl(frControl.withVelocity(toRPS(-speedRPM)));
+		this.feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
+		this.feederMotorRight.setControl(frControl.withVelocity(toRPS(-speedRPM)));
 	}
 
     private double toRPS(double rpm) {
 		return rpm / 60.0;
 	}
 
-    public void intake() {
-       
-        setVelocity(-900);
+    public Command intake() {
+        return new FunctionalCommand(
+            () -> setVelocity(-900), 
+            () -> {},
+            interrupted -> stop(),
+            () -> !RobotContainer.hasIndexedNote,
+            this
+        );
     }
 
     public void eject() {

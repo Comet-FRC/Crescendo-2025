@@ -65,10 +65,7 @@
         "left": 150,
         "right": 2961,
         "top": 79,
-        "width": 16.541748046875,
-        "window": {
-          "visible": true
-        }
+        "width": 16.541748046875
       }
     }
   },
@@ -80,16 +77,26 @@
       "open": false
     },
     "transitory": {
+      "AdvantageKit": {
+        "RealOutputs": {
+          "field": {
+            "open": true,
+            "poses": {
+              "open": true
+            }
+          },
+          "open": true
+        }
+      },
+      "FMSInfo": {
+        "open": true
+      },
       "LiveWindow": {
         "open": true
       },
       "SmartDashboard": {
-        "Field": {
-          "open": true
-        },
         "open": true,
         "robot": {
-          "open": true,
           "shooter": {
             "open": true
           }
@@ -100,7 +107,7 @@
       }
     }
   },
-  "NetworkTables Info": {
-    "visible": true
+  "NetworkTables View": {
+    "visible": false
   }
 }

@@ -1,24 +1,33 @@
 package frc.robot.subsystems;
 
-import java.util.logging.Level;
-
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Robot;
 
-public class LaserCanSubsystem extends SubsystemBase {
+public class ProximitySensor {
+
+    /* Singleton */
+	
+	private static ProximitySensor instance = null;
+	
+	public static ProximitySensor getInstance() {
+		if (instance == null) instance = new ProximitySensor();
+		return instance;
+	}
+
+	/* Implementation */
+
     private LaserCan laserCan;
 
-    public LaserCanSubsystem() {
+    private ProximitySensor() {
         laserCan = new LaserCan(Constants.Feeder.laserCanID);
         try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
             laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
             laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
         } catch (ConfigurationFailedException e) {
-            Robot.getLogger().log(Level.SEVERE, "LaserCAN configuration failed!");
+            
+            System.out.println("LaserCAN configuration failed!");
         }
     }
 
@@ -28,8 +37,7 @@ public class LaserCanSubsystem extends SubsystemBase {
 		if (measurement == null || measurement.status != LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)
 			return 0;
 
-        double distanceMeters = measurement.distance_mm;
-		return distanceMeters;
+		return measurement.distance_mm;
     }
 
     public boolean hasObject() {

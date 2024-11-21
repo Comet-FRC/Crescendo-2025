@@ -2,26 +2,32 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.LaserCanSubsystem;
+import frc.robot.subsystems.ProximitySensor;
 
 public class IndexNote extends Command {
     private final FeederSubsystem feeder;
-    private final LaserCanSubsystem laserCan;
+    private final ProximitySensor laserCan;
+    
 
     /**
      * Tries to adjust note position so that it's in the same spot every time. This
      * should probably be run in parallel with {@link PrepAmpCommand} so that as the
      * robot is revving its shooter motor, the feeder fixes the note
      */
-    public IndexNote(FeederSubsystem feeder, LaserCanSubsystem laserCan)
+    public IndexNote()
     {
-        this.feeder = feeder;
-        this.laserCan = laserCan;
+        this.feeder = FeederSubsystem.getInstance();
+        this.laserCan = ProximitySensor.getInstance();
     }
 
     @Override
     public void initialize() {
         feeder.setVelocity(100);
+    }
+
+    @Override
+    public void execute() {
+        
     }
 
     @Override
