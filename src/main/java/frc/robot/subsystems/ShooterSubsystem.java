@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -16,6 +18,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -148,9 +151,10 @@ public class ShooterSubsystem extends SubsystemBase {
 		return rpm / 60.0;
 	}
 
-	public Command rev(DoubleSupplier distance) {
+	public Command revSpeaker(DoubleSupplier distance) {
+		Logger.recordOutput("shooter/rev speaker distance", distance.getAsDouble());
 		return new InstantCommand(() -> setVelocity(RANGE_TABLE_SPEAKER.get(distance.getAsDouble())), this)
-			.until(this::isReady);
+			.andThen(new WaitUntilCommand(this::isReady));
 	}
 
 	public void setVelocity(ShooterSpeed speed) {

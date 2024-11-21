@@ -4,14 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -20,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.Constants.Feeder;
 import frc.robot.commands.IndexNote;
 import frc.robot.commands.IntakeCommand;
 import frc.robot.commands.OuttakeCommand;
@@ -33,8 +26,6 @@ import frc.robot.subsystems.ProximitySensor;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.utils.LimelightHelpers;
-
-import java.io.File;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -61,7 +52,6 @@ public class RobotContainer {
 	private final Joystick operatorController;
 
 	/* Robot states */
-	public static boolean hasIndexedNote = false;
 	private static State robotState = State.IDLE;
 	
 	/**
@@ -78,42 +68,21 @@ public class RobotContainer {
 
 		this.driverController = new CommandXboxController(0);
 		this.operatorController = new Joystick(1);
-
-		this.registerPathplannerCommands();
-
 		DriverStation.silenceJoystickConnectionWarning(true);
-
-		configureBindings();
+		
+		this.registerPathplannerCommands();
+		this.configureBindings();
 
 		this.autoChooser = AutoBuilder.buildAutoChooser();
 		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
 
-		if (RobotBase.isSimulation()) {
-			swerve.getSwerveDrive().setHeadingCorrection(true);
-		}
-
-		swerve.setDefaultCommand(
-			swerve.driveCommand(
-				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
-				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
-				() -> -MathUtil.applyDeadband(driverController.getRightX(), 0.02)
-			)
-		);
+		this.configureDefaultCommands();
 
 		// Sets the color of the LEDS once
-		led.setColor(255, 255, 255);
+		this.led.setColor(255, 255, 255);
+	}
 
-
-		AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
-
-		var alliance = DriverStation.getAlliance();
-        boolean isRedAlliance = alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-        int priorityTagID = isRedAlliance ? 4 : 7;
-
-        Pose2d tagPose = aprilTagFieldLayout.getTagPose(priorityTagID).orElseThrow().toPose2d();
-        Pose2d targetPose = tagPose.plus(new Transform2d(0.35, 0, new Rotation2d()));
-
-		Logger.recordOutput("field/poses/speaker pose", targetPose);
+	private void registerPathplannerCommands() {
 	}
 
 	private void configureBindings() {
@@ -125,27 +94,28 @@ public class RobotContainer {
 			new AutoShoot()
 		);
 
+		// B -> Drive to Amp
+		driverController.b().whileTrue(
+			this.swerve.driveToAmp()
+		);
+
 		// back button (not B button)
 		new JoystickButton(operatorController, 7)
-			.whileTrue(new OuttakeCommand(shooter, feeder, intake));
+			.whileTrue(new OuttakeCommand());
 
 		// start button -> intake
 		new JoystickButton(operatorController, 8)
-			.whileTrue(new IntakeCommand(intake, feeder));
+			.whileTrue(new IntakeCommand());
 
 		// right bumper -> spin shooter wheels
-		
-		/*
-		/new JoystickButton(operatorController, 6)
-			.whileTrue(new ShootCommand(shooter));	
-		*/
 
 		new JoystickButton(operatorController, 6)
 			.whileTrue(
 				new ShootCommand(shooter)
 				.finallyDo(
 					() -> {
-						SmartDashboard.putString("robot/shooter/last shoot pose", swerve.getPose().toString());
+						Logger.recordOutput("shooter/last shoot distance", swerve.getDistanceFromSpeaker());
+						Logger.recordOutput("shooter/last shoot pose", swerve.getPose().toString());
 					}
 				)
 			);		
@@ -155,7 +125,7 @@ public class RobotContainer {
 		.whileTrue(
 			Commands.runOnce(() -> setState(State.INTAKING))
 			.andThen(
-				new IntakeCommand(intake, feeder)
+				new IntakeCommand()
 				.onlyWhile(() -> !sensor.hasObject())
 				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
 			)
@@ -165,11 +135,18 @@ public class RobotContainer {
 		);
 	}
 
-	public SwerveSubsystem getSwerveSubsystem() {
-		return swerve;
+	private void configureDefaultCommands() {
+		swerve.setDefaultCommand(
+			swerve.driveCommand(
+				() -> -MathUtil.applyDeadband(driverController.getLeftY(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getLeftX(), 0.02),
+				() -> -MathUtil.applyDeadband(driverController.getRightX(), 0.02)
+			)
+		);
 	}
 
-	private void registerPathplannerCommands() {
+	public SwerveSubsystem getSwerveSubsystem() {
+		return swerve;
 	}
 
 	public Command getAutonomousCommand() {
@@ -206,10 +183,6 @@ public class RobotContainer {
 		} catch (Exception e) {
 		}
   	}
-
-	public void updateNoteStatus() {
-		this.hasIndexedNote = sensor.isNoteIndexed();
-	}
 
 	public enum State {
 		IDLE,

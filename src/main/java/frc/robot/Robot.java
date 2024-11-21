@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -11,6 +12,7 @@ import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -97,8 +99,8 @@ public class Robot extends LoggedRobot
 		// and running subsystem periodic() methods.  This must be called from the robot's periodic
 		// block in order for anything in the Command-based framework to work.
 		CommandScheduler.getInstance().run();
-		SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
-		SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
+		Logger.recordOutput("Match Info/Match Time", DriverStation.getMatchTime());
+		Logger.recordOutput("Robot/Battery Voltage", RobotController.getBatteryVoltage());
 	}
 
 	/**
@@ -120,7 +122,6 @@ public class Robot extends LoggedRobot
 			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
 			disabledTimer.stop();
 		}
-		m_robotContainer.updateNoteStatus();
 	}
 
 	@Override
@@ -140,7 +141,6 @@ public class Robot extends LoggedRobot
 	public void autonomousPeriodic()
 	{
 		m_robotContainer.updateVision();
-		m_robotContainer.updateNoteStatus();
 	}
 
 	@Override
@@ -162,7 +162,6 @@ public class Robot extends LoggedRobot
 	public void teleopPeriodic()
 	{
 		m_robotContainer.updateVision();
-		m_robotContainer.updateNoteStatus();
 	}
 
 	@Override
@@ -177,6 +176,11 @@ public class Robot extends LoggedRobot
 		{
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public void simulationInit() {
+		DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
 	}
 
 	public RobotContainer getRobotContainer() {

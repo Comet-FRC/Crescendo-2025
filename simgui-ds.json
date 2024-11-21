@@ -1,4 +1,14 @@
 {
+  "FMS": {
+    "window": {
+      "visible": false
+    }
+  },
+  "Joysticks": {
+    "window": {
+      "visible": false
+    }
+  },
   "Keyboard 0 Settings": {
     "window": {
       "visible": true
@@ -25,13 +35,12 @@
           "keyRate": 0.009999999776482582
         },
         {},
-        {},
         {
           "decKey": 263,
           "incKey": 262
         }
       ],
-      "axisCount": 6,
+      "axisCount": 5,
       "buttonCount": 6,
       "buttonKeys": [
         90,

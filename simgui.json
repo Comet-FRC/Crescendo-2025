@@ -65,7 +65,10 @@
         "left": 150,
         "right": 2961,
         "top": 79,
-        "width": 16.541748046875
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
       }
     }
   },
@@ -80,22 +83,17 @@
       "AdvantageKit": {
         "RealOutputs": {
           "field": {
-            "open": true,
             "poses": {
               "open": true
             }
           },
-          "open": true
+          "open": true,
+          "shooter": {
+            "open": true
+          }
         }
       },
-      "FMSInfo": {
-        "open": true
-      },
-      "LiveWindow": {
-        "open": true
-      },
       "SmartDashboard": {
-        "open": true,
         "robot": {
           "shooter": {
             "open": true
@@ -106,8 +104,5 @@
         }
       }
     }
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

@@ -6,7 +6,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -14,24 +13,20 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -67,6 +62,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
     private final SwerveDrive swerveDrive;
 
+    private final ProfiledPIDController headingPID = new ProfiledPIDController(0.06, 0.0, 0.0, new TrapezoidProfile.Constraints(360.0, 360.0 * 2.0));
+
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
@@ -76,18 +73,17 @@ public class SwerveSubsystem extends SubsystemBase {
 
         File directory = new File(Filesystem.getDeployDirectory(), "swerve/neo");
 
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
-
         try {
-            swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.SWERVE.MAX_SPEED);
+            this.swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.SWERVE.MAX_SPEED);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
         // This adds the trajectories on the field display
         // Subscribe to PathPlanner path updates
         PathPlannerLogging.setLogActivePathCallback((poses) -> {
-            swerveDrive.field.getObject("path").setPoses(poses);
+            this.swerveDrive.field.getObject("path").setPoses(poses);
         });
 
         // Subscribe to PathPlanner target pose updates
@@ -100,13 +96,20 @@ public class SwerveSubsystem extends SubsystemBase {
         // Heading correction should only be used while controlling the robot via angle.
         //swerveDrive.setHeadingCorrection(true);
         //swerveDrive.setAutoCenteringModules(true);
-        swerveDrive.setCosineCompensator(false);
-    
-        setupPathPlanner();
+        if (RobotBase.isSimulation()) {
+			this.swerveDrive.setHeadingCorrection(true);
+		}
+        this.swerveDrive.setCosineCompensator(false);
+        this.setupPathPlanner();
+        
 
         // DO THIS AFTER CONFIGURATION OF YOUR DESIRED PATHFINDER
         // see https://pathplanner.dev/pplib-pathfinding.html#java-warmup
         PathfindingCommand.warmupCommand().schedule();
+
+
+        headingPID.enableContinuousInput(-180, 180);
+                headingPID.setTolerance(0.1, 0.4);
     }
 
     /**
@@ -143,9 +146,65 @@ public class SwerveSubsystem extends SubsystemBase {
         );
     }
 
+    /**
+     * Use PathPlanner Path finding to go to a point on the field.
+     *
+     * @param pose Target {@link Pose2d} to go to.
+     * @return PathFinding command
+     */
+    public Command driveToPose(Pose2d pose) {
+        // Since AutoBuilder is configured, we can use it to build pathfinding commands
+        return AutoBuilder.pathfindToPose(
+                pose,
+                new PathConstraints(
+                    this.getMaximumVelocity(), 4.0,
+                    this.getMaximumAngularVelocity(),
+                    Units.degreesToRadians(720)
+                ),
+                0.0, // Goal end velocity in meters/sec
+                0.0 // Rotation delay distance in meters. This is how far the robot should travel
+                    // before attempting to rotate.
+        );
+    }
+
+        /**
+     * Use PathPlanner Path finding to go to a point on the field.
+     *
+     * @param pose Target {@link Pose2d} to go to.
+     * @return PathFinding command
+     */
+    private Command driveToPosition(Supplier<Translation2d> positionSupplier) {
+        // Since AutoBuilder is configured, we can use it to build pathfinding commands
+        return AutoBuilder.pathfindToPose(
+                new Pose2d(positionSupplier.get(), new Rotation2d()),
+                new PathConstraints(
+                    this.getMaximumVelocity(), 4.0,
+                    this.getMaximumAngularVelocity(),
+                    Units.degreesToRadians(720)),
+                0.0, // Goal end velocity in meters/sec
+                0.0 // Rotation delay distance in meters. This is how far the robot should travel
+                    // before attempting to rotate.
+        );
+    }
+
+      // TODO: distance filter, same as trap
+    public Command driveToAmp() {
+        return AutoBuilder.pathfindThenFollowPath(
+            PathPlannerPath.fromPathFile("AmpAlign"),
+            new PathConstraints(
+                this.getMaximumVelocity(), 4.0,
+                this.getMaximumAngularVelocity(),
+                Units.degreesToRadians(720)
+            )
+        );
+    }
+    
     public Translation2d getSpeakerPosition() {
-        System.out.println(AllianceColor.isRed());
-        return AllianceColor.isRed() ? new Translation2d(16.23, 5.55) : new Translation2d(0.3, 5.55);
+        return AllianceColor.isRed()  ? new Translation2d(16.23, 5.55) : new Translation2d(0.3, 5.55);
+    }
+
+    public Translation2d getAmpPosition() {
+        return AllianceColor.isRed() ? new Translation2d(14.701, 8.204) : new Translation2d(1.841, 8.204);
     }
 
     public double getDistance(Translation2d targetPose) {
@@ -157,29 +216,49 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     public double getDistanceFromSpeaker() {
-        return getDistance(getSpeakerPosition());
+        return this.getDistance(this.getSpeakerPosition());
     }
 
+    public double getDistanceFromAmp() {
+        return this.getDistance(this.getAmpPosition());
+    }
 
     /**
-     * Use PathPlanner Path finding to go to a point on the field.
-     *
-     * @param pose Target {@link Pose2d} to go to.
-     * @return PathFinding command
+     * @see https://github.com/Team-8-bit/2024-Sonic/blob/develop/robot/src/main/kotlin/org/team9432/robot/RobotPosition.kt
+     * @param targetPosition
+     * @return the angle between the robots current pose and the target position
      */
-    public Command driveToPose(Pose2d pose) {
-        // Create the constraints to use while pathfinding
-        PathConstraints constraints = new PathConstraints(
-                swerveDrive.getMaximumVelocity(), 4.0,
-                swerveDrive.getMaximumAngularVelocity(), Units.degreesToRadians(720));
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-        return AutoBuilder.pathfindToPose(
-                pose,
-                constraints,
-                0.0, // Goal end velocity in meters/sec
-                0.0 // Rotation delay distance in meters. This is how far the robot should travel
-                    // before attempting to rotate.
+    public Rotation2d getAngleTo(Translation2d targetPosition) {
+        return new Rotation2d(
+            Math.atan2(
+                targetPosition.getY() - this.getPose().getY(),
+                targetPosition.getX() - this.getPose().getX()
+            )
         );
+    }
+
+    public Rotation2d getAngleToSpeaker() {
+        return getAngleTo(getSpeakerPosition());
+    }
+
+    private Command turnToAngle(Supplier<Rotation2d> angleSupplier) {
+        return new FunctionalCommand(
+            () -> {
+                headingPID.setGoal(angleSupplier.get().getDegrees());
+            },
+            () -> {
+                double angularVelocity = headingPID.calculate(this.getPose().getRotation().getDegrees());
+                ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(0,0, angularVelocity, this.getYaw());
+                this.drive(speed);
+            }, 
+            interrupted -> {},
+            headingPID::atSetpoint,
+            this
+        );
+    }
+
+    public Command turnToSpeaker() {
+        return this.turnToAngle(this::getAngleToSpeaker);
     }
 
     /**
@@ -243,24 +322,6 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public void drive(ChassisSpeeds velocity) {
         swerveDrive.drive(velocity);
-    }
-
-    /**
-     * @see https://github.com/Team-8-bit/2024-Sonic/blob/develop/robot/src/main/kotlin/org/team9432/robot/RobotPosition.kt
-     * @param targetPosition
-     * @return the angle between the robots current pose and the target position
-     */
-    public Rotation2d getAngleTo(Translation2d targetPosition) {
-        return new Rotation2d(
-            Math.atan2(
-                targetPosition.getY() - this.getPose().getY(),
-                targetPosition.getX() - this.getPose().getX()
-            )
-        );
-    }
-
-    public Rotation2d getAngleToSpeaker() {
-        return getAngleTo(getSpeakerPosition());
     }
 
     /**
@@ -465,10 +526,5 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public SwerveDrive getSwerveDrive() {
         return swerveDrive;
-    }
-
-    @Override
-    public void periodic() {
-        SmartDashboard.putString("robot/pose", getPose().toString());
     }
 }

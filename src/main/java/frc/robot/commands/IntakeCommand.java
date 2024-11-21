@@ -10,9 +10,9 @@ public class IntakeCommand extends Command {
     private final IntakeSubsystem intake;
     private final FeederSubsystem feeder;
 
-    public IntakeCommand(IntakeSubsystem intake, FeederSubsystem feeder) {
-        this.intake = intake;
-        this.feeder = feeder;
+    public IntakeCommand() {
+        this.intake = IntakeSubsystem.getInstance();
+        this.feeder = FeederSubsystem.getInstance();
 
         addRequirements(feeder, intake);
     }

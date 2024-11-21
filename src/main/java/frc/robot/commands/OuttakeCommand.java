@@ -12,27 +12,26 @@ public class OuttakeCommand extends Command {
     private final FeederSubsystem feeder;
     private final IntakeSubsystem intake;
 
-    public OuttakeCommand(ShooterSubsystem shooter, FeederSubsystem feeder, IntakeSubsystem intake) {
-        this.shooter = shooter;
-        this.feeder = feeder;
-        this.intake = intake;
-
-        addRequirements(shooter, feeder, intake);
+    public OuttakeCommand() {
+        this.shooter = ShooterSubsystem.getInstance();
+        this.feeder = FeederSubsystem.getInstance();
+        this.intake = IntakeSubsystem.getInstance();
+        this.addRequirements(shooter, feeder, intake);
     }
 
     @Override
     public void initialize() {
-        shooter.eject();
-        feeder.eject();
-        intake.eject();
+        this.shooter.eject();
+        this.feeder.eject();
+        this.intake.eject();
         RobotContainer.setState(State.OUTTAKING);
     }
 
     @Override
     public void end(boolean interrupted) {
-        shooter.stop();
-        feeder.stop();
-        intake.stop();
+        this.shooter.stop();
+        this.feeder.stop();
+        this.intake.stop();
         RobotContainer.setState(State.OUTTAKING);
     }
 }

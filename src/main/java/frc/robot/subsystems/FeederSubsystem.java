@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.RobotContainer;
 
 public class FeederSubsystem extends SubsystemBase {
 
@@ -84,7 +83,7 @@ public class FeederSubsystem extends SubsystemBase {
             () -> setVelocity(-900), 
             () -> {},
             interrupted -> stop(),
-            () -> !RobotContainer.hasIndexedNote,
+            () -> !ProximitySensor.getInstance().isNoteIndexed(),
             this
         );
     }
