@@ -34,7 +34,7 @@ public class AutoShoot extends SequentialCommandGroup {
                 new AimCommand(() -> this.swerve.getSpeakerPosition()),
                 new SequentialCommandGroup(
                     new IndexNote(),
-                    this.shooter.rev(() -> swerve.getDistance(targetPose))
+                    this.shooter.rev(() -> swerve.getDistanceFromSpeaker())
                 )
             ),
             this.feeder.intake(),

@@ -21,15 +21,10 @@ public class AimCommand extends Command {
         this.target = target;
 
         this.pid.enableContinuousInput(-180, 180);
-        this.pid.setTolerance(3.0);
-        //TODO: look into if setting 
+        this.pid.setTolerance(0.1, 0.4);
+        //TODO: Check if these values are good
 
         addRequirements(swerve);
-    }
-
-    @Override
-    public void initialize() {
-        pid.reset(swerve.getYaw().getDegrees());
     }
 
     @Override

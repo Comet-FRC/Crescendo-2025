@@ -156,6 +156,10 @@ public class SwerveSubsystem extends SubsystemBase {
         return this.getPose().getTranslation().getDistance(targetPose.getTranslation());
     }
 
+    public double getDistanceFromSpeaker() {
+        return getDistance(getSpeakerPosition());
+    }
+
 
     /**
      * Use PathPlanner Path finding to go to a point on the field.
@@ -253,6 +257,10 @@ public class SwerveSubsystem extends SubsystemBase {
                 targetPosition.getX() - this.getPose().getX()
             )
         );
+    }
+
+    public Rotation2d getAngleToSpeaker() {
+        return getAngleTo(getSpeakerPosition());
     }
 
     /**
