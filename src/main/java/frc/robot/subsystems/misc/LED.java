@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.misc;
 
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;

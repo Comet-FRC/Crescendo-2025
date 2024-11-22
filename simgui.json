@@ -88,10 +88,23 @@
             }
           },
           "open": true,
+          "robot": {
+            "open": true,
+            "shooter": {
+              "bot": {
+                "open": true
+              },
+              "open": true,
+              "top": {
+                "open": true
+              }
+            }
+          },
           "shooter": {
             "open": true
           }
-        }
+        },
+        "open": true
       },
       "SmartDashboard": {
         "robot": {
@@ -104,5 +117,8 @@
         }
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   }
 }
