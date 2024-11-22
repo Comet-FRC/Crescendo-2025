@@ -25,7 +25,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -62,7 +61,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     private final SwerveDrive swerveDrive;
 
-    private final ProfiledPIDController headingPID = new ProfiledPIDController(0.06, 0.0, 0.0, new TrapezoidProfile.Constraints(360.0, 360.0 * 2.0));
+    private final ProfiledPIDController rotationPID = new ProfiledPIDController(0.06, 0.0, 0.0, new TrapezoidProfile.Constraints(360.0, 360.0 * 2.0));
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
@@ -108,8 +107,8 @@ public class SwerveSubsystem extends SubsystemBase {
         PathfindingCommand.warmupCommand().schedule();
 
 
-        headingPID.enableContinuousInput(-180, 180);
-                headingPID.setTolerance(0.1, 0.4);
+        this.rotationPID.enableContinuousInput(-180, 180);
+        this.rotationPID.setTolerance(0.1, 0.4);
     }
 
     /**
@@ -167,27 +166,6 @@ public class SwerveSubsystem extends SubsystemBase {
         );
     }
 
-        /**
-     * Use PathPlanner Path finding to go to a point on the field.
-     *
-     * @param pose Target {@link Pose2d} to go to.
-     * @return PathFinding command
-     */
-    private Command driveToPosition(Supplier<Translation2d> positionSupplier) {
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
-        return AutoBuilder.pathfindToPose(
-                new Pose2d(positionSupplier.get(), new Rotation2d()),
-                new PathConstraints(
-                    this.getMaximumVelocity(), 4.0,
-                    this.getMaximumAngularVelocity(),
-                    Units.degreesToRadians(720)),
-                0.0, // Goal end velocity in meters/sec
-                0.0 // Rotation delay distance in meters. This is how far the robot should travel
-                    // before attempting to rotate.
-        );
-    }
-
-      // TODO: distance filter, same as trap
     public Command driveToAmp() {
         return AutoBuilder.pathfindThenFollowPath(
             PathPlannerPath.fromPathFile("AmpAlign"),
@@ -244,15 +222,15 @@ public class SwerveSubsystem extends SubsystemBase {
     private Command turnToAngle(Supplier<Rotation2d> angleSupplier) {
         return new FunctionalCommand(
             () -> {
-                headingPID.setGoal(angleSupplier.get().getDegrees());
+                rotationPID.setGoal(angleSupplier.get().getDegrees());
             },
             () -> {
-                double angularVelocity = headingPID.calculate(this.getPose().getRotation().getDegrees());
+                double angularVelocity = rotationPID.calculate(this.getPose().getRotation().getDegrees());
                 ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(0,0, angularVelocity, this.getYaw());
                 this.drive(speed);
             }, 
             interrupted -> {},
-            headingPID::atSetpoint,
+            rotationPID::atSetpoint,
             this
         );
     }
