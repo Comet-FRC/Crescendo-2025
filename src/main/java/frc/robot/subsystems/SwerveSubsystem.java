@@ -114,7 +114,6 @@ public class SwerveSubsystem extends SubsystemBase {
         );
         this.rotationPID.enableContinuousInput(-180, 180);
         this.rotationPID.setTolerance(0.1, 0.4);
-
         this.autonConstraints = new PathConstraints(
             this.getMaximumVelocity(), 4.0,
             this.getMaximumAngularVelocity(),
