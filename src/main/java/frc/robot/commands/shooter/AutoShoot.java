@@ -28,10 +28,7 @@ public class AutoShoot extends SequentialCommandGroup {
                 this.swerve.turnToSpeaker(),
                 new SequentialCommandGroup(
                     new IndexNote(),
-                    Commands.defer(
-                        () -> this.shooter.revSpeaker(this.swerve::getDistanceFromSpeaker),
-                        Set.of(shooter)
-                    )
+                    this.shooter.revSpeaker(this.swerve::getDistanceFromSpeaker)
                 )
             ),
             this.feeder.intake(),

@@ -152,8 +152,10 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	public Command revSpeaker(DoubleSupplier distance) {
-		Logger.recordOutput("shooter/rev speaker distance", distance.getAsDouble());
-		return new InstantCommand(() -> setVelocity(RANGE_TABLE_SPEAKER.get(distance.getAsDouble())), this)
+		return new InstantCommand(() -> {
+			setVelocity(RANGE_TABLE_SPEAKER.get(distance.getAsDouble()));
+			Logger.recordOutput("shooter/rev speaker distance", distance.getAsDouble());
+		}, this)
 			.andThen(new WaitUntilCommand(this::isReady));
 	}
 

@@ -183,6 +183,10 @@ public class Robot extends LoggedRobot
 		DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
 	}
 
+	@Override
+	public void simulationPeriodic() {
+	}
+
 	public RobotContainer getRobotContainer() {
 		return m_robotContainer;
 	}
