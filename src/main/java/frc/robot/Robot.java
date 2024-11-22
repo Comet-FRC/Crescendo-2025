@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.SwerveSubsystem;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -107,7 +109,7 @@ public class Robot extends LoggedRobot
 	@Override
 	public void disabledInit()
 	{
-		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
+		SwerveSubsystem.getInstance().setMotorBrake(true);
 		disabledTimer.reset();
 		disabledTimer.start();
 	}
@@ -117,7 +119,7 @@ public class Robot extends LoggedRobot
 	{
 		if (disabledTimer.hasElapsed(Constants.SWERVE.WHEEL_LOCK_TIME))
 		{
-			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
+			SwerveSubsystem.getInstance().setMotorBrake(false);
 			disabledTimer.stop();
 		}
 	}
@@ -125,7 +127,7 @@ public class Robot extends LoggedRobot
 	@Override
 	public void autonomousInit()
 	{
-		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
+		SwerveSubsystem.getInstance().setMotorBrake(true);
 
 		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 		// schedule the autonomous command (example)
@@ -153,7 +155,7 @@ public class Robot extends LoggedRobot
 			m_autonomousCommand.cancel();
 		}
 		CommandScheduler.getInstance().cancelAll();
-		m_robotContainer.getSwerveSubsystem().setMotorBrake(true);
+		SwerveSubsystem.getInstance().setMotorBrake(true);
 	}
 
 	@Override

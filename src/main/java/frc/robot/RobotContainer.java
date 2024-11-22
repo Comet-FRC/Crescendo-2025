@@ -46,10 +46,10 @@ public class RobotContainer {
 	private final ProximitySensor sensor;
 	private final LED led;
 
-	private final LoggedDashboardChooser<Command> autoChooser;
-
 	private final CommandXboxController driverController;
 	private final Joystick operatorController;
+	
+	private final LoggedDashboardChooser<Command> autoChooser;
 
 	/* Robot states */
 	private static State robotState = State.IDLE;
@@ -99,29 +99,29 @@ public class RobotContainer {
 		);
 
 		// back button (not B button)
-		new JoystickButton(operatorController, 7)
-			.whileTrue(new OuttakeCommand());
+		new JoystickButton(operatorController, 7).whileTrue(
+			new OuttakeCommand()
+		);
 
 		// start button -> intake
-		new JoystickButton(operatorController, 8)
-			.whileTrue(new IntakeCommand());
+		new JoystickButton(operatorController, 8).whileTrue(
+			new IntakeCommand()
+		);
 
 		// right bumper -> spin shooter wheels
 
-		new JoystickButton(operatorController, 6)
-			.whileTrue(
-				new ShootCommand(shooter)
-				.finallyDo(
-					() -> {
-						Logger.recordOutput("shooter/last shoot distance", swerve.getDistanceFromSpeaker());
-						Logger.recordOutput("shooter/last shoot pose", swerve.getPose().toString());
-					}
-				)
-			);		
+		new JoystickButton(operatorController, 6).whileTrue(
+			new ShootCommand(shooter)
+			.finallyDo(
+				() -> {
+					Logger.recordOutput("shooter/last shoot distance", swerve.getDistanceFromSpeaker());
+					Logger.recordOutput("shooter/last shoot pose", swerve.getPose().toString());
+				}
+			)
+		);		
 
 		// left bumper -> intake note, then index it
-		new JoystickButton(operatorController, 5)
-		.whileTrue(
+		new JoystickButton(operatorController, 5).whileTrue(
 			Commands.runOnce(() -> setState(State.INTAKING))
 			.andThen(
 				new IntakeCommand()
@@ -129,8 +129,6 @@ public class RobotContainer {
 				.onlyWhile(() -> feeder.getTorqueCurrent() > -25)
 			)
 			.andThen(new IndexNote())
-			.andThen(() -> setState(State.REVVING))
-			.handleInterrupt(() -> setState(State.IDLE))
 		);
 	}
 
@@ -142,10 +140,6 @@ public class RobotContainer {
 				() -> -MathUtil.applyDeadband(driverController.getRightX(), 0.02)
 			)
 		);
-	}
-
-	public SwerveSubsystem getSwerveSubsystem() {
-		return swerve;
 	}
 
 	public Command getAutonomousCommand() {
