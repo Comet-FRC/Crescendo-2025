@@ -20,7 +20,7 @@ public class ProximitySensor {
     private LaserCan laserCan;
 
     private ProximitySensor() {
-        laserCan = new LaserCan(Constants.Feeder.laserCanID);
+        laserCan = new LaserCan(Constants.FEEDER.laserCanID);
         try {
             laserCan.setRangingMode(LaserCan.RangingMode.SHORT);
             laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));

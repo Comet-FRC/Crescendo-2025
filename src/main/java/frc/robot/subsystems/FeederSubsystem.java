@@ -38,8 +38,8 @@ public class FeederSubsystem extends SubsystemBase {
     private double speed = 0;
 
     private FeederSubsystem() {
-        this.feederMotorLeft = new TalonFX(Constants.Feeder.leftFeederID, "rio");
-        this.feederMotorRight = new TalonFX(Constants.Feeder.rightFeederID, "rio");
+        this.feederMotorLeft = new TalonFX(Constants.FEEDER.leftFeederID, "rio");
+        this.feederMotorRight = new TalonFX(Constants.FEEDER.rightFeederID, "rio");
         this.flControl = new VelocityVoltage(0).withEnableFOC(true);
         this.frControl = new VelocityVoltage(0).withEnableFOC(true);
 
@@ -50,14 +50,14 @@ public class FeederSubsystem extends SubsystemBase {
 		TalonFXConfiguration feederMotorConfig = new TalonFXConfiguration();
 		feederMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		feederMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Intake.peakForwardVoltage;
-		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.Intake.peakReverseVoltage;
+		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.INTAKE.peakForwardVoltage;
+		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.INTAKE.peakReverseVoltage;
         
-		feederMotorConfig.Slot0.kP = Constants.Shooter.kP;
-		feederMotorConfig.Slot0.kI = Constants.Shooter.kI;
-		feederMotorConfig.Slot0.kD = Constants.Shooter.kD;
-		feederMotorConfig.Slot0.kS = Constants.Shooter.kS;
-		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.Shooter.RPMsPerVolt);
+		feederMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
+		feederMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
+		feederMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
+		feederMotorConfig.Slot0.kS = Constants.SHOOTER.kS;
+		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.SHOOTER.RPMsPerVolt);
 		feederMotorConfig.Slot0.kA = 0.0;
 		feederMotorConfig.Slot0.kG = 0.0;
         

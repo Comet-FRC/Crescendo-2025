@@ -30,7 +30,6 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
-import frc.robot.Constants.AutonConstants;
 import frc.robot.Constants.SWERVE;
 import frc.robot.utils.AllianceColor;
 
@@ -60,8 +59,8 @@ public class SwerveSubsystem extends SubsystemBase {
     /* Implementation */
 
     private final SwerveDrive swerveDrive;
-
-    private final ProfiledPIDController rotationPID = new ProfiledPIDController(0.06, 0.0, 0.0, new TrapezoidProfile.Constraints(360.0, 360.0 * 2.0));
+    private final ProfiledPIDController rotationPID;
+    private final PathConstraints autonConstraints;
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
@@ -101,14 +100,26 @@ public class SwerveSubsystem extends SubsystemBase {
         this.swerveDrive.setCosineCompensator(false);
         this.setupPathPlanner();
         
-
-        // DO THIS AFTER CONFIGURATION OF YOUR DESIRED PATHFINDER
-        // see https://pathplanner.dev/pplib-pathfinding.html#java-warmup
+        /*
+         * DO THIS AFTER CONFIGURATION OF YOUR DESIRED PATHFINDER
+         * see https://pathplanner.dev/pplib-pathfinding.html#java-warmup
+         */
         PathfindingCommand.warmupCommand().schedule();
 
-
+        this.rotationPID = new ProfiledPIDController(
+            0.06,
+            0.0,
+            0.0,
+            new TrapezoidProfile.Constraints(360.0, 360.0 * 2.0)
+        );
         this.rotationPID.enableContinuousInput(-180, 180);
         this.rotationPID.setTolerance(0.1, 0.4);
+
+        this.autonConstraints = new PathConstraints(
+            this.getMaximumVelocity(), 4.0,
+            this.getMaximumAngularVelocity(),
+            Units.degreesToRadians(720)
+        );
     }
 
     /**
@@ -116,32 +127,19 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     private void setupPathPlanner() {
         AutoBuilder.configureHolonomic(
-                this::getPose, // Robot pose supplier
-                this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getRobotVelocity, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::setChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your
-                                                 // Constants class
-                        AutonConstants.TRANSLATION_PID,
-                        // Translation PID constants
-                        AutonConstants.ANGLE_PID,
-                        // Rotation PID constants
-                        SWERVE.MAX_SPEED,
-                        // Max module speed, in m/s
+                this::getPose,
+                this::resetOdometry,
+                this::getRobotVelocity,
+                this::setChassisSpeeds,
+                new HolonomicPathFollowerConfig(
+                        Constants.AUTON.TRANSLATION_PID,
+                        Constants.AUTON.ANGLE_PID,
+                        this.getMaximumVelocity(),
                         swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),
-                        // Drive base radius in meters. Distance from robot center to furthest module.
                         new ReplanningConfig()
-                // Default path replanning config. See the API for the options here
                 ),
-                () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red
-                    // alliance
-                    // This will flip the path being followed to the red side of the field.
-                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                    var alliance = DriverStation.getAlliance();
-                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-                },
-                this // Reference to this subsystem to set requirements
+                () -> AllianceColor.isRed(),
+                this
         );
     }
 
@@ -152,17 +150,11 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return PathFinding command
      */
     public Command driveToPose(Pose2d pose) {
-        // Since AutoBuilder is configured, we can use it to build pathfinding commands
         return AutoBuilder.pathfindToPose(
                 pose,
-                new PathConstraints(
-                    this.getMaximumVelocity(), 4.0,
-                    this.getMaximumAngularVelocity(),
-                    Units.degreesToRadians(720)
-                ),
-                0.0, // Goal end velocity in meters/sec
-                0.0 // Rotation delay distance in meters. This is how far the robot should travel
-                    // before attempting to rotate.
+                this.autonConstraints,
+                0.0,
+                0.0
         );
     }
 
@@ -214,6 +206,8 @@ public class SwerveSubsystem extends SubsystemBase {
             )
         );
     }
+
+    
 
     public Rotation2d getAngleToSpeaker() {
         return getAngleTo(getSpeakerPosition());
@@ -417,7 +411,7 @@ public class SwerveSubsystem extends SubsystemBase {
                 headingX,
                 headingY,
                 getHeading().getRadians(),
-                Constants.SWERVE.MAX_SPEED);
+                SWERVE.MAX_SPEED);
     }
 
     /**
@@ -437,7 +431,7 @@ public class SwerveSubsystem extends SubsystemBase {
                 scaledInputs.getY(),
                 angle.getRadians(),
                 getHeading().getRadians(),
-                Constants.SWERVE.MAX_SPEED);
+                SWERVE.MAX_SPEED);
     }
 
     /**

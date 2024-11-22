@@ -96,8 +96,8 @@ public class ShooterSubsystem extends SubsystemBase {
 	}
 
 	private ShooterSubsystem() {
-		top = new TalonFX(Constants.Shooter.topShooterID, "rio");
-		bottom = new TalonFX(Constants.Shooter.bottomShooterID, "rio");
+		top = new TalonFX(Constants.SHOOTER.topShooterID, "rio");
+		bottom = new TalonFX(Constants.SHOOTER.bottomShooterID, "rio");
 		applyConfigs();
 
 		// For setting the range table
@@ -128,14 +128,14 @@ public class ShooterSubsystem extends SubsystemBase {
 		var shooterMotorConfig = new TalonFXConfiguration();
 		shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		shooterMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-		shooterMotorConfig.Voltage.PeakForwardVoltage = Constants.Shooter.peakForwardVoltage;
-		shooterMotorConfig.Voltage.PeakReverseVoltage = Constants.Shooter.peakReverseVoltage;
+		shooterMotorConfig.Voltage.PeakForwardVoltage = Constants.SHOOTER.peakForwardVoltage;
+		shooterMotorConfig.Voltage.PeakReverseVoltage = Constants.SHOOTER.peakReverseVoltage;
 
-		shooterMotorConfig.Slot0.kP = Constants.Shooter.kP;
-		shooterMotorConfig.Slot0.kI = Constants.Shooter.kI;
-		shooterMotorConfig.Slot0.kD = Constants.Shooter.kD;
-		shooterMotorConfig.Slot0.kS = Constants.Shooter.kS;
-		shooterMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.Shooter.RPMsPerVolt);
+		shooterMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
+		shooterMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
+		shooterMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
+		shooterMotorConfig.Slot0.kS = Constants.SHOOTER.kS;
+		shooterMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.SHOOTER.RPMsPerVolt);
 		shooterMotorConfig.Slot0.kA = 0.0;
 		shooterMotorConfig.Slot0.kG = 0.0;
 
@@ -186,8 +186,8 @@ public class ShooterSubsystem extends SubsystemBase {
 	 */
 	public boolean isReady() {
 
-		boolean topIsReady = Math.abs(toRPM(top.getVelocity().getValueAsDouble()) - speedTarget.topMotorSpeed) < (Constants.Shooter.maxRPMError);
-		boolean bottomIsReady = Math.abs(toRPM(bottom.getVelocity().getValueAsDouble()) - speedTarget.bottomMotorSpeed) < (Constants.Shooter.maxRPMError);
+		boolean topIsReady = Math.abs(toRPM(top.getVelocity().getValueAsDouble()) - speedTarget.topMotorSpeed) < (Constants.SHOOTER.maxRPMError);
+		boolean bottomIsReady = Math.abs(toRPM(bottom.getVelocity().getValueAsDouble()) - speedTarget.bottomMotorSpeed) < (Constants.SHOOTER.maxRPMError);
 
 		return topIsReady && bottomIsReady;
 	}

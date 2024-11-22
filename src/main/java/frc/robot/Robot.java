@@ -10,10 +10,8 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import java.io.File;
@@ -117,7 +115,7 @@ public class Robot extends LoggedRobot
 	@Override
 	public void disabledPeriodic()
 	{
-		if (disabledTimer.hasElapsed(Constants.DrivebaseConstants.WHEEL_LOCK_TIME))
+		if (disabledTimer.hasElapsed(Constants.SWERVE.WHEEL_LOCK_TIME))
 		{
 			m_robotContainer.getSwerveSubsystem().setMotorBrake(false);
 			disabledTimer.stop();

@@ -29,7 +29,7 @@ public class IntakeSubsystem extends SubsystemBase {
     double speed = 0;
 
     private IntakeSubsystem() {
-        intakeMotor = new CANSparkMax(Constants.Intake.motorID, MotorType.kBrushless);
+        intakeMotor = new CANSparkMax(Constants.INTAKE.motorID, MotorType.kBrushless);
         intakeMotor.setSmartCurrentLimit(80);
     }
 
@@ -44,11 +44,11 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public void intake() {
-        set(Constants.Intake.intakingSpeed);
+        set(Constants.INTAKE.intakingSpeed);
     }
 
     public void eject() {
-        set(Constants.Intake.ejectingSpeed);
+        set(Constants.INTAKE.ejectingSpeed);
     }
 
     /**
