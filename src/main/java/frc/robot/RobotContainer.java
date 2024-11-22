@@ -28,6 +28,7 @@ import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.utils.LimelightHelpers;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -46,7 +47,7 @@ public class RobotContainer {
 	private final ProximitySensor sensor;
 	private final LED led;
 
-	private final SendableChooser<Command> autoChooser;
+	private final LoggedDashboardChooser<Command> autoChooser;
 
 	private final CommandXboxController driverController;
 	private final Joystick operatorController;
@@ -73,8 +74,7 @@ public class RobotContainer {
 		this.registerPathplannerCommands();
 		this.configureBindings();
 
-		this.autoChooser = AutoBuilder.buildAutoChooser();
-		SmartDashboard.putData("auto/Auto Chooser", autoChooser);
+		this.autoChooser = new LoggedDashboardChooser<Command>("auto/Auto Chooser", AutoBuilder.buildAutoChooser());
 
 		this.configureDefaultCommands();
 
@@ -150,7 +150,7 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return autoChooser.getSelected();
+		return autoChooser.get();
 	}
 
 	public void updateVision() {
