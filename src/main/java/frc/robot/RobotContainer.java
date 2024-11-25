@@ -8,9 +8,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IndexNote;
 import frc.robot.commands.shooter.AutoShoot;
@@ -74,7 +76,7 @@ public class RobotContainer {
 		this.autoChooser = new LoggedDashboardChooser<Command>("auto/Auto Chooser", AutoBuilder.buildAutoChooser());
 
 		// Sets the color of the LEDS once
-		this.led.setColor(255, 255, 255);
+		//this.led.setColor(255, 255, 255);
 	}
 
 	private void registerPathplannerCommands() {
@@ -93,6 +95,10 @@ public class RobotContainer {
 		//this.shooter.setDefaultCommand(this.shooter.stop());
 		this.feeder.setDefaultCommand(new IndexNote());
 		this.intake.setDefaultCommand(this.intake.stop());
+
+		this.led.setDefaultCommand(
+			this.led.setColor(() -> new Color8Bit(255, 255, 255))
+		);
 	}
 
 	private void configureBindings() {

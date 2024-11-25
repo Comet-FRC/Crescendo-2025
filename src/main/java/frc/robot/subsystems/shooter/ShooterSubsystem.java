@@ -121,7 +121,7 @@ public class ShooterSubsystem extends SubsystemBase {
 	@Override
 	public void periodic() {
 
-		double targetTopMotorSpeed = toRPM(top.getDifferentialClosedLoopReference().getValueAsDouble());
+		double targetTopMotorSpeed = toRPM(top.getClosedLoopReference().getValueAsDouble());
 		double measuredTopMotorSpeed = toRPM(top.getVelocity().getValueAsDouble());
 		double topSpeedError = toRPM(top.getClosedLoopError().getValueAsDouble());
 
@@ -129,7 +129,7 @@ public class ShooterSubsystem extends SubsystemBase {
 		Logger.recordOutput("robot/shooter/top/measuredSpeed", measuredTopMotorSpeed);
 		Logger.recordOutput("robot/shooter/top/speedError", topSpeedError);
 		
-		double targetBottomMotorSpeed = toRPM(bottom.getDifferentialClosedLoopReference().getValueAsDouble());
+		double targetBottomMotorSpeed = toRPM(bottom.getClosedLoopReference().getValueAsDouble());
 		double measuredBottomMotorSpeed = toRPM(bottom.getVelocity().getValueAsDouble());
 		double bottomSpeedError = toRPM(bottom.getClosedLoopError().getValueAsDouble());
 
