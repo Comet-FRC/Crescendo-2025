@@ -3,10 +3,9 @@ package frc.robot.commands.shooter;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.IndexNote;
-import frc.robot.commands.ShootNoteRevvedShooter;
 import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class AutoShoot extends SequentialCommandGroup {
 
@@ -25,10 +24,14 @@ public class AutoShoot extends SequentialCommandGroup {
                 this.swerve.turnToSpeaker(),
                 new SequentialCommandGroup(
                     new IndexNote(),
-                    this.shooter.revSpeaker(this.swerve::getDistanceFromSpeaker)
+                    this.shooter.setVelocityFromDistance(this.swerve::getDistanceFromSpeaker)
+                        .until(this.shooter::isReady)
                 )
             ),
-            new ShootNoteRevvedShooter()
+            this.feeder.shoot(), // until there's no note
+            this.feeder.stop(),
+            this.shooter.stop()
         );
+
     }
 }

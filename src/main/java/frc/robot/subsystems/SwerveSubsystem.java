@@ -13,6 +13,7 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -28,6 +29,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.SWERVE;
@@ -256,6 +258,14 @@ public class SwerveSubsystem extends SubsystemBase {
                         new Config(),
                         this, swerveDrive),
                 3.0, 5.0, 3.0);
+    }
+
+    public Command driveCommand(CommandXboxController controller) {
+        return this.driveCommand(
+            () -> -MathUtil.applyDeadband(controller.getLeftY(), 0.02),
+            () -> -MathUtil.applyDeadband(controller.getLeftX(), 0.02),
+            () -> -MathUtil.applyDeadband(controller.getRightX(), 0.02)
+        );
     }
 
     /**

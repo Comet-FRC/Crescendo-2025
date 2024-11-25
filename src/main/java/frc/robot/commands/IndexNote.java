@@ -18,16 +18,13 @@ public class IndexNote extends Command {
     {
         this.feeder = FeederSubsystem.getInstance();
         this.laserCan = ProximitySensor.getInstance();
+
+        addRequirements(feeder);
     }
 
     @Override
     public void initialize() {
         feeder.setVelocity(100);
-    }
-
-    @Override
-    public void execute() {
-        
     }
 
     @Override

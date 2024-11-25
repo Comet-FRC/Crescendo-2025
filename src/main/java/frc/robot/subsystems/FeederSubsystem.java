@@ -10,8 +10,13 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import au.grapplerobotics.LaserCan;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.misc.ProximitySensor;
@@ -31,12 +36,8 @@ public class FeederSubsystem extends SubsystemBase {
 
     public final TalonFX feederMotorLeft;
     private final TalonFX feederMotorRight;
-
     private final VelocityVoltage flControl;
     private final VelocityVoltage frControl;
-
-
-    private double speed = 0;
 
     private FeederSubsystem() {
         this.feederMotorLeft = new TalonFX(Constants.FEEDER.leftFeederID, "rio");
@@ -67,10 +68,6 @@ public class FeederSubsystem extends SubsystemBase {
 	}
 
     public void setVelocity(double speedRPM) {
-        // Only set the speed if it's not already the speed.
-        if (speedRPM == this.speed) return;
-
-        this.speed = speedRPM;
 		this.feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
 		this.feederMotorRight.setControl(frControl.withVelocity(toRPS(-speedRPM)));
 	}
@@ -80,22 +77,21 @@ public class FeederSubsystem extends SubsystemBase {
 	}
 
     public Command intake() {
-        return new FunctionalCommand(
-            () -> setVelocity(-900), 
-            () -> {},
-            interrupted -> stop(),
-            () -> !ProximitySensor.getInstance().isNoteIndexed(),
-            this
-        );
+        return Commands.runOnce(() -> this.setVelocity(-900), this)
+            .until(() -> (ProximitySensor.getInstance().hasObject() || this.getTorqueCurrent() < -25));
     }
 
-    public void eject() {
-       
-        setVelocity(500);
+    public Command shoot() {
+        return Commands.runOnce(() -> this.setVelocity(-900), this)
+            .until(() -> !ProximitySensor.getInstance().hasObject());
     }
 
-    public void stop() {
-        setVelocity(0);
+    public Command outtake() {
+        return Commands.runOnce(() -> this.setVelocity(500), this);
+    }
+
+    public Command stop() {
+        return Commands.runOnce(() -> this.setVelocity(0), this);
     }
 
     public double getTorqueCurrent() {

@@ -47,6 +47,7 @@ public final class Constants {
 		public static final int motorID = 15;
 		/* Motor Speed Values */
 		public static final double intakingSpeed = 0.5;
+		public static final double shootingSpeed = 0.5;
 		public static final double ejectingSpeed = -0.5;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
@@ -66,7 +67,6 @@ public final class Constants {
 		public static final int bottomShooterID = 14;
 		/* Motor Speed Values */
 		public static final double maxRPMError = 60.0;
-		public static final double maxRPMErrorLong = 30.0;
 		/* Motor Config Values */
 		public static final double peakForwardVoltage = 12.0;
 		public static final double peakReverseVoltage = -12.0;
