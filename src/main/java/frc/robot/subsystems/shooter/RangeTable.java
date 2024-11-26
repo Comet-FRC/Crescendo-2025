@@ -17,19 +17,13 @@ public class RangeTable {
     }
 
     private void setupRangeTable() {
-		RANGE_TABLE_SPEAKER.put(0.91186, new ShooterSpeed(1200, 3200));
-		RANGE_TABLE_SPEAKER.put(1.19126, new ShooterSpeed(1500, 2500));
-		RANGE_TABLE_SPEAKER.put(1.5113, new ShooterSpeed(2200, 2200));
-		RANGE_TABLE_SPEAKER.put(1.83388, new ShooterSpeed(2700, 2200));
-		RANGE_TABLE_SPEAKER.put(2.12089, new ShooterSpeed(3000, 1900));
-		RANGE_TABLE_SPEAKER.put(2.43178, new ShooterSpeed(2900, 1700));
-		RANGE_TABLE_SPEAKER.put(2.74574, new ShooterSpeed(2800, 1550));
-		RANGE_TABLE_SPEAKER.put(3.07186, new ShooterSpeed(2800, 1425));
-		RANGE_TABLE_SPEAKER.put(3.35328, new ShooterSpeed(2700, 1400));
-
-		// TODO: MEASURE RANGE TABLE VALUES
-		// THIS IS THE ONLY ONE WE KNOW FOR SURE WORKS RN
-        RANGE_TABLE_SPEAKER.put(2.34, new ShooterSpeed(3100, 3100));
+		RANGE_TABLE_SPEAKER.put(1.144, new ShooterSpeed(6000, 4500));
+		RANGE_TABLE_SPEAKER.put(1.33, new ShooterSpeed(3600, 3400));
+		RANGE_TABLE_SPEAKER.put(1.48, new ShooterSpeed(3500, 3500));
+		RANGE_TABLE_SPEAKER.put(1.87, new ShooterSpeed(3000, 2800));
+		RANGE_TABLE_SPEAKER.put(2.1203355593490785, new ShooterSpeed(2800, 2800));
+		RANGE_TABLE_SPEAKER.put(2.3587506681318846, new ShooterSpeed(2700, 2600));
+		RANGE_TABLE_SPEAKER.put(2.534346332294663, new ShooterSpeed(2700, 2350));
 	}
 
     public ShooterSpeed get(double distance) {

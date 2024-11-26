@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -77,7 +79,7 @@ public class FeederSubsystem extends SubsystemBase {
     }
 
     public Command shoot() {
-        return Commands.runOnce(() -> this.setVelocity(-900), this)
+        return Commands.run(() -> this.setVelocity(-4000), this)
             .until(() -> !ProximitySensor.getInstance().hasObject());
     }
 
@@ -96,5 +98,10 @@ public class FeederSubsystem extends SubsystemBase {
         sum /= 2.0;
 
         return sum;
+    }
+
+    @Override
+    public void periodic() {
+        Logger.recordOutput("robot/feeder/proximity distance mm", ProximitySensor.getInstance().getDistanceMM());
     }
 }

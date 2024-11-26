@@ -120,8 +120,8 @@ public class ShooterSubsystem extends SubsystemBase {
 	 * @return
 	 */
 	public boolean isReady() {
-		boolean topIsReady = toRPM(top.getClosedLoopError().getValueAsDouble()) < Constants.SHOOTER.maxRPMError;
-		boolean bottomIsReady = toRPM(bottom.getClosedLoopError().getValueAsDouble()) < Constants.SHOOTER.maxRPMError;
+		boolean topIsReady = Math.abs(toRPM(top.getClosedLoopError().getValueAsDouble())) < Constants.SHOOTER.maxRPMError;
+		boolean bottomIsReady = Math.abs(toRPM(bottom.getClosedLoopError().getValueAsDouble())) < Constants.SHOOTER.maxRPMError;
 
 		return topIsReady && bottomIsReady;
 	}

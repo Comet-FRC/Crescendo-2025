@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -86,16 +87,15 @@ public class RobotContainer {
 	private void configureDefaultCommands() {
 		this.swerve.setDefaultCommand(this.swerve.driveCommand(driverController));
 
-		this.shooter.setDefaultCommand(
+		/*this.shooter.setDefaultCommand(
 			Commands.either(
 				this.shooter.setVelocityFromDistance(this.swerve::getDistanceFromSpeaker),
 				this.shooter.stop(),
 				() -> sensor.isNoteIndexed() && this.swerve.getDistanceFromSpeaker() < 4
 			)
-		);
-		//this.shooter.setDefaultCommand(this.shooter.stop());
-		this.feeder.setDefaultCommand(new IndexNote());
-		this.intake.setDefaultCommand(this.intake.stop());
+		);*/
+		this.shooter.setDefaultCommand(this.shooter.stop());
+		this.feeder.setDefaultCommand(this.feeder.stop());
 
 		this.led.setDefaultCommand(
 			this.led.setColor(() -> new Color8Bit(255, 255, 255))
@@ -124,6 +124,30 @@ public class RobotContainer {
 					Commands.repeatingSequence(shooter.shoot())
 				)
 			);		
+
+
+			// right bumper -> shoot
+		/*new JoystickButton(operatorController, 6)
+		.whileTrue(
+			Commands.parallel(
+				swerve.turnToSpeaker(),
+				Commands.repeatingSequence(shooter.shoot())
+			)
+		);	*/
+
+		new JoystickButton(operatorController, 6)
+		.whileTrue(
+			Commands.parallel(
+				swerve.turnToSpeaker(),
+				Commands.repeatingSequence(shooter.setVelocityFromDistance(swerve::getDistanceFromSpeaker))
+			)
+		);	
+
+		// left bumper -> intake
+		new JoystickButton(operatorController, 5)
+		.whileTrue(
+			Commands.repeatingSequence(feeder.intake())
+		);	
 	}
 
 	public Command getAutonomousCommand() {
@@ -151,8 +175,9 @@ public class RobotContainer {
 			}
 			
 			if(!doRejectUpdate) {
-				//double estimatedRotation = mt2.pose.getRotation().getDegrees();
-				//swerve.getSwerveDrive().setGyro(new Rotation3d(estimatedRotation, 0, 0));
+				double estimatedRotation = mt2.pose.getRotation().getRadians();
+				Rotation3d newRotation = new Rotation3d(0, 0, estimatedRotation);
+				swerve.getSwerveDrive().setGyro(newRotation);
 				swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION.VISION_MEASUREMENT_STD_DEV);
 			}
 

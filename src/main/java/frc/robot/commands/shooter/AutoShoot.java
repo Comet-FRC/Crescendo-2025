@@ -23,7 +23,7 @@ public class AutoShoot extends SequentialCommandGroup {
             new ParallelCommandGroup(
                 this.swerve.turnToSpeaker(),
                 new SequentialCommandGroup(
-                    new IndexNote(),
+                    //new IndexNote(),
                     this.shooter.setVelocityFromDistance(this.swerve::getDistanceFromSpeaker)
                         .until(this.shooter::isReady)
                 )
