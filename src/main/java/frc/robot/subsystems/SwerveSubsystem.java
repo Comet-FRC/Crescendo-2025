@@ -39,6 +39,8 @@ import java.io.File;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
@@ -507,5 +509,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public SwerveDrive getSwerveDrive() {
         return swerveDrive;
+    }
+
+    @Override
+    public void periodic() {
+        Logger.recordOutput("robot/shooter/distance from speaker", this.getDistanceFromSpeaker());
     }
 }

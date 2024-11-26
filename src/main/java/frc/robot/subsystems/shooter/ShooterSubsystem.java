@@ -43,11 +43,6 @@ public class ShooterSubsystem extends SubsystemBase {
 		this.top = new TalonFX(Constants.SHOOTER.topShooterID, "rio");
 		this.bottom = new TalonFX(Constants.SHOOTER.bottomShooterID, "rio");
 		this.setupMotors();
-
-
-		// For setting the range table
-		SmartDashboard.putNumber("robot/shooter/topSpeed", 2000);
-		SmartDashboard.putNumber("robot/shooter/bottomSpeed", 2000);
 	}
 
 	private void setupMotors() {
@@ -82,7 +77,6 @@ public class ShooterSubsystem extends SubsystemBase {
 			Commands.runOnce(
 				() -> {
 					RobotContainer.setState(State.REVVING);
-					Logger.recordOutput("robot/shooter/distance from speaker", distance.getAsDouble());
 				},
 				this
 			).andThen(this.setVelocity(() -> RANGE_TABLE.get(distance.getAsDouble())));
@@ -96,6 +90,20 @@ public class ShooterSubsystem extends SubsystemBase {
 				this.top.setControl(this.topControl.withVelocity(this.toRPS(topSpeed)));
 				this.bottom.setControl(this.bottomControl.withVelocity(this.toRPS(bottomSpeed)));
 			}, this);
+	}
+
+	public Command shoot() {
+		
+		SmartDashboard.putNumber("shooter/topMotorSpeed", 0);
+		SmartDashboard.putNumber("shooter/bottomMotorSpeed", 0);
+
+		return this.setVelocity(
+			() -> {
+				double topShooterSpeed = SmartDashboard.getNumber("shooter/topMotorSpeed", 0);
+				double bottomShooterSpeed = SmartDashboard.getNumber("shooter/bottomMotorSpeed", 0);
+				return new ShooterSpeed(topShooterSpeed,bottomShooterSpeed);
+			}
+		);
 	}
 
 	public Command eject() {

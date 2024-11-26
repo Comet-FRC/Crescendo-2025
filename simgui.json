@@ -114,9 +114,6 @@
           "shooter": {
             "open": true
           }
-        },
-        "shooter": {
-          "open": false
         }
       }
     }
