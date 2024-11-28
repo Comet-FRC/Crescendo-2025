@@ -14,6 +14,8 @@ import com.ctre.phoenix.led.CANdleConfiguration;
 import com.ctre.phoenix.led.RainbowAnimation;
 
 /**
+ * Controls LED lighting using a CANdle device from CTRE Phoenix, with methods for
+ * setting colors and configuring the LEDs.
  * @see https://api.ctr-electronics.com/phoenix/release/java/com/ctre/phoenix/led/CANdle.html
  */
 public class LED extends SubsystemBase {
