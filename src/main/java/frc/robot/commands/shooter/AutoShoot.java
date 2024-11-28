@@ -2,6 +2,7 @@ package frc.robot.commands.shooter;
 
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.commands.IndexNote;
 import frc.robot.subsystems.FeederSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -24,8 +25,8 @@ public class AutoShoot extends SequentialCommandGroup {
                 this.swerve.turnToSpeaker(),
                 new SequentialCommandGroup(
                     //new IndexNote(),
-                    this.shooter.setVelocityFromDistance(this.swerve::getDistanceFromSpeaker)
-                        .until(this.shooter::isReady)
+                    this.shooter.setVelocityFromDistance(this.swerve::getDistanceFromSpeaker),
+                    new WaitUntilCommand(this.shooter::isReady)
                 )
             ),
             this.feeder.shoot(), // until there's no note
