@@ -2,8 +2,10 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems;
+package org.cometrobotics.frc2024.robot.subsystems;
 
+import org.cometrobotics.frc2024.robot.Constants;
+import org.cometrobotics.frc2024.robot.subsystems.misc.ProximitySensor;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -15,8 +17,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.subsystems.misc.ProximitySensor;
 
 public class FeederSubsystem extends SubsystemBase {
 

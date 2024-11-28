@@ -1,8 +1,9 @@
-package frc.robot.subsystems.misc;
+package org.cometrobotics.frc2024.robot.subsystems.misc;
+
+import org.cometrobotics.frc2024.robot.Constants;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
-import frc.robot.Constants;
 
 public class ProximitySensor {
 

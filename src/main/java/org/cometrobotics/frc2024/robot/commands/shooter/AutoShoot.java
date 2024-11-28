@@ -1,12 +1,12 @@
-package frc.robot.commands.shooter;
+package org.cometrobotics.frc2024.robot.commands.shooter;
+
+import org.cometrobotics.frc2024.robot.subsystems.FeederSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.SwerveSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.shooter.ShooterSubsystem;
 
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.commands.IndexNote;
-import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class AutoShoot extends SequentialCommandGroup {
 

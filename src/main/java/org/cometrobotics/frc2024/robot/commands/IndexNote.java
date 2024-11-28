@@ -1,8 +1,9 @@
-package frc.robot.commands;
+package org.cometrobotics.frc2024.robot.commands;
+
+import org.cometrobotics.frc2024.robot.subsystems.FeederSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.misc.ProximitySensor;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.misc.ProximitySensor;
 
 public class IndexNote extends Command {
     private final FeederSubsystem feeder;

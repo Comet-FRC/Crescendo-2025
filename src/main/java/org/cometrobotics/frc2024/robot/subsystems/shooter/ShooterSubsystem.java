@@ -1,8 +1,12 @@
-package frc.robot.subsystems.shooter;
+package org.cometrobotics.frc2024.robot.subsystems.shooter;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.cometrobotics.frc2024.robot.Constants;
+import org.cometrobotics.frc2024.robot.RobotContainer;
+import org.cometrobotics.frc2024.robot.RobotContainer.State;
+import org.cometrobotics.frc2024.robot.subsystems.misc.ProximitySensor;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -16,10 +20,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.Constants;
-import frc.robot.RobotContainer;
-import frc.robot.RobotContainer.State;
-import frc.robot.subsystems.misc.ProximitySensor;
 
 public class ShooterSubsystem extends SubsystemBase {
 	/* Singleton */

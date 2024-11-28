@@ -1,4 +1,4 @@
-package frc.robot.utils;
+package org.cometrobotics.frc2024.robot.utils;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import java.util.Optional;

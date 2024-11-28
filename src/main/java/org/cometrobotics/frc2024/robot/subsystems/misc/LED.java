@@ -1,11 +1,10 @@
-package frc.robot.subsystems.misc;
+package org.cometrobotics.frc2024.robot.subsystems.misc;
 
 import java.util.function.Supplier;
 
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
 
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;

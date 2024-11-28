@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter;
+package org.cometrobotics.frc2024.robot.subsystems.shooter;
 
 import edu.wpi.first.math.interpolation.Interpolatable;
 import edu.wpi.first.math.interpolation.Interpolator;

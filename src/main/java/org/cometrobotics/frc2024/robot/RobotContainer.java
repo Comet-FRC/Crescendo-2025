@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot;
+package org.cometrobotics.frc2024.robot;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -13,19 +13,17 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.IndexNote;
-import frc.robot.commands.shooter.AutoShoot;
-import frc.robot.subsystems.FeederSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.subsystems.misc.LED;
-import frc.robot.subsystems.misc.ProximitySensor;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.utils.LimelightHelpers;
 
+import org.cometrobotics.frc2024.robot.commands.shooter.AutoShoot;
+import org.cometrobotics.frc2024.robot.subsystems.FeederSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.IntakeSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.SwerveSubsystem;
+import org.cometrobotics.frc2024.robot.subsystems.misc.LED;
+import org.cometrobotics.frc2024.robot.subsystems.misc.ProximitySensor;
+import org.cometrobotics.frc2024.robot.subsystems.shooter.ShooterSubsystem;
+import org.cometrobotics.frc2024.robot.utils.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -96,6 +94,7 @@ public class RobotContainer {
 		);*/
 		this.shooter.setDefaultCommand(this.shooter.stop());
 		this.feeder.setDefaultCommand(this.feeder.stop());
+		this.intake.setDefaultCommand(this.intake.stop());
 
 		this.led.setDefaultCommand(
 			this.led.setColor(() -> new Color8Bit(255, 255, 255))
