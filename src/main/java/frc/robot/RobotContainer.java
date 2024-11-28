@@ -121,25 +121,15 @@ public class RobotContainer {
 			.whileTrue(
 				Commands.parallel(
 					swerve.turnToSpeaker(),
-					Commands.repeatingSequence(shooter.shoot())
+					shooter.shoot()
 				)
 			);		
-
-
-			// right bumper -> shoot
-		/*new JoystickButton(operatorController, 6)
-		.whileTrue(
-			Commands.parallel(
-				swerve.turnToSpeaker(),
-				Commands.repeatingSequence(shooter.shoot())
-			)
-		);	*/
 
 		new JoystickButton(operatorController, 6)
 		.whileTrue(
 			Commands.parallel(
 				swerve.turnToSpeaker(),
-				Commands.repeatingSequence(shooter.setVelocityFromDistance(swerve::getDistanceFromSpeaker))
+				shooter.setVelocityFromDistance(swerve::getDistanceFromSpeaker)
 			)
 		);	
 
@@ -154,34 +144,29 @@ public class RobotContainer {
 		return autoChooser.get();
 	}
 
-	public void updateVision() {
+	/**
+	 * updates pose estimation using data from a Limelight camera and adjusts the
+	 * robot's orientation based on the vision measurements.
+	 */
+	public void updatePoseEstimation() {
 		swerve.getSwerveDrive().updateOdometry();
 
 		if (RobotBase.isSimulation()) {
 			return;
 		}
 
-		boolean doRejectUpdate = false;
-
 		LimelightHelpers.SetRobotOrientation("limelight-shooter", swerve.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
 		LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-shooter");
 		
 		try {
-			// if our angular velocity is greater than 720 degrees per second, ignore vision updates
-			if (Math.abs(swerve.getRate()) > 720) {
-				doRejectUpdate = true;
-			} else if(mt2.tagCount == 0) {
-				doRejectUpdate = true;
-			}
+			/* if our angular velocity is greater than 720 degrees per second, ignore vision updates */ 
+			if (Math.abs(swerve.getRate()) > 720) return;
+			if(mt2.tagCount == 0) return;
 			
-			if(!doRejectUpdate) {
-				double estimatedRotation = mt2.pose.getRotation().getRadians();
-				Rotation3d newRotation = new Rotation3d(0, 0, estimatedRotation);
-				swerve.getSwerveDrive().setGyro(newRotation);
-				swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION.VISION_MEASUREMENT_STD_DEV);
-			}
-
-			SmartDashboard.putNumber("robot/estimated rotation", mt2.pose.getRotation().getDegrees());
+			double estimatedRotation = mt2.pose.getRotation().getRadians();
+			Rotation3d newRotation = new Rotation3d(0, 0, estimatedRotation);
+			swerve.getSwerveDrive().setGyro(newRotation);
+			swerve.getSwerveDrive().addVisionMeasurement(mt2.pose, mt2.timestampSeconds, Constants.VISION.VISION_MEASUREMENT_STD_DEV);
 		} catch (Exception e) {
 		}
   	}
