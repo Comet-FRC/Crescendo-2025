@@ -46,6 +46,6 @@ public class ProximitySensor {
     }
 
     public boolean isNoteIndexed() {
-        return getDistanceMM() < 50;
+        return this.hasObject() && getDistanceMM() > 50;
     }
 }

@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 public class IndexNote extends Command {
     private final FeederSubsystem feeder;
-    private final ProximitySensor laserCan;
+    private final ProximitySensor sensor;
     
 
     /**
@@ -18,7 +18,7 @@ public class IndexNote extends Command {
     public IndexNote()
     {
         this.feeder = FeederSubsystem.getInstance();
-        this.laserCan = ProximitySensor.getInstance();
+        this.sensor = ProximitySensor.getInstance();
 
         addRequirements(feeder);
     }
@@ -30,7 +30,7 @@ public class IndexNote extends Command {
 
     @Override
     public boolean isFinished() {
-        return laserCan.isNoteIndexed();
+        return !sensor.hasObject() || sensor.isNoteIndexed();
     }
 
     @Override
