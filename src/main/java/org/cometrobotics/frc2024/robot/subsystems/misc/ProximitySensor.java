@@ -27,7 +27,6 @@ public class ProximitySensor {
             laserCan.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
             laserCan.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_20MS);
         } catch (ConfigurationFailedException e) {
-            
             System.out.println("LaserCAN configuration failed!");
         }
     }
