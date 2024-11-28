@@ -139,16 +139,16 @@ public class ShooterSubsystem extends SubsystemBase {
 		double measuredTopMotorSpeed = toRPM(top.getVelocity().getValueAsDouble());
 		double topSpeedError = toRPM(top.getClosedLoopError().getValueAsDouble());
 
-		Logger.recordOutput("robot/shooter/top/targetSpeed", targetTopMotorSpeed);
-		Logger.recordOutput("robot/shooter/top/measuredSpeed", measuredTopMotorSpeed);
-		Logger.recordOutput("robot/shooter/top/speedError", topSpeedError);
+		Logger.recordOutput("Robot/Shooter/Top/Target Speed", targetTopMotorSpeed);
+		Logger.recordOutput("Robot/Shooter/Top/Measured Speed", measuredTopMotorSpeed);
+		Logger.recordOutput("Robot/Shooter/Top/Speed Error", topSpeedError);
 		
 		double targetBottomMotorSpeed = toRPM(bottom.getClosedLoopReference().getValueAsDouble());
 		double measuredBottomMotorSpeed = toRPM(bottom.getVelocity().getValueAsDouble());
 		double bottomSpeedError = toRPM(bottom.getClosedLoopError().getValueAsDouble());
 
-		Logger.recordOutput("robot/shooter/bot/targetSpeed", targetBottomMotorSpeed);
-		Logger.recordOutput("robot/shooter/bot/measuredSpeed", measuredBottomMotorSpeed);
-		Logger.recordOutput("robot/shooter/bot/speedError", bottomSpeedError);
+		Logger.recordOutput("Robot/Shooter/Bottom/Target Speed", targetBottomMotorSpeed);
+		Logger.recordOutput("Robot/Shooter/Bottom/Measured Speed", measuredBottomMotorSpeed);
+		Logger.recordOutput("Robot/Shooter/Bottom/Speed Error", bottomSpeedError);
 	}
 }

@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import java.io.File;
 import java.io.IOException;
 
+import org.cometrobotics.frc2024.BuildConstants;
 import org.cometrobotics.frc2024.robot.subsystems.SwerveSubsystem;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -57,7 +58,23 @@ public class Robot extends LoggedRobot
 	@Override
 	public void robotInit()
 	{
-		Logger.recordMetadata("ProjectName", "MyProject"); // Set a metadata value
+		Logger.recordMetadata("Robot", "Rhythm");
+		Logger.recordMetadata("Project Name", BuildConstants.MAVEN_NAME);
+		Logger.recordMetadata("Build Date", BuildConstants.BUILD_DATE);
+		Logger.recordMetadata("Git SHA", BuildConstants.GIT_SHA);
+		Logger.recordMetadata("Git Date", BuildConstants.GIT_DATE);
+		Logger.recordMetadata("Git Branch", BuildConstants.GIT_BRANCH);
+		switch (BuildConstants.DIRTY) {
+			case 0:
+				Logger.recordMetadata("GitDirty", "All changes committed");
+				break;
+			case 1:
+				Logger.recordMetadata("GitDirty", "Uncomitted changes");
+				break;
+			default:
+				Logger.recordMetadata("GitDirty", "Unknown");
+				break;
+		}
 
 		if (isReal()) {
 			//Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")

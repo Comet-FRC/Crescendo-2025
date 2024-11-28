@@ -102,6 +102,6 @@ public class FeederSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("robot/feeder/proximity distance mm", ProximitySensor.getInstance().getDistanceMM());
+        Logger.recordOutput("Robot/Feeder/Proximity Distance mm", ProximitySensor.getInstance().getDistanceMM());
     }
 }

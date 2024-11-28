@@ -519,6 +519,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Logger.recordOutput("robot/shooter/distance from speaker", this.getDistanceFromSpeaker());
+        Logger.recordOutput("Robot/Shooter/Distance From Speaker", this.getDistanceFromSpeaker());
     }
 }
