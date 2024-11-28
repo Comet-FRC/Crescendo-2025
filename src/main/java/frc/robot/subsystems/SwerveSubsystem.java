@@ -220,6 +220,7 @@ public class SwerveSubsystem extends SubsystemBase {
         return new FunctionalCommand(
             () -> {
                 rotationPID.setGoal(angleSupplier.get().getDegrees());
+                rotationPID.reset(this.getPose().getRotation().getDegrees(), this.getAngularVelocity());
             },
             () -> {
                 double angularVelocity = rotationPID.calculate(this.getPose().getRotation().getDegrees());
@@ -499,7 +500,12 @@ public class SwerveSubsystem extends SubsystemBase {
         return swerveDrive.getModulePositions();
     }
     
-    public double getRate() {
+    /**
+     * returns the angular velocity by retrieving the rate from a Pigeon2 gyro sensor in a swerve drive system.
+     * 
+     * @return the angular velocity of the swerve drive, in meters per second
+     */
+    public double getAngularVelocity() {
         return ((Pigeon2)(swerveDrive.getGyro().getIMU())).getRate();
     }
 
