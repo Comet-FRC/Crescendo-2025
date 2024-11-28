@@ -160,7 +160,7 @@ public class RobotContainer {
 		
 		try {
 			/* if our angular velocity is greater than 720 degrees per second, ignore vision updates */ 
-			if (Math.abs(swerve.getRate()) > 720) return;
+			if (Math.abs(swerve.getAngularVelocity()) > 720) return;
 			if(mt2.tagCount == 0) return;
 			
 			double estimatedRotation = mt2.pose.getRotation().getRadians();
