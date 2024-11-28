@@ -11,6 +11,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotBase;
+import swervelib.telemetry.Alert;
+import swervelib.telemetry.Alert.AlertType;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean constants. This
@@ -21,6 +24,36 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+	private static RobotType robotType = RobotType.SIMBOT;
+
+	public static RobotType getRobotType() {
+		if (RobotBase.isReal() && robotType == RobotType.SIMBOT) {
+			new Alert("Invalid robot selected, using competition robot as default.", AlertType.ERROR)
+				.set(true);
+			robotType = RobotType.COMPBOT;
+		}
+		return robotType;
+	  }
+
+	public static Mode getRobotMode() {
+		return switch (robotType) {
+		case DEVBOT, COMPBOT -> RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
+		case SIMBOT -> Mode.SIM;
+		};
+	}
+
+	public enum Mode {
+		REAL,
+		SIM,
+		REPLAY
+	}
+
+	public enum RobotType {
+		SIMBOT,
+		DEVBOT,
+		COMPBOT
+	}
 
 	public static final class AUTON {
 		public static final PIDConstants TRANSLATION_PID = new PIDConstants(16, 0, 0);

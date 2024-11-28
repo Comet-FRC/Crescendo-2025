@@ -17,6 +17,9 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.cometrobotics.frc2024.BuildConstants;
 import org.cometrobotics.frc2024.robot.subsystems.SwerveSubsystem;
@@ -42,6 +45,10 @@ public class Robot extends LoggedRobot
 
 	private RobotContainer m_robotContainer;
 
+	/**
+	 * a timer to disable motor brake a few seconds after disable.  This will let the
+	 * robot stop immediately when disabled, but then also let it be pushed more
+	 */
 	private Timer disabledTimer;
 
 	public Robot() {
@@ -58,6 +65,20 @@ public class Robot extends LoggedRobot
 	@Override
 	public void robotInit()
 	{
+		this.configureLogging();
+		this.m_robotContainer = new RobotContainer();
+		this.disabledTimer = new Timer();
+	}
+
+	private void configureLogging() {
+		this.recordMetadata();
+		this.configureDataReceivers();
+		this.configureCommandLogging();
+		// Logger.disableDeterministicTimestamps() // See "Deterministic Timestamps" in the "Understanding Data Flow" page
+		Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
+	}
+
+	private void recordMetadata() {
 		Logger.recordMetadata("Robot", "Rhythm");
 		Logger.recordMetadata("Project Name", BuildConstants.MAVEN_NAME);
 		Logger.recordMetadata("Build Date", BuildConstants.BUILD_DATE);
@@ -75,30 +96,53 @@ public class Robot extends LoggedRobot
 				Logger.recordMetadata("GitDirty", "Unknown");
 				break;
 		}
-
-		if (isReal()) {
-			//Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
-			Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-			//new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
-		} else if (isSimulation()) {
-			Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-		} else {
-			setUseTiming(false); // Run as fast as possible
-			String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
-			Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-			Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+		Logger.recordMetadata("Robot Type", Constants.getRobotType().toString());
+		Logger.recordMetadata("Robot Mode", Constants.getRobotMode().toString());
+	}
+	private void configureDataReceivers() {
+		switch (Constants.getRobotMode()) {
+			case REAL:
+				//Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+				Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+				break;
+			case SIM:
+				Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+				break;
+			case REPLAY:
+				setUseTiming(false); // Run as fast as possible
+				String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+				Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+				Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+				break;
 		}
-
-		// Logger.disableDeterministicTimestamps() // See "Deterministic Timestamps" in the "Understanding Data Flow" page
-		Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
-
-		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-		// autonomous chooser on the dashboard.
-		m_robotContainer = new RobotContainer();
-
-		// Create a timer to disable motor brake a few seconds after disable.  This will let the robot stop
-		// immediately when disabled, but then also let it be pushed more 
-		disabledTimer = new Timer();
+	}
+	private void configureCommandLogging() {
+		// Log active commands
+		Map<String, Integer> commandCounts = new HashMap<>();
+		BiConsumer<Command, Boolean> logCommandFunction =
+			(Command command, Boolean active) -> {
+			String name = command.getName();
+			int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
+			commandCounts.put(name, count);
+			Logger.recordOutput(
+				"CommandsUnique/" + name + "_" + Integer.toHexString(command.hashCode()), active);
+			Logger.recordOutput("CommandsAll/" + name, count > 0);
+			};
+		CommandScheduler.getInstance()
+			.onCommandInitialize(
+				(Command command) -> {
+				logCommandFunction.accept(command, true);
+				});
+		CommandScheduler.getInstance()
+			.onCommandFinish(
+				(Command command) -> {
+				logCommandFunction.accept(command, false);
+				});
+		CommandScheduler.getInstance()
+			.onCommandInterrupt(
+				(Command command) -> {
+				logCommandFunction.accept(command, false);
+				});
 	}
 
 	/**
