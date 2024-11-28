@@ -1,11 +1,6 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "SPARK MAX [15]": {
-        "header": {
-          "open": true
-        }
-      },
       "Talon FX (v6)[13]": {
         "header": {
           "open": true
@@ -13,66 +8,63 @@
       },
       "Talon FX (v6)[2]/Rotor Sensor": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX (v6)[51]": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX[50]": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX[51]/Integrated Sensor": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX[52]/Integrated Sensor": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX[8]/Integrated Sensor": {
         "header": {
-          "open": true
+          "open": false
         }
+      },
+      "window": {
+        "visible": false
       }
     }
   },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
-      "/LiveWindow/SwerveSubsystem": "Subsystem",
-      "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
-      "/LiveWindow/Ungrouped/Pigeon 2 [13]": "Gyro",
-      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
       "/SmartDashboard/Field": "Field2d",
-      "/SmartDashboard/Pigeon 2 (v6) [13]": "Gyro",
       "/SmartDashboard/Pigeon 2 (v6) [20]": "Gyro",
-      "/SmartDashboard/Pigeon 2 [13]": "Gyro",
-      "/SmartDashboard/SendableChooser[0]": "String Chooser",
       "/SmartDashboard/auto/Auto Chooser": "String Chooser",
-      "/SmartDashboard/navX-Sensor[1]": "Gyro",
-      "/SmartDashboard/navX-Sensor[4]": "Gyro",
       "/SmartDashboard/robot/field": "Field2d"
     },
     "windows": {
       "/SmartDashboard/Field": {
         "XModules": {
-          "arrowColor": [
-            0.09611687064170837,
-            0.17414122819900513,
-            0.9803921580314636,
-            255.0
-          ],
-          "arrowSize": 33,
-          "arrowWeight": 3.0,
           "style": "Hidden"
         },
+        "bottom": 1476,
+        "height": 8.210550308227539,
+        "left": 150,
+        "right": 2961,
+        "top": 79,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/robot/field": {
         "bottom": 1476,
         "height": 8.210550308227539,
         "left": 150,
@@ -86,22 +78,50 @@
     }
   },
   "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
+    "Retained Values": {
+      "open": false
+    },
     "transitory": {
+      "AdvantageKit": {
+        "RealOutputs": {
+          "field": {
+            "poses": {
+              "open": true
+            }
+          },
+          "open": true,
+          "robot": {
+            "open": true,
+            "shooter": {
+              "bot": {
+                "open": true
+              },
+              "open": true,
+              "top": {
+                "open": true
+              }
+            }
+          },
+          "shooter": {
+            "open": true
+          }
+        },
+        "open": true
+      },
       "SmartDashboard": {
         "open": true,
-        "shooter": {
-          "open": true
-        },
-        "swerve": {
-          "open": true
+        "robot": {
+          "shooter": {
+            "open": true
+          }
         }
       }
     }
   },
   "NetworkTables Info": {
     "visible": true
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

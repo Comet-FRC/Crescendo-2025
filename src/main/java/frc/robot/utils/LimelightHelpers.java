@@ -1,6 +1,6 @@
 //LimelightHelpers v1.9 (REQUIRES 2024.9.1)
 
-package frc.robot.subsystems.Vision;
+package frc.robot.utils;
 
 import edu.wpi.first.networktables.DoubleArrayEntry;
 import edu.wpi.first.networktables.NetworkTable;
@@ -602,7 +602,7 @@ public class LimelightHelpers {
         return new PoseEstimate(pose, adjustedTimestamp, latency, tagCount, tagSpan, tagDist, tagArea, rawFiducials);
     }
 
-    private static RawFiducial[] getRawFiducials(String limelightName) {
+    /*private static RawFiducial[] getRawFiducials(String limelightName) {
         var entry = LimelightHelpers.getLimelightNTTableEntry(limelightName, "rawfiducials");
         var rawFiducialArray = entry.getDoubleArray(new double[0]);
         int valsPerEntry = 7;
@@ -627,7 +627,7 @@ public class LimelightHelpers {
         }
     
         return rawFiducials;
-    }
+    }*/
 
     public static RawDetection[] getRawDetections(String limelightName) {
         var entry = LimelightHelpers.getLimelightNTTableEntry(limelightName, "rawdetections");

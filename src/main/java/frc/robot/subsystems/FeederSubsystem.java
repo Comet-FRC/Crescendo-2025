@@ -4,75 +4,104 @@
 
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.misc.ProximitySensor;
 
 public class FeederSubsystem extends SubsystemBase {
+
+	/* Singleton */
+	
+	private static FeederSubsystem instance = null;
+	
+	public static FeederSubsystem getInstance() {
+		if (instance == null) instance = new FeederSubsystem();
+		return instance;
+	}
+
+	/* Implementation */
+
     public final TalonFX feederMotorLeft;
     private final TalonFX feederMotorRight;
+    private final VelocityVoltage flControl;
+    private final VelocityVoltage frControl;
 
-    private final VelocityVoltage flControl = new VelocityVoltage(0).withEnableFOC(true);
-    private final VelocityVoltage frControl = new VelocityVoltage(0).withEnableFOC(true);
-
-    private double speed = 0;
-
-    public FeederSubsystem() {
-        feederMotorLeft = new TalonFX(Constants.Feeder.leftFeederID, "rio");
-        feederMotorRight = new TalonFX(Constants.Feeder.rightFeederID, "rio");
+    private FeederSubsystem() {
+        this.feederMotorLeft = new TalonFX(Constants.FEEDER.leftFeederID, "rio");
+        this.feederMotorRight = new TalonFX(Constants.FEEDER.rightFeederID, "rio");
+        this.flControl = new VelocityVoltage(0).withEnableFOC(true);
+        this.frControl = new VelocityVoltage(0).withEnableFOC(true);
 
         applyConfigs();
     }
 
     private void applyConfigs() {
-		var feederMotorConfig = new TalonFXConfiguration();
+		TalonFXConfiguration feederMotorConfig = new TalonFXConfiguration();
 		feederMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 		feederMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.Intake.peakForwardVoltage;
-		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.Intake.peakReverseVoltage;
+		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.INTAKE.peakForwardVoltage;
+		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.INTAKE.peakReverseVoltage;
         
-		feederMotorConfig.Slot0.kP = Constants.Shooter.kP;
-		feederMotorConfig.Slot0.kI = Constants.Shooter.kI;
-		feederMotorConfig.Slot0.kD = Constants.Shooter.kD;
-		feederMotorConfig.Slot0.kS = Constants.Shooter.kS;
-		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.Shooter.RPMsPerVolt);
+		feederMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
+		feederMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
+		feederMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
+		feederMotorConfig.Slot0.kS = Constants.SHOOTER.kS;
+		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.SHOOTER.RPMsPerVolt);
 		feederMotorConfig.Slot0.kA = 0.0;
 		feederMotorConfig.Slot0.kG = 0.0;
         
+		this.feederMotorLeft.getConfigurator().apply(feederMotorConfig);
+		this.feederMotorRight.getConfigurator().apply(feederMotorConfig);
+	}
 
-		feederMotorLeft.getConfigurator().apply(feederMotorConfig);
-		feederMotorRight.getConfigurator().apply(feederMotorConfig);
+    public void setVelocity(double speedRPM) {
+		this.feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
+		this.feederMotorRight.setControl(frControl.withVelocity(toRPS(-speedRPM)));
 	}
 
     private double toRPS(double rpm) {
 		return rpm / 60.0;
 	}
 
-    public void setVelocity(double speed) {
-        // Only set the speed if it's not already the speed.
-        if (speed == this.speed) return;
-
-        this.speed = speed;
-		feederMotorLeft.setControl(flControl.withVelocity(toRPS(speed)));
-		feederMotorRight.setControl(frControl.withVelocity(toRPS(-speed)));
-	}
-
-    public void intake() {
-       
-        setVelocity(-900);
+    public Command intake() {
+        return Commands.runOnce(() -> this.setVelocity(-900), this)
+            .until(() -> (ProximitySensor.getInstance().hasObject() || this.getTorqueCurrent() < -25));
     }
 
-    public void eject() {
-       
-        setVelocity(500);
+    public Command shoot() {
+        return Commands.run(() -> this.setVelocity(-4000), this)
+            .until(() -> !ProximitySensor.getInstance().hasObject());
     }
 
-    public void stop() {
-        setVelocity(0);
+    public Command outtake() {
+        return Commands.runOnce(() -> this.setVelocity(500), this);
+    }
+
+    public Command stop() {
+        return Commands.runOnce(() -> this.setVelocity(0), this);
+    }
+
+    public double getTorqueCurrent() {
+        double sum = 0;
+        sum += feederMotorLeft.getTorqueCurrent().getValueAsDouble();
+        sum += feederMotorRight.getTorqueCurrent().getValueAsDouble();
+        sum /= 2.0;
+
+        return sum;
+    }
+
+    @Override
+    public void periodic() {
+        Logger.recordOutput("robot/feeder/proximity distance mm", ProximitySensor.getInstance().getDistanceMM());
     }
 }
