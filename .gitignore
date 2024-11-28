@@ -176,3 +176,11 @@ logs/
 
 # Folder that has CTRE Phoenix Sim device config storage
 ctre_sim/
+
+# Simulation GUI and other tools window save files
+*-window.json
+simgui*.json
+networktables.json
+
+# Version file
+src/main/java/org/cometrobotics/frc2024/BuildConstants.java
