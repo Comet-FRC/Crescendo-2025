@@ -140,7 +140,7 @@ public class Robot extends LoggedRobot
 	@Override
 	public void autonomousPeriodic()
 	{
-		m_robotContainer.updateVision();
+		m_robotContainer.updatePoseEstimation();
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class Robot extends LoggedRobot
 	@Override
 	public void teleopPeriodic()
 	{
-		m_robotContainer.updateVision();
+		m_robotContainer.updatePoseEstimation();
 	}
 
 	@Override

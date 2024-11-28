@@ -26,6 +26,12 @@ public class RangeTable {
 		RANGE_TABLE_SPEAKER.put(2.534346332294663, new ShooterSpeed(2700, 2350));
 	}
 
+    /**
+     * returns the ShooterSpeed value corresponding to a given distance from the speaker
+     * 
+     * @param distance the distance at which the shooter speed needs to be determined. 
+     * @return The speeds to rev the shooter motors at
+     */
     public ShooterSpeed get(double distance) {
         return this.RANGE_TABLE_SPEAKER.get(distance);
     }
