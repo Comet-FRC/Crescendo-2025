@@ -54,6 +54,10 @@ public class ShooterSubsystem extends SubsystemBase {
 		shooterMotorConfig.Voltage.PeakForwardVoltage = Constants.SHOOTER.peakForwardVoltage;
 		shooterMotorConfig.Voltage.PeakReverseVoltage = Constants.SHOOTER.peakReverseVoltage;
 
+		shooterMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+		shooterMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
+		shooterMotorConfig.CurrentLimits.SupplyTimeThreshold = 0.5;
+
 		shooterMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
 		shooterMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
 		shooterMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
