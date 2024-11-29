@@ -115,6 +115,16 @@ public class RobotContainer {
 			this.swerve.driveToAmp()
 		);
 
+		// Y -> System Identification Angle Swerve
+		driverController.y().whileTrue(
+			this.swerve.sysIdAngleMotorCommand()
+		);
+
+		// Y -> System Identification Angle Swerve
+		driverController.x().whileTrue(
+			this.swerve.sysIdDriveMotorCommand()
+		);
+
 		// right bumper -> shoot
 		new JoystickButton(operatorController, 6)
 			.whileTrue(
@@ -124,13 +134,15 @@ public class RobotContainer {
 				)
 			);		
 
+		/*
 		new JoystickButton(operatorController, 6)
-		.whileTrue(
-			Commands.parallel(
-				swerve.turnToSpeaker(),
-				shooter.setVelocityFromDistance(swerve::getDistanceFromSpeaker)
-			)
-		);	
+			.whileTrue(
+				Commands.parallel(
+					swerve.turnToSpeaker(),
+					shooter.setVelocityFromDistance(swerve::getDistanceFromSpeaker)
+				)
+			);
+		*/
 
 		// left bumper -> intake
 		new JoystickButton(operatorController, 5)
