@@ -198,6 +198,6 @@ public class RobotContainer {
 		}
 
         ROBOT_STATE = newState;
-        SmartDashboard.putString("robot/robot state", ROBOT_STATE.toString());
+		Logger.recordOutput("Robot/Robot State", ROBOT_STATE.toString());
     }
 }
