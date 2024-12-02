@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import org.cometrobotics.frc2024.robot.commands.shooter.AutoShoot;
 import org.cometrobotics.frc2024.robot.subsystems.FeederSubsystem;
@@ -27,6 +28,7 @@ import org.cometrobotics.frc2024.robot.utils.LimelightHelpers;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 /**
@@ -102,8 +104,25 @@ public class RobotContainer {
 	}
 
 	private void configureBindings() {
+
+
+		driverController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+		driverController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+
+		/*
+		* Joystick Y = quasistatic forward
+		* Joystick A = quasistatic reverse
+		* Joystick B = dynamic forward
+		* Joystick X = dyanmic reverse
+		*/
+		driverController.y().whileTrue(feeder.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+		driverController.a().whileTrue(feeder.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+		driverController.b().whileTrue(feeder.sysIdDynamic(SysIdRoutine.Direction.kForward));
+		driverController.x().whileTrue(feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+
 		// Press A to Zero Gyro
-		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
+		/*driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
 
 		// right bumper
 		driverController.rightBumper().whileTrue(
@@ -123,16 +142,16 @@ public class RobotContainer {
 		// Y -> System Identification Angle Swerve
 		driverController.x().whileTrue(
 			this.swerve.sysIdDriveMotorCommand()
-		);
+		);*/
 
 		// right bumper -> shoot
-		new JoystickButton(operatorController, 6)
+		/*new JoystickButton(operatorController, 6)
 			.whileTrue(
 				Commands.parallel(
 					swerve.turnToSpeaker(),
 					shooter.shoot()
 				)
-			);		
+			);		*/
 
 		/*
 		new JoystickButton(operatorController, 6)
