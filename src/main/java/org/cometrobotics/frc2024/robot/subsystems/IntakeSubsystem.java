@@ -51,11 +51,11 @@ public class IntakeSubsystem extends SubsystemBase {
         this.pid = intakeMotor.getPIDController();
 
         // TODO: test new values
-        pid.setP(4.9805E-06);
+        pid.setP(4.6803E-06);
         pid.setI(0);
         pid.setD(0);
 
-        this.ff = new SimpleMotorFeedforward(0.010373, 0.0077227, 0.0018405);
+        this.ff = new SimpleMotorFeedforward(0.011483, 0.0077225, 0.0018332);
 
         intakeMotor.setSmartCurrentLimit(80);
     }
