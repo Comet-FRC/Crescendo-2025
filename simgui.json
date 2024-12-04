@@ -81,9 +81,15 @@
     "Retained Values": {
       "open": false
     },
+    "Transitory Values": {
+      "open": false
+    },
     "transitory": {
       "AdvantageKit": {
         "RealOutputs": {
+          "CommandsUnique": {
+            "open": true
+          },
           "field": {
             "poses": {
               "open": true

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -105,25 +106,18 @@ public class RobotContainer {
 
 	private void configureBindings() {
 
-
-		driverController.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
-		driverController.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
-
 		/*
-		* Joystick Y = quasistatic forward
+		* Joystick Y = FeederSubsystem
 		* Joystick A = quasistatic reverse
 		* Joystick B = dynamic forward
 		* Joystick X = dyanmic reverse
 		*/
-		driverController.y().whileTrue(feeder.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-		driverController.a().whileTrue(feeder.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-		driverController.b().whileTrue(feeder.sysIdDynamic(SysIdRoutine.Direction.kForward));
-		driverController.x().whileTrue(feeder.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+		driverController.y().whileTrue(intake.sysId());
 
 
 		// Press A to Zero Gyro
-		/*driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
-
+		driverController.a().onTrue((Commands.runOnce(swerve::zeroGyro)));
+		/*
 		// right bumper
 		driverController.rightBumper().whileTrue(
 			new AutoShoot()
@@ -145,13 +139,10 @@ public class RobotContainer {
 		);*/
 
 		// right bumper -> shoot
-		/*new JoystickButton(operatorController, 6)
+		new JoystickButton(operatorController, 6)
 			.whileTrue(
-				Commands.parallel(
-					swerve.turnToSpeaker(),
-					shooter.shoot()
-				)
-			);		*/
+				Commands.repeatingSequence(shooter.shoot())
+			);
 
 		/*
 		new JoystickButton(operatorController, 6)
@@ -166,7 +157,7 @@ public class RobotContainer {
 		// left bumper -> intake
 		new JoystickButton(operatorController, 5)
 		.whileTrue(
-			Commands.repeatingSequence(feeder.intake())
+			intake.intake()
 		);	
 	}
 
@@ -179,7 +170,7 @@ public class RobotContainer {
 	 * robot's orientation based on the vision measurements.
 	 */
 	public void updatePoseEstimation() {
-		swerve.getSwerveDrive().updateOdometry();
+		//swerve.getSwerveDrive().updateOdometry();
 
 		if (RobotBase.isSimulation()) {
 			return;

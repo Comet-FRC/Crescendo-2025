@@ -9,17 +9,21 @@ import org.cometrobotics.frc2024.robot.RobotContainer.State;
 import org.cometrobotics.frc2024.robot.subsystems.misc.ProximitySensor;
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class ShooterSubsystem extends SubsystemBase {
 	/* Singleton */
@@ -33,8 +37,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	/* Implementation */
 
-	private final TalonFX top;
-	private final TalonFX bottom;
+	private TalonFX top;
+	private TalonFX bottom;
 
 	private final VelocityVoltage topControl = new VelocityVoltage(0).withEnableFOC(true);
 	private final VelocityVoltage bottomControl = new VelocityVoltage(0).withEnableFOC(true);
@@ -58,12 +62,12 @@ public class ShooterSubsystem extends SubsystemBase {
 		shooterMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
 		shooterMotorConfig.CurrentLimits.SupplyTimeThreshold = 0.5;
 
-		shooterMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
-		shooterMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
-		shooterMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
-		shooterMotorConfig.Slot0.kS = Constants.SHOOTER.kS;
-		shooterMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.SHOOTER.RPMsPerVolt);
-		shooterMotorConfig.Slot0.kA = 0.0;
+		shooterMotorConfig.Slot0.kP = 0.17901;
+		shooterMotorConfig.Slot0.kI = 0;
+		shooterMotorConfig.Slot0.kD = 0;
+		shooterMotorConfig.Slot0.kS = 0.056818;
+		shooterMotorConfig.Slot0.kV = 0.12037;
+		shooterMotorConfig.Slot0.kA = 0.011335;
 		shooterMotorConfig.Slot0.kG = 0.0;
 
 		top.getConfigurator().apply(shooterMotorConfig);
@@ -100,8 +104,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
 	public Command shoot() {
 		
-		SmartDashboard.putNumber("shooter/topMotorSpeed", 0);
-		SmartDashboard.putNumber("shooter/bottomMotorSpeed", 0);
+		SmartDashboard.putNumber("shooter/topMotorSpeed", 2500);
+		SmartDashboard.putNumber("shooter/bottomMotorSpeed", 2500);
 
 		return
 			this.setVelocity(
@@ -155,4 +159,38 @@ public class ShooterSubsystem extends SubsystemBase {
 		Logger.recordOutput("Robot/Shooter/Bottom/Measured Speed", measuredBottomMotorSpeed);
 		Logger.recordOutput("Robot/Shooter/Bottom/Speed Error", bottomSpeedError);
 	}
+
+	/* SYS ID */
+
+    public Command sysId() {
+        SysIdRoutine routine =
+            new SysIdRoutine(
+                new SysIdRoutine.Config(
+                    null,               // Use default ramp rate (1 V/s)
+                    Units.Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                    null,                // Use default timeout (10 s)
+                                                // Log state with Phoenix SignalLogger class
+                    (state) -> SignalLogger.writeString("state", state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                    (volts) -> {
+                        top.setControl(new VoltageOut(volts.in(Units.Volts)));
+                        bottom.setControl(new VoltageOut(volts.in(Units.Volts)));
+                    },
+                    null,
+                    this
+                )
+            );
+
+        return
+            Commands.runOnce(SignalLogger::start)
+            .andThen(routine.dynamic(SysIdRoutine.Direction.kForward))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.dynamic(SysIdRoutine.Direction.kReverse))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.quasistatic(SysIdRoutine.Direction.kForward))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.quasistatic(SysIdRoutine.Direction.kReverse))
+            .andThen(Commands.runOnce(SignalLogger::stop));
+    }
 }

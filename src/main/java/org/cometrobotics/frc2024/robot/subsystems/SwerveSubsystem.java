@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 
@@ -164,11 +165,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public Command driveToAmp() {
         return AutoBuilder.pathfindThenFollowPath(
             PathPlannerPath.fromPathFile("AmpAlign"),
-            new PathConstraints(
-                this.getMaximumVelocity(), 4.0,
-                this.getMaximumAngularVelocity(),
-                Units.degreesToRadians(720)
-            )
+            this.autonConstraints
         );
     }
     
@@ -246,7 +243,7 @@ public class SwerveSubsystem extends SubsystemBase {
         return SwerveDriveTest.generateSysIdCommand(
                 SwerveDriveTest.setDriveSysIdRoutine(
                         new Config(),
-                        this, swerveDrive, 12),
+                        this, swerveDrive, 4),
                 3.0, 5.0, 3.0);
     }
 
@@ -358,24 +355,13 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * Checks if the alliance is red, defaults to false if alliance isn't available.
-     *
-     * @return true if the red alliance, false if blue. Defaults to false if none is
-     *         available.
-     */
-    private boolean isRedAlliance() {
-        var alliance = DriverStation.getAlliance();
-        return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
-    }
-
-    /**
      * This will zero (calibrate) the robot to assume the current position is facing
      * forward
      * <p>
      * If red alliance rotate the robot 180 after the drviebase zero command
      */
     public void zeroGyroWithAlliance() {
-        if (isRedAlliance()) {
+        if (AllianceColor.isRed()) {
             zeroGyro();
             // Set the pose 180 degrees
             resetOdometry(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));

@@ -30,6 +30,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import com.ctre.phoenix6.SignalLogger;
+
 import swervelib.parser.SwerveParser;
 
 /**
@@ -75,6 +77,10 @@ public class Robot extends LoggedRobot
 		this.configureDataReceivers();
 		this.configureCommandLogging();
 		Logger.start();
+
+		// Set the logger to log to the first flashdrive plugged in
+		// TODO: Attach a flash drive to the robot
+		//SignalLogger.setPath("/media/sda1/");
 	}
 
 	private void recordMetadata() {

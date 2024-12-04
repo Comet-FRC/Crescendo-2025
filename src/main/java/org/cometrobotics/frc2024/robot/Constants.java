@@ -79,7 +79,7 @@ public final class Constants {
 		/* IDs */
 		public static final int motorID = 15;
 		/* Motor Speed Values */
-		public static final double intakingSpeed = 0.5;
+		public static final double intakingSpeed = 100;
 		public static final double shootingSpeed = 0.5;
 		public static final double ejectingSpeed = -0.5;
 		/* Motor Config Values */

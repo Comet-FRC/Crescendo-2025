@@ -60,12 +60,12 @@ public class FeederSubsystem extends SubsystemBase {
 		feederMotorConfig.Voltage.PeakForwardVoltage = Constants.INTAKE.peakForwardVoltage;
 		feederMotorConfig.Voltage.PeakReverseVoltage = Constants.INTAKE.peakReverseVoltage;
         
-		feederMotorConfig.Slot0.kP = Constants.SHOOTER.kP;
-		feederMotorConfig.Slot0.kI = Constants.SHOOTER.kI;
-		feederMotorConfig.Slot0.kD = Constants.SHOOTER.kD;
-		feederMotorConfig.Slot0.kS = Constants.SHOOTER.kS;
-		feederMotorConfig.Slot0.kV = 1.0 / toRPS(Constants.SHOOTER.RPMsPerVolt);
-		feederMotorConfig.Slot0.kA = 0.0;
+		feederMotorConfig.Slot0.kP = 0.0025347;
+		feederMotorConfig.Slot0.kI = 0;
+		feederMotorConfig.Slot0.kD = 0;
+		feederMotorConfig.Slot0.kV = 0.11666;
+		feederMotorConfig.Slot0.kA = 0.002207;
+		feederMotorConfig.Slot0.kS = 0.016299;
 		feederMotorConfig.Slot0.kG = 0.0;
         
 		this.feederMotorLeft.getConfigurator().apply(feederMotorConfig);
@@ -78,6 +78,10 @@ public class FeederSubsystem extends SubsystemBase {
     public void setVelocity(double speedRPM) {
 		this.feederMotorLeft.setControl(flControl.withVelocity(toRPS(speedRPM)));
 		this.feederMotorRight.setControl(frControl.withVelocity(toRPS(speedRPM)));
+	}
+
+    private double toRPM(double rps) {
+		return rps * 60.0;
 	}
 
     private double toRPS(double rpm) {
@@ -113,35 +117,58 @@ public class FeederSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        /*double targetLeftMotorSpeed = toRPM(feederMotorLeft.getClosedLoopReference().getValueAsDouble());
+		double measuredLeftMotorSpeed = toRPM(feederMotorLeft.getVelocity().getValueAsDouble());
+		double leftSpeedError = toRPM(feederMotorLeft.getClosedLoopError().getValueAsDouble());
+
+		Logger.recordOutput("Robot/Feeder/Left/Target Speed", targetLeftMotorSpeed);
+		Logger.recordOutput("Robot/Feeder/Left/Measured Speed", measuredLeftMotorSpeed);
+		Logger.recordOutput("Robot/Feeder/Left/Speed Error", leftSpeedError);
+		
+        double targetRightMotorSpeed = toRPM(feederMotorRight.getClosedLoopReference().getValueAsDouble());
+		double measuredRightMotorSpeed = toRPM(feederMotorRight.getVelocity().getValueAsDouble());
+		double RightSpeedError = toRPM(feederMotorRight.getClosedLoopError().getValueAsDouble());
+
+		Logger.recordOutput("Robot/Feeder/Right/Target Speed", targetRightMotorSpeed);
+		Logger.recordOutput("Robot/Feeder/Right/Measured Speed", measuredRightMotorSpeed);
+		Logger.recordOutput("Robot/Feeder/Right/Speed Error", RightSpeedError);
+        */
         Logger.recordOutput("Robot/Feeder/Proximity Distance mm", ProximitySensor.getInstance().getDistanceMM());
     }
 
 
 
-
     /* SYS ID */
 
-    private final SysIdRoutine sysIdRoutine =
-        new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,               // Use default ramp rate (1 V/s)
-                Units.Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
-                null,                // Use default timeout (10 s)
-                                             // Log state with Phoenix SignalLogger class
-                (state) -> SignalLogger.writeString("state", state.toString())
-            ),
-            new SysIdRoutine.Mechanism(
-                (volts) -> feederMotorLeft.setControl(new VoltageOut(volts.in(Units.Volts))),
-                null,
-                this
-            )
-        );
+    public Command sysId() {
+        SysIdRoutine routine =
+            new SysIdRoutine(
+                new SysIdRoutine.Config(
+                    null,               // Use default ramp rate (1 V/s)
+                    Units.Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
+                    null,                // Use default timeout (10 s)
+                                                // Log state with Phoenix SignalLogger class
+                    (state) -> SignalLogger.writeString("state", state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                    (volts) -> {
+                        feederMotorLeft.setControl(new VoltageOut(volts.in(Units.Volts)));
+                        feederMotorRight.setControl(new VoltageOut(volts.in(Units.Volts)));
+                    },
+                    null,
+                    this
+                )
+            );
 
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return sysIdRoutine.quasistatic(direction);
-    }
-        
-        public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return sysIdRoutine.dynamic(direction);
+        return
+            Commands.runOnce(SignalLogger::start)
+            .andThen(routine.dynamic(SysIdRoutine.Direction.kForward))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.dynamic(SysIdRoutine.Direction.kReverse))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.quasistatic(SysIdRoutine.Direction.kForward))
+            .andThen(Commands.waitSeconds(3))
+            .andThen(routine.quasistatic(SysIdRoutine.Direction.kReverse))
+            .andThen(Commands.runOnce(SignalLogger::stop));
     }
 }
